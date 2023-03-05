@@ -1,0 +1,5 @@
+faiss-cpu
+transformers
+sentence_transformers
+punkt
+sqlalchemy
