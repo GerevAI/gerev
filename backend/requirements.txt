@@ -3,3 +3,4 @@ transformers
 sentence_transformers
 sqlalchemy
 fastapi
+uvicorn

@@ -1,0 +1,9 @@
+services:
+  gerev:
+    image: gerev:latest
+    ports:
+      - 80:80
+    volumes:
+      - ./storage:/storage
+      - ./backend:/app
+    build: .
