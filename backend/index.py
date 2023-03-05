@@ -17,6 +17,8 @@ class Index():
     
     @staticmethod
     def get() -> 'Index':
+        if Index.instance is None:
+            raise RuntimeError("Index is not initialized")
         return Index.instance
 
     def __init__(self) -> None:
@@ -28,7 +30,7 @@ class Index():
 
         self.index: faiss.IndexIDMap = index
     
-    def add_and_save(self, ids, embeddings):
+    def update(self, ids, embeddings):
         self.index.add_with_ids(embeddings, ids)
 
         faiss.write_index(self.index, INDEX_PATH)

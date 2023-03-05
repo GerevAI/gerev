@@ -4,3 +4,4 @@ sentence_transformers
 sqlalchemy
 fastapi
 uvicorn
+rank_bm25
