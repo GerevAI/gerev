@@ -10,11 +10,11 @@ from db_engine import Session
 from index import Index
 from models import bi_encoder, cross_encoder_small, cross_encoder_large
 
-SMALL_CROSS_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 50
-LARGE_CROSS_ENCODER_CANDIDATES = 20 if torch.cuda.is_available() else 10
+BI_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 50
+SMALL_CROSS_ENCODER_CANDIDATES = 20 if torch.cuda.is_available() else 10
 
 
-def split_into_paragraphs(text, minimum_length=256):
+def _split_into_paragraphs(text, minimum_length=256):
     """
     split into paragraphs and batch small paragraphs together into the same paragraph
     """
@@ -34,7 +34,7 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
         db_documents = []
         for document in documents:
             # Split the content into paragraphs that fit inside the database
-            paragraphs = split_into_paragraphs(document.content)
+            paragraphs = _split_into_paragraphs(document.content)
             # Create a new document in the database
             db_document = Document(
                 integration_name=document.integration_name,
@@ -68,37 +68,40 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
     index.update(paragraph_ids, embeddings)
 
 
+def _cross_encode(
+        cross_encoder: CrossEncoder,
+        encoded_query: torch.LongTensor,
+        paragraphs: List[Paragraph],
+        top_k: int) -> List[Paragraph]:
+    scores = cross_encoder.predict([(encoded_query, paragraph.content) for paragraph in paragraphs])
+    candidates = [{
+        'paragraph': paragraph,
+        'score': score
+    } for paragraph, score in zip(paragraphs, scores)]
+    candidates.sort(key=lambda c: c['score'], reverse=True)
+    return [candidate['paragraph'] for candidate in candidates[:top_k]]
+
+
 def search_documents(query: str, top_k: int) -> List[Paragraph]:
     # Encode the query
     query_embedding = bi_encoder.encode(query, convert_to_tensor=True)
 
     # Search the index for 100 candidates
     index = Index.get()
-    top_k_ids = list(index.search(query_embedding, SMALL_CROSS_ENCODER_CANDIDATES))[0]
-    top_k_ids = [int(id) for id in top_k_ids if id != -1]
+    results = index.search(query_embedding, BI_ENCODER_CANDIDATES)
+    results = results[0]
+    results = [id for id in results if id != -1]  # filter out empty results
+
     # Get the paragraphs from the database
-    session = Session()
-    paragraphs = session.query(Paragraph).filter(Paragraph.id.in_(top_k_ids)).all()
+    with Session() as session:
+        paragraphs = session.query(Paragraph).filter(Paragraph.id.in_(results)).all()
 
     if len(paragraphs) == 0:
         return []
 
     # calculate small cross-encoder scores to leave just a few candidates
-    small_scores = cross_encoder_small.predict([(query, p.content) for p in paragraphs])
-    candidates = [{
-        'paragraph': p,
-        'score': s
-    } for p, s in zip(paragraphs, small_scores)]
-    candidates.sort(key=lambda c: c['score'], reverse=True)
-
-    candidates = candidates[:LARGE_CROSS_ENCODER_CANDIDATES]
-
+    candidates = _cross_encode(cross_encoder_small, query_embedding, paragraphs, SMALL_CROSS_ENCODER_CANDIDATES)
     # calculate large cross-encoder scores to leave just top_k candidates
-    large_scores = cross_encoder_large.predict([(query, c['paragraph'].content) for c in candidates])
-    candidates = [{
-        'paragraph': c['paragraph'],
-        'score': s
-    } for c, s in zip(candidates, large_scores)]
-    candidates.sort(key=lambda c: c['score'], reverse=True)
+    candidates = _cross_encode(cross_encoder_large, query_embedding, candidates, top_k)
 
-    return [c['paragraph'] for c in candidates[:top_k]]
+    return candidates

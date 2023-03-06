@@ -1,5 +1,7 @@
 import os
+import torch
 import faiss
+from typing import List
 
 
 INDEX_PATH = '/tmp/storage/index.bin'
@@ -31,16 +33,16 @@ class Index():
 
         self.index: faiss.IndexIDMap = index
 
-    def update(self, ids, embeddings):
+    def update(self, ids: torch.LongTensor | List[int], embeddings: torch.FloatTensor):
         self.index.add_with_ids(embeddings, ids)
 
         faiss.write_index(self.index, INDEX_PATH)
 
-    def search(self, queries, top_k, *args, **kwargs):
+    def search(self, queries: torch.FloatTensor, top_k: int, *args, **kwargs):
         if queries.ndim == 1:
             queries = queries.unsqueeze(0)
-        D, I = self.index.search(queries, top_k, *args, **kwargs)
-        return I
+        _, ids = self.index.search(queries, top_k, *args, **kwargs)
+        return list(ids)
 
     def clear(self):
         self.index.reset()
