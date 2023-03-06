@@ -5,6 +5,7 @@ import faiss
 INDEX_PATH = '/tmp/storage/index.bin'
 MODEL_DIM = 384
 
+
 class Index():
     instance = None
 
@@ -14,7 +15,7 @@ class Index():
             raise RuntimeError("Index is already initialized")
 
         Index.instance = Index()
-    
+
     @staticmethod
     def get() -> 'Index':
         if Index.instance is None:
@@ -29,7 +30,7 @@ class Index():
             index = faiss.IndexIDMap(index)
 
         self.index: faiss.IndexIDMap = index
-    
+
     def update(self, ids, embeddings):
         self.index.add_with_ids(embeddings, ids)
 
@@ -40,7 +41,7 @@ class Index():
             queries = queries.unsqueeze(0)
         D, I = self.index.search(queries, top_k, *args, **kwargs)
         return I
-        
 
-
-
+    def clear(self):
+        self.index.reset()
+        faiss.write_index(self.index, INDEX_PATH)
