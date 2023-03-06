@@ -30,6 +30,7 @@ async def clear_index():
     with Session() as session:
         session.query(Document).delete()
         session.query(Paragraph).delete()
+        session.commit()
 
 
 @app.get("/search")

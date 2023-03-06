@@ -70,10 +70,10 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
 
 def _cross_encode(
         cross_encoder: CrossEncoder,
-        encoded_query: torch.LongTensor,
+        query: str,
         paragraphs: List[Paragraph],
         top_k: int) -> List[Paragraph]:
-    scores = cross_encoder.predict([(encoded_query, paragraph.content) for paragraph in paragraphs])
+    scores = cross_encoder.predict([(query, paragraph.content) for paragraph in paragraphs])
     candidates = [{
         'paragraph': paragraph,
         'score': score
@@ -90,18 +90,15 @@ def search_documents(query: str, top_k: int) -> List[Paragraph]:
     index = Index.get()
     results = index.search(query_embedding, BI_ENCODER_CANDIDATES)
     results = results[0]
-    results = [id for id in results if id != -1]  # filter out empty results
-
+    results = [int(id) for id in results if id != -1]  # filter out empty results
     # Get the paragraphs from the database
     with Session() as session:
         paragraphs = session.query(Paragraph).filter(Paragraph.id.in_(results)).all()
+        if len(paragraphs) == 0:
+            return []
 
-    if len(paragraphs) == 0:
-        return []
-
-    # calculate small cross-encoder scores to leave just a few candidates
-    candidates = _cross_encode(cross_encoder_small, query_embedding, paragraphs, SMALL_CROSS_ENCODER_CANDIDATES)
-    # calculate large cross-encoder scores to leave just top_k candidates
-    candidates = _cross_encode(cross_encoder_large, query_embedding, candidates, top_k)
-
-    return candidates
+        # calculate small cross-encoder scores to leave just a few candidates
+        candidates = _cross_encode(cross_encoder_small, query, paragraphs, SMALL_CROSS_ENCODER_CANDIDATES)
+        # calculate large cross-encoder scores to leave just top_k candidates
+        candidates = _cross_encode(cross_encoder_large, query, candidates, top_k)
+        return candidates

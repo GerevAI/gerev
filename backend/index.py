@@ -42,7 +42,7 @@ class Index():
         if queries.ndim == 1:
             queries = queries.unsqueeze(0)
         _, ids = self.index.search(queries, top_k, *args, **kwargs)
-        return list(ids)
+        return ids
 
     def clear(self):
         self.index.reset()
