@@ -1,24 +1,23 @@
 import torch
+
 from typing import List
 from sentence_transformers import SentenceTransformer, CrossEncoder
 
-
 import integrations_api
 
-from models import Document, Paragraph
+from schemas import Document, Paragraph
 from db_engine import Session
 from index import Index
+from models import bi_encoder, cross_encoder_small, cross_encoder_large
 
-bi_encoder = SentenceTransformer('multi-qa-MiniLM-L6-cos-v1')
-
-cross_encoder_small = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-2-v2')
-cross_encoder_large = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
-
-SMALL_CROSS_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 10
+SMALL_CROSS_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 50
 LARGE_CROSS_ENCODER_CANDIDATES = 20 if torch.cuda.is_available() else 10
 
 
 def split_into_paragraphs(text, minimum_length=256):
+    """
+    split into paragraphs and batch small paragraphs together into the same paragraph
+    """
     paragraphs = []
     current_paragraph = ''
     for paragraph in text.split('\n\n'):

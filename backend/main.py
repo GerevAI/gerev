@@ -2,8 +2,8 @@ from fastapi import FastAPI, BackgroundTasks
 from search import search_documents, index_documents
 from index import Index
 from db_engine import Session
-from models.document import Document
-from models.paragraph import Paragraph
+from schemas.document import Document
+from schemas.paragraph import Paragraph
 app = FastAPI()
 
 
