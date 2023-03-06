@@ -1,3 +1,1 @@
-from basic_document import BasicDocument
-
-__all__ = ['BasicDocument']
+from integrations_api.basic_document import BasicDocument
