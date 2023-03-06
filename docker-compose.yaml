@@ -4,6 +4,6 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./storage:/storage
+      - ./storage:/var/opt/storage
       - ./backend:/app
     build: .

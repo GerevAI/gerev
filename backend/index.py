@@ -2,7 +2,7 @@ import os
 import faiss
 
 
-INDEX_PATH = '/tmp/index.bin'
+INDEX_PATH = '/tmp/storage/index.bin'
 MODEL_DIM = 384
 
 class Index():
@@ -36,6 +36,8 @@ class Index():
         faiss.write_index(self.index, INDEX_PATH)
 
     def search(self, queries, top_k, *args, **kwargs):
+        if queries.ndim == 1:
+            queries = queries.unsqueeze(0)
         D, I = self.index.search(queries, top_k, *args, **kwargs)
         return I
         
