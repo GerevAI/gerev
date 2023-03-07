@@ -8,9 +8,11 @@ from sentence_transformers import CrossEncoder
 from schemas import Paragraph
 from db_engine import Session
 from indexing.faiss_index import FaissIndex
+from indexing.bm25_index import Bm25Index
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 
-BI_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 50
+BM_25_CANDIDATES = 50 if torch.cuda.is_available() else 20
+BI_ENCODER_CANDIDATES = 50 if torch.cuda.is_available() else 20
 SMALL_CROSS_ENCODER_CANDIDATES = 20 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
@@ -70,6 +72,8 @@ def search_documents(query: str, top_k: int) -> List[dict]:
     results = index.search(query_embedding, BI_ENCODER_CANDIDATES)
     results = results[0]
     results = [int(id) for id in results if id != -1]  # filter out empty results
+
+    results += Bm25Index.get().search(query, BM_25_CANDIDATES)
     # Get the paragraphs from the database
     with Session() as session:
         paragraphs = session.query(Paragraph).filter(Paragraph.id.in_(results)).all()
