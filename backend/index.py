@@ -33,7 +33,7 @@ class Index():
 
         self.index: faiss.IndexIDMap = index
 
-    def update(self, ids: torch.LongTensor | List[int], embeddings: torch.FloatTensor):
+    def update(self, ids: torch.LongTensor, embeddings: torch.FloatTensor):
         self.index.add_with_ids(embeddings, ids)
 
         faiss.write_index(self.index, INDEX_PATH)

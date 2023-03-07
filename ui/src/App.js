@@ -61,19 +61,17 @@ class App extends React.Component {
   }
 
   search = () => {
-    console.log(this.state.query)
-    this.setState({answers: ["test", "test2"]});
-  //   const fetchData = async () => {
-  //     try {
-  //       const response = await axios.post("http://localhost:80/api/v1/search/", {
-  //         "search": "test"
-  //       });
-  //       console.log(response.data);
-  //     } catch (error) {
-  //       console.error(error);
-  //     }
-  //   };
-  }
+    console.log("searching for " + this.state.query);
+    try {
+        const response = axios.get("http://localhost:8000/search?query=" + this.state.query).then(response => {
+          const answers = response.data.map((answer) => answer.content);
+          this.setState({answers: answers});
+        });
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
 }
 
 
