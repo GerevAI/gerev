@@ -1,4 +1,5 @@
 import torch
+import logging
 
 from typing import List
 from sentence_transformers import SentenceTransformer, CrossEncoder
@@ -66,6 +67,7 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
     # Add the embeddings to the index
     index = Index.get()
     index.update(paragraph_ids, embeddings)
+    logging.getLogger().info(f"Indexed {len(paragraphs)} paragraphs")
 
 
 def _cross_encode(

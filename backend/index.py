@@ -34,14 +34,14 @@ class Index():
         self.index: faiss.IndexIDMap = index
 
     def update(self, ids: torch.LongTensor, embeddings: torch.FloatTensor):
-        self.index.add_with_ids(embeddings, ids)
+        self.index.add_with_ids(embeddings.cpu(), ids)
 
         faiss.write_index(self.index, INDEX_PATH)
 
     def search(self, queries: torch.FloatTensor, top_k: int, *args, **kwargs):
         if queries.ndim == 1:
             queries = queries.unsqueeze(0)
-        _, ids = self.index.search(queries, top_k, *args, **kwargs)
+        _, ids = self.index.search(queries.cpu(), top_k, *args, **kwargs)
         return ids
 
     def clear(self):
