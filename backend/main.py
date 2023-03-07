@@ -1,6 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
-from search import search_documents, index_documents
-from index import Index
+from search import search_documents
+from indexing import index_documents
+from indexing.faiss_index import FaissIndex
 from db_engine import Session
 from schemas.document import Document
 from schemas.paragraph import Paragraph
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 @app.on_event("startup")
 async def startup_event():
-    Index.create()
+    FaissIndex.create()
 
 
 @app.post("/example-index")
@@ -42,7 +43,7 @@ async def example_index(background_tasks: BackgroundTasks):
 
 @app.post("/clear-index")
 async def clear_index():
-    Index.get().clear()
+    FaissIndex.get().clear()
     with Session() as session:
         session.query(Document).delete()
         session.query(Paragraph).delete()
@@ -52,7 +53,6 @@ async def clear_index():
 @app.get("/search")
 async def search(query: str, top_k: int = 5):
     return search_documents(query, top_k)
-
 
 
 @app.get("/")

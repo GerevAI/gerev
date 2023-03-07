@@ -8,21 +8,21 @@ INDEX_PATH = '/tmp/storage/index.bin'
 MODEL_DIM = 384
 
 
-class Index():
+class FaissIndex():
     instance = None
 
     @staticmethod
     def create():
-        if Index.instance is not None:
+        if FaissIndex.instance is not None:
             raise RuntimeError("Index is already initialized")
 
-        Index.instance = Index()
+        FaissIndex.instance = FaissIndex()
 
     @staticmethod
-    def get() -> 'Index':
-        if Index.instance is None:
+    def get() -> 'FaissIndex':
+        if FaissIndex.instance is None:
             raise RuntimeError("Index is not initialized")
-        return Index.instance
+        return FaissIndex.instance
 
     def __init__(self) -> None:
         if os.path.exists(INDEX_PATH):
