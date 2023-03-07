@@ -1,3 +1,6 @@
+import datetime
+from enum import Enum
+
 import torch
 import nltk
 
@@ -24,6 +27,12 @@ class TextPart:
     bold: bool
 
 
+class ResultType(Enum):
+    DOCUMENT = "document"
+    COMMENT = "comment"
+    PERSON = "person"
+
+
 @dataclass
 class SearchResult:
     score: float
@@ -31,6 +40,9 @@ class SearchResult:
     author: str
     title: str
     url: str
+    platform: str
+    time: datetime
+    type: ResultType
 
 
 @dataclass
@@ -51,11 +63,14 @@ class Candidate:
             suffix = self.content[self.answer_end:]
             content.append(TextPart(suffix, False))
 
-        return SearchResult(score=self.score,
+        return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
                             author=self.document.author,
                             title=self.document.title,
-                            url=self.document.url)
+                            url=self.document.url,
+                            time=self.document.timestamp,
+                            platform=self.document.integration_name,
+                            type=ResultType.DOCUMENT)
 
 
 def _cross_encode(
