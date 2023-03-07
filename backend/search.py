@@ -5,7 +5,7 @@ from typing import List
 from dataclasses import dataclass
 from sentence_transformers import CrossEncoder
 
-from schemas import Paragraph
+from schemas import Paragraph, Document
 from db_engine import Session
 from indexing.faiss_index import FaissIndex
 from indexing.bm25_index import Bm25Index
@@ -19,31 +19,43 @@ nltk.download('punkt')
 
 
 @dataclass
-class ResultPresentation:
+class TextPart:
     content: str
     bold: bool
+
+
+@dataclass
+class SearchResult:
+    score: float
+    content: List[TextPart]
+    author: str
+    title: str
+    url: str
 
 
 @dataclass
 class Candidate:
     content: str
     score: float = 0.0
+    document: Document = None
     answer_start: int = -1
     answer_end: int = -1
 
-    def to_api(self) -> dict:
-        representation = []
+    def to_search_result(self) -> SearchResult:
         # if self.answer_start > 0:
         #     prefix = self.content[:self.answer_start]
         #     representation.append(ResultPresentation(prefix, False))
-        representation.append(ResultPresentation(self.content[self.answer_start:self.answer_end], True))
+        content = [TextPart(self.content[self.answer_start: self.answer_end], True)]
+
         if self.answer_end < len(self.content) - 1:
             suffix = self.content[self.answer_end:]
-            representation.append(ResultPresentation(suffix, False))
-        return {
-            'score': self.score,
-            'content': representation
-        }
+            content.append(TextPart(suffix, False))
+
+        return SearchResult(score=self.score,
+                            content=content,
+                            author=self.document.author,
+                            title=self.document.title,
+                            url=self.document.url)
 
 
 def _cross_encode(
@@ -86,7 +98,7 @@ def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List
     return candidates
 
 
-def search_documents(query: str, top_k: int) -> List[dict]:
+def search_documents(query: str, top_k: int) -> List[SearchResult]:
     # Encode the query
     query_embedding = bi_encoder.encode(query, convert_to_tensor=True, show_progress_bar=False)
 
@@ -102,11 +114,13 @@ def search_documents(query: str, top_k: int) -> List[dict]:
         paragraphs = session.query(Paragraph).filter(Paragraph.id.in_(results)).all()
         if len(paragraphs) == 0:
             return []
-        candidates = [Candidate(content=paragraph.content, score=0.0) for paragraph in paragraphs]
+        candidates = [Candidate(content=paragraph.content, document=paragraph.document, score=0.0)
+                      for paragraph in paragraphs]
         # calculate small cross-encoder scores to leave just a few candidates
         candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES)
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k)
         candidates = _find_answers_in_candidates(candidates, query)
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True)
-        return [candidate.to_api() for candidate in candidates]
+
+        return [candidate.to_search_result() for candidate in candidates]

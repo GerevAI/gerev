@@ -1,8 +1,8 @@
-from typing import TYPE_CHECKING
 from schemas.document import Document
 from schemas.base import Base
 from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 
 class Paragraph(Base):
     __tablename__ = "paragraph"

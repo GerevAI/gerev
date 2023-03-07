@@ -5,6 +5,7 @@ from schemas.base import Base
 from sqlalchemy import String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+
 class Document(Base):
     __tablename__ = 'document'
 
