@@ -8,7 +8,7 @@ from sentence_transformers import CrossEncoder
 from schemas import Paragraph
 from db_engine import Session
 from indexing.faiss_index import FaissIndex
-from models import bi_encoder, cross_encoder_small, cross_encoder_large
+from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 
 BI_ENCODER_CANDIDATES = 100 if torch.cuda.is_available() else 50
 SMALL_CROSS_ENCODER_CANDIDATES = 20 if torch.cuda.is_available() else 10
@@ -49,25 +49,21 @@ def _cross_encode(
 
 def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List[Candidate]:
     for candidate in candidates:
-        sentences = nltk.sent_tokenize(candidate.content)
-        scores = cross_encoder_small.predict([(query, sent) for sent in sentences], convert_to_tensor=True)
-        best_sentence = torch.argmax(scores).item()
-
+        qa = qa_model(question=query, context=candidate.content)
         candidate.representation = []
-        if best_sentence > 0:
-            prefix = ' '.join(sentences[:best_sentence])
+        if qa['start'] > 0:
+            prefix = candidate.content[:qa['start']]
             candidate.representation.append(ResultPresentation(prefix, False))
-        candidate.representation.append(ResultPresentation(sentences[best_sentence], True))
-        if best_sentence < len(sentences) - 1:
-            suffix = ' '.join(sentences[best_sentence + 1:])
+        candidate.representation.append(ResultPresentation(qa['answer'], True))
+        if qa['end'] < len(candidate.content) - 1:
+            suffix = candidate.content[qa['end']:]
             candidate.representation.append(ResultPresentation(suffix, False))
-
     return candidates
 
 
 def search_documents(query: str, top_k: int) -> List[dict]:
     # Encode the query
-    query_embedding = bi_encoder.encode(query, convert_to_tensor=True)
+    query_embedding = bi_encoder.encode(query, convert_to_tensor=True, show_progress_bar=False)
 
     # Search the index for 100 candidates
     index = FaissIndex.get()

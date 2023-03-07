@@ -8,7 +8,7 @@ from indexing.faiss_index import FaissIndex
 from db_engine import Session
 
 
-def _split_into_paragraphs(text, minimum_length=768):
+def _split_into_paragraphs(text, minimum_length=512):
     """
     split into paragraphs and batch small paragraphs together into the same paragraph
     """
