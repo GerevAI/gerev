@@ -1,4 +1,3 @@
-import logging
 import os
 import pickle
 import nltk
@@ -43,7 +42,7 @@ class Bm25Index:
             id_map = [paragraph.id for paragraph in all_paragraphs]
             self.index = BM25Okapi(corpus)
             self.id_map = id_map
-        self.save()
+        self._save()
 
     def search(self, query: str, top_k: int) -> List[int]:
         tokenized_query = nltk.word_tokenize(query)
@@ -56,7 +55,7 @@ class Bm25Index:
     def clear(self):
         self.index = None
         self.id_map = []
-        self.save()
+        self._save()
 
     def _save(self):
         with open(INDEX_PATH, 'wb') as f:

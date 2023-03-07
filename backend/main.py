@@ -1,4 +1,6 @@
 from fastapi import FastAPI, BackgroundTasks
+
+from data_sources.confluence import ConfluenceDataSource
 from search import search_documents
 from indexing import index_documents
 from indexing.faiss_index import FaissIndex
@@ -20,7 +22,7 @@ app.add_middleware(
 )
 
 # init logger
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -41,6 +43,14 @@ async def example_index(background_tasks: BackgroundTasks):
     document1 = BasicDocument(title="Harry potter and the philosopher's stone", content=text, author="J. K. Rowling",
                               timestamp=datetime.now(), id=1, integration_name="confluence", url=url)
     background_tasks.add_task(index_documents, [document1])
+
+
+@app.post("/index-confluence")
+async def index_confluence(background_tasks: BackgroundTasks):
+    logger.debug("Start indexing example documents")
+    confluence = ConfluenceDataSource()
+    docs = confluence.get_documents()
+    background_tasks.add_task(index_documents, docs)
 
 
 @app.post("/clear-index")

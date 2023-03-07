@@ -25,6 +25,8 @@ def _split_into_paragraphs(text, minimum_length=512):
 
 
 def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Paragraph]:
+    logging.getLogger().info(f"Indexing {len(documents)} documents")
+
     with Session() as session:
         db_documents = []
         for document in documents:

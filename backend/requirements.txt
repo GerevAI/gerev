@@ -7,5 +7,6 @@ uvicorn
 rank_bm25
 atlassian-python-api
 markdown
-BeautifulSoup
+beautifulsoup4
 html2text
+python-dotenv
