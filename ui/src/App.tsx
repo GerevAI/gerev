@@ -13,7 +13,8 @@ export interface TextPart{
 }
 
 export interface SearchResult {
-  text_parts: TextPart[]
+  content: TextPart[]
+  score: number
 }
 
 export interface AppState {
@@ -39,7 +40,7 @@ export default class App extends React.Component <{}, AppState>{
                 Index
           </button>
         </div>
-        <div className='mx-auto my-40'>
+        <div className='mx-auto my-10'>
           <h1 className='text-7xl text-center m-10'>gerev.ai 🧦</h1>
           <div className='flex flex-col container text-3xl p-4 rounded bg-[#ddddddd1] text-white border-2
                          border-slate-700'>
@@ -63,19 +64,22 @@ export default class App extends React.Component <{}, AppState>{
                 /> : <BsSearch></BsSearch>}
               </button>
             </div>
-            {/*Answers for each answer in state */}
+
             <div className='w-full mt-4'>
-              {this.state.results.map((answer, index) => {
+              {this.state.results.map((result, index) => {
                 return (
+                  <div>
+                    <a className="relative text-sm float-right text-black right-2 top-2">{result.score.toFixed(2)}%</a>
                     <p key={index} className='p-2 text-black rounded border-2 border-slate-700 mt-2'>
-                      {answer.text_parts.map((text_part, index) => {
+                      {result.content.map((text_part, index) => {
                         return (
-                          <span key={index} className={text_part.bold ? 'font-bold' : ''}>
+                          <span key={index} className={(text_part.bold ? 'font-bold' : '') + " text-lg"}>
                             {text_part.content}
                           </span>
                         )
                       })}
                     </p>
+                  </div>
                   )
               })}
             </div>
@@ -113,7 +117,7 @@ export default class App extends React.Component <{}, AppState>{
         const response = axios.get<SearchResult[]>("http://localhost:8000/search?query=" + this.state.query).then(
           response => {
             if (response.data.length == 0) {
-              this.setState({results: [{text_parts: [{content: "No results found", bold: false}]}], isLoading: false});
+              response.data = [{content: [{content: "No results found", bold: false}], score: 0}];
             }
             this.setState({results: response.data, isLoading: false});
           }
