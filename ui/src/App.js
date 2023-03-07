@@ -47,7 +47,15 @@ class App extends React.Component {
                 /> : <BsSearch></BsSearch>}
               </button>
             </div>
-
+            {/*Answers for each answer in state */}
+            <div className='w-full mt-4'>
+              {this.state.answers.map((answer, index) => {
+                return (
+                  <div key={index} className='p-2 text-black rounded border-2 border-slate-700 mt-2'>
+                    {answer}
+                  </div>)
+              })}
+            </div>
           </div>
         </div>
       </div>
