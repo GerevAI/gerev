@@ -5,6 +5,7 @@ import integrations_api
 from schemas import Document, Paragraph
 from models import bi_encoder
 from indexing.faiss_index import FaissIndex
+from indexing.bm25_index import Bm25Index
 from db_engine import Session
 
 
@@ -50,14 +51,16 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
         session.commit()
 
         # Create a list of all the paragraphs in the documents
-        paragraphs = [p for d in db_documents for p in d.paragraphs]
-        paragraph_ids = [p.id for p in paragraphs]
-        paragraph_contents = [p.content for p in paragraphs]
+        paragraphs = [paragraph for document in db_documents for paragraph in document.paragraphs]
+        paragraph_ids = [paragraph.id for paragraph in paragraphs]
+        paragraph_contents = [paragraph.content for paragraph in paragraphs]
+
+    Bm25Index.get().update()
 
     # Encode the paragraphs
     embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True)
 
     # Add the embeddings to the index
-    index = FaissIndex.get()
-    index.update(paragraph_ids, embeddings)
+    FaissIndex.get().update(paragraph_ids, embeddings)
+
     logging.getLogger().info(f"Indexed {len(paragraphs)} paragraphs")
