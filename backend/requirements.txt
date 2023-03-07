@@ -5,3 +5,7 @@ sqlalchemy
 fastapi
 uvicorn
 rank_bm25
+atlassian-python-api
+markdown
+BeautifulSoup
+html2text

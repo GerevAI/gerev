@@ -17,3 +17,6 @@ venv
 # vim temporary files
 *~
 .*.sw?
+
+
+.env

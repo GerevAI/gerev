@@ -1,8 +1,9 @@
 from datetime import datetime
 from dataclasses import dataclass
 
+
 @dataclass
-class BasicDocument():
+class BasicDocument:
     id: int
     title: str
     content: str
