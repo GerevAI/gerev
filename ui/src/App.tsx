@@ -1,4 +1,5 @@
-import React from 'react';
+import * as React from "react";
+
 import axios from 'axios';
 import ClipLoader from "react-spinners/ClipLoader";
 import { BsSearch } from "react-icons/bs";
@@ -6,11 +7,26 @@ import { BsSearch } from "react-icons/bs";
 import './App.css';
 
 
-class App extends React.Component {
+export interface TextPart{
+  content: string
+  bold: boolean
+}
+
+export interface SearchResult {
+  text_parts: TextPart[]
+}
+
+export interface AppState {
+  query: string
+  results: SearchResult[]
+  isLoading: boolean
+}
+
+export default class App extends React.Component <{}, AppState>{
 
   constructor() {
-    super();
-    this.state = {query: "Who is Harry Potter?", answers: [], isLoading: false};
+    super({});
+    this.state = {query: "Who is Harry Potter?", results: [], isLoading: false};
   }
 
 
@@ -28,7 +44,7 @@ class App extends React.Component {
           <div className='flex flex-col container text-3xl p-4 rounded bg-[#ddddddd1] text-white border-2
                          border-slate-700'>
             <div className='flex'>
-              {this.state.answers.length > 0 &&
+              {this.state.results.length > 0 &&
               <a onClick={this.clear} className='text-black mr-2 p-2 cursor-pointer  hover:text-white transition'> 
                 X
               </a>
@@ -49,11 +65,18 @@ class App extends React.Component {
             </div>
             {/*Answers for each answer in state */}
             <div className='w-full mt-4'>
-              {this.state.answers.map((answer, index) => {
+              {this.state.results.map((answer, index) => {
                 return (
-                  <div key={index} className='p-2 text-black rounded border-2 border-slate-700 mt-2'>
-                    {answer}
-                  </div>)
+                    <p key={index} className='p-2 text-black rounded border-2 border-slate-700 mt-2'>
+                      {answer.text_parts.map((text_part, index) => {
+                        return (
+                          <span key={index} className={text_part.bold ? 'font-bold' : ''}>
+                            {text_part.content}
+                          </span>
+                        )
+                      })}
+                    </p>
+                  )
               })}
             </div>
           </div>
@@ -70,27 +93,31 @@ class App extends React.Component {
     }
   }
 
-  onKeyDown = (event) => {
+  onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       this.search();
     }
   }
 
-  handleChange = (event) => {
+  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({query: event.target.value});
   }
 
   clear = () => {
-    this.setState({answers: [], query: ""});
+    this.setState({results: [], query: ""});
   }
 
   search = () => {
     this.setState({isLoading: true});
     try {
-        const response = axios.get("http://localhost:8000/search?query=" + this.state.query).then(response => {
-          const answers = response.data.map((answer) => answer.content);
-          this.setState({answers: answers, isLoading: false});
-        });
+        const response = axios.get<SearchResult[]>("http://localhost:8000/search?query=" + this.state.query).then(
+          response => {
+            if (response.data.length == 0) {
+              this.setState({results: [{text_parts: [{content: "No results found", bold: false}]}], isLoading: false});
+            }
+            this.setState({results: response.data, isLoading: false});
+          }
+        );
     } catch (error) {
       console.error(error);
     }
@@ -98,5 +125,3 @@ class App extends React.Component {
   
 }
 
-
-export default App;
