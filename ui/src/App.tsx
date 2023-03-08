@@ -86,13 +86,13 @@ export default class App extends React.Component <{}, AppState>{
           this.state.results.length === 0 &&    
             <div className='fixed flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
-                  <GiSocks className='text-7xl text-center text-[#A78BF6] m-10'></GiSocks>
-                  <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">
+                  <GiSocks className='text-7xl text-center text-[#A78BF6] mt-4 mr-7'></GiSocks>
+                  <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] via-[#B8ADFF_50.45%] to-[#B8ADFF_74.45%]">
                     gerev.ai
                   </span>
                 </h1>
                 <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                          onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} />
+                          onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
 
                 <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
                   transition duration-150 ease-in-out hover:shadow-[#6c6c6c] bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
@@ -116,7 +116,7 @@ export default class App extends React.Component <{}, AppState>{
             </span>
             <div className="flex flex-col items-start w-10/12">
               <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} />
+                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={false} />
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)
               </span>
