@@ -1,14 +1,14 @@
 import * as React from "react";
 
 import axios from 'axios';
-import ClipLoader from "react-spinners/ClipLoader";
-import { BsSearch, BsXLg } from "react-icons/bs";
+
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
 import EnterImage from './assets/images/enter.svg';
 
 
 import './assets/css/App.css';
+import SearchBar from "./components/search-bar";
 
 
 export interface TextPart{
@@ -59,7 +59,7 @@ export default class App extends React.Component <{}, AppState>{
 
   render() {
     return (
-      <div className="bg-[#181212] w-screen h-screen flex">
+      <div className="bg-[#181212] w-[99vw] h-screen flex">
         <div className='absolute'>
           <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
@@ -68,47 +68,30 @@ export default class App extends React.Component <{}, AppState>{
         </div>
         <div className='flex flex-col items-center mx-auto my-40 w-full'>
           <h1 className='text-7xl text-center text-white m-10'>🧦 gerev.ai</h1>
-          <div className="h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-500">
-            <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>
-              
-              <button onClick={this.search} className='mx-2 text-white p-2 rounded
-               hover:text-[#493294] transition duration-500 ease-in-out flex items-center'>
-                {this.state.isLoading ?
-                <ClipLoader
-                  color="#ffffff"
-                  loading={this.state.isLoading}
-                  size={25}
-                  aria-label="Loading Spinner"
-                /> : <BsSearch size={20} className="text-[#D2D2D2] hover:text-[#ebebeb] hover:cursor-pointer"></BsSearch>}
-              </button>
-              <input type="text" className='w-full font-poppins font-medium leading-7 text-lg p-2 rounded text-[#C9C9C9] bg-transparent !outline-none'
-                     placeholder='Search' value={this.state.query} onChange={this.handleChange} onKeyDown={this.onKeyDown} />
-              {this.state.results.length > 0 &&
-                <BsXLg onClick={this.clear} size={23} className='text-[#8E8C8C] mr-4 hover:text-[#c1bebe] hover:cursor-pointer'></BsXLg>
-              }
-            </div>
+            <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
+                       onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} />
 
-          </div>
-            <button className="h-9 w-28 mt-8 p-3 flex items-center justify-center bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
+            <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
+               transition duration-150 ease-in-out hover:shadow-[#6c6c6c] bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
               <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
-              <img src={EnterImage}></img>
+              <img className="ml-2" src={EnterImage}></img>
             </button>
        
-            <div className='w-full mt-4'>
+            <div className='w-7/12 mt-4'>
               {this.state.results.map((result, index) => {
                 return (
                   <div>
-                    <a className="relative text-sm float-right text-black right-2 top-2">{result.score.toFixed(2)}%</a>
-                    <p key={index} className='p-2 text-black rounded border-2 border-slate-700 mt-2'>
-                      <span className="text-[24px] text-black font-semibold flex items-center">
+                    <a className="relative text-sm float-right text-white right-2 top-2">{result.score.toFixed(2)}%</a>
+                    <p key={index} className='p-2 text-[#9D9D9D] mt-2'>
+                      <span className="text-[24px] text-white font-semibold flex items-center">
                         {this.getIconByPlatform(result.platform as Platform)} {result.title}
                       </span>
-                      <span className="text-[15px] text-black font-medium block">
+                      <span className="text-[15px] text-white font-medium block">
                         (by {result.author}, {this.getFormattedTime(result.time)})
-                        </span>
+                      </span>
                       {result.content.map((text_part, index) => {
                         return (
-                          <span key={index} className={(text_part.bold ? 'font-bold' : '') + " text-lg"}>
+                          <span key={index} className={(text_part.bold ? 'font-bold text-white' : '') + " text-md font-poppins font-medium"}>
                             {text_part.content}
                           </span>
                         )
@@ -131,10 +114,8 @@ export default class App extends React.Component <{}, AppState>{
     }
   }
 
-  onKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') {
-      this.search();
-    }
+  handleQueryChange = (query: string) => {
+    this.setState({query: query});
   }
 
   getFormattedTime = (time: string) => {
@@ -154,17 +135,17 @@ export default class App extends React.Component <{}, AppState>{
     }
   }
       
-
-  handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({query: event.target.value});
-  }
-
   clear = () => {
-    this.setState({results: [], query: ""});
+    this.setState({query: "", results: []});
   }
 
   search = () => {
+    if (this.state.query == "") {
+      return;
+    }
+
     this.setState({isLoading: true});
+
     try {
         const response = api.get<SearchResult[]>("/search", {
           params: {
