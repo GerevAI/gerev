@@ -116,7 +116,7 @@ export default class App extends React.Component <{}, AppState>{
 
   startIndex = () => {
     try {
-        const response = axios.post("http://localhost:8000/example-index").then(response => {});
+        const response = axios.post("http://localhost:8000/index-confluence").then(response => {});
     } catch (error) {
       console.error(error);
     }
