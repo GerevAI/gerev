@@ -25,7 +25,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
 
     render() {
         return ( 
-            <div className="h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-500">
+            <div className="h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r from-[#8E59D1] via-[#85a6ec] to-[#b385ec]">
                 <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>
                   
                   <button onClick={this.props.onSearch} className='mx-2 text-white p-2 rounded

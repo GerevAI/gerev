@@ -7,6 +7,7 @@ import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 import EnterImage from './assets/images/enter.svg';
 import BlueFolder from './assets/images/blue-folder.svg';
 import Yuval from './assets/images/yuval.png';
+import { GiSocks } from "react-icons/gi";
 
 
 
@@ -48,6 +49,7 @@ export interface AppState {
   results: SearchResult[]
   searchDuration: number
   isLoading: boolean
+  isNoResults: boolean
 }
 
 const api = axios.create({
@@ -60,22 +62,10 @@ export default class App extends React.Component <{}, AppState>{
     super({});
     this.state = {
       isLoading: false,
-      query: "Ask any workplace question",
-      results: [{content: [{content: "Should end with a", bold: false},
-                {content: " Design Review", bold: true},
-                {content: " Think of the Plan as a recommendation.", bold: false},], 
-                score: 0.5, author: "Yuval Steuer", title: "Infrastructure Rework",
-                 url: "https://www.gerev.ai", time: "2021-05-01", platform: "confluence", type: ResultType.Docment,
-                location: "Dev Group"},
+      isNoResults: false,
+      query: "",
+      results: [],
 
-                {content: [{content: "This", bold: false},
-                {content: " Design Review", bold: true},
-                {content: " Makes no sense.", bold: false},
-                {content: " We should fire this guy ASAP", bold: false},], 
-                score: 0.5, author: "Yuval Steuer", title: "Infrastructure Rework",
-                  url: "https://www.gerev.ai", time: "2021-05-02", platform: "confluence", type: ResultType.Docment,
-                location: "Dev Group"},
-      ],
       searchDuration: 0
     }
   }
@@ -83,19 +73,24 @@ export default class App extends React.Component <{}, AppState>{
 
   render() {
     return (
-      <div className="bg-[#181212] w-[99vw] h-screen">
-        {/* <div className='absolute'>
+      <div className="bg-[#221f2e] w-[99vw] h-screen">
+        <div className='absolute'>
           <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
                 Index
           </button>
-        </div> */}
+        </div>
 
         {/* front search page*/}
         {
           this.state.results.length === 0 &&    
             <div className='fixed flex flex-col items-center top-40 mx-auto w-full'>
-              <h1 className='text-7xl text-center text-white m-10'>🧦 gerev.ai</h1>
+                <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
+                  <GiSocks className='text-7xl text-center text-[#A78BF6] m-10'></GiSocks>
+                  <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">
+                    gerev.ai
+                  </span>
+                </h1>
                 <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                           onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} />
 
@@ -104,6 +99,10 @@ export default class App extends React.Component <{}, AppState>{
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
                   <img className="ml-2" src={EnterImage}></img>
                 </button>
+                { this.state.isNoResults && 
+                  <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
+                  </span>
+                }
             </div>  
         } 
 
@@ -111,7 +110,10 @@ export default class App extends React.Component <{}, AppState>{
         {
           this.state.results.length > 0 && 
           <div className="fixed flex flex-row top-20 left-5 w-full">
-            <span className='text-3xl text-center text-white m-10 mt-0'>🧦 gerev.ai</span>
+            <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
+              <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
+              <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
+            </span>
             <div className="flex flex-col items-start w-10/12">
               <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} />
@@ -128,7 +130,7 @@ export default class App extends React.Component <{}, AppState>{
                             {this.getIconByPlatform(result.platform as Platform)}
                           </span>
                           <p key={index} className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                            <span className="text-[24px] text-[#EDBB46] text-xl font-poppins font-medium ">{result.title}</span>
+                            <span className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium ">{result.title}</span>
                             <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                               <img className="inline-block mr-2" src={BlueFolder}></img>
                               <span className="ml-0 text-[#D5D5D5]">{result.location} ·&thinsp;</span>
@@ -217,14 +219,11 @@ export default class App extends React.Component <{}, AppState>{
           }
         }).then(
           response => {
-            if (response.data.length == 0) {
-              response.data = [{content: [{content: "No results found", bold: false}], score: 0, author: "", 
-              title: "", url: "", platform: "", type: ResultType.Docment, time: "", location: ""}];
-            }
-
             let end = new Date().getTime();
             let duartionSeconds =  (end - start) / 1000;
-            this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds});
+            this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds,
+              isNoResults: response.data.length == 0
+            });
           }
         );
     } catch (error) {
