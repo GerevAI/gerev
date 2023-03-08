@@ -2,10 +2,13 @@ import * as React from "react";
 
 import axios from 'axios';
 import ClipLoader from "react-spinners/ClipLoader";
-import { BsSearch } from "react-icons/bs";
+import { BsSearch, BsXLg } from "react-icons/bs";
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
-import './App.css';
+import EnterImage from './assets/images/enter.svg';
+
+
+import './assets/css/App.css';
 
 
 export interface TextPart{
@@ -46,44 +49,47 @@ export default class App extends React.Component <{}, AppState>{
 
   constructor() {
     super({});
-    this.state = {query: "Who is the CEO of Gitlab?", results: [], isLoading: false};
+    this.state = {query: "Ask any workplace question", results: [], isLoading: false};
   }
 
 
   render() {
     return (
-      <div className="bg-[#a5a5a5d1] w-screen h-screen flex">
+      <div className="bg-[#181212] w-screen h-screen flex">
         <div className='absolute'>
           <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
                 Index
           </button>
         </div>
-        <div className='mx-auto my-10'>
-          <h1 className='text-7xl text-center m-10'>gerev.ai 🧦</h1>
-          <div className='flex flex-col container text-3xl p-4 rounded bg-[#ddddddd1] text-white border-2
-                         border-slate-700'>
-            <div className='flex'>
-              {this.state.results.length > 0 &&
-              <a onClick={this.clear} className='text-black mr-2 p-2 cursor-pointer  hover:text-white transition'> 
-                X
-              </a>
-              }
-              <input type="text" className='w-full p-2 rounded bg-[#ddddddd1] text-black border-2 border-slate-700'
-                     placeholder='Search' value={this.state.query} onChange={this.handleChange} onKeyDown={this.onKeyDown} />
-              <button onClick={this.search} className='bg-[#060117] ml-3 text-white p-2 rounded border-2 border-slate-700
-              hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out flex items-center'>
-                <span className='text-3xl mr-2'>Search</span>
+        <div className='flex flex-col items-center mx-auto my-40 w-full'>
+          <h1 className='text-7xl text-center text-white m-10'>🧦 gerev.ai</h1>
+          <div className="h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r from-yellow-400 via-red-500 to-yellow-500">
+            <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>
+              
+              <button onClick={this.search} className='mx-2 text-white p-2 rounded
+               hover:text-[#493294] transition duration-500 ease-in-out flex items-center'>
                 {this.state.isLoading ?
                 <ClipLoader
                   color="#ffffff"
                   loading={this.state.isLoading}
-                  size={30}
+                  size={25}
                   aria-label="Loading Spinner"
-                /> : <BsSearch></BsSearch>}
+                /> : <BsSearch size={20} className="text-[#D2D2D2] hover:text-[#ebebeb] hover:cursor-pointer"></BsSearch>}
               </button>
+              <input type="text" className='w-full font-poppins font-medium leading-7 text-lg p-2 rounded text-[#C9C9C9] bg-transparent !outline-none'
+                     placeholder='Search' value={this.state.query} onChange={this.handleChange} onKeyDown={this.onKeyDown} />
+              {this.state.results.length > 0 &&
+                <BsXLg onClick={this.clear} size={23} className='text-[#8E8C8C] mr-4 hover:text-[#c1bebe] hover:cursor-pointer'></BsXLg>
+              }
             </div>
 
+          </div>
+            <button className="h-9 w-28 mt-8 p-3 flex items-center justify-center bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
+              <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
+              <img src={EnterImage}></img>
+            </button>
+       
             <div className='w-full mt-4'>
               {this.state.results.map((result, index) => {
                 return (
@@ -108,7 +114,6 @@ export default class App extends React.Component <{}, AppState>{
                   )
               })}
             </div>
-          </div>
         </div>
       </div>
     );  

@@ -1,0 +1,7 @@
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 500;
+    font-style: normal;
+    font-display: fallback;
+    src: url('../fonts/Poppins-Medium.ttf') format('truetype');
+}
