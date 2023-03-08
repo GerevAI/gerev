@@ -45,6 +45,10 @@ export interface AppState {
   isLoading: boolean
 }
 
+const api = axios.create({
+  baseURL: `http://${window.location.hostname}:8000`,
+})
+
 export default class App extends React.Component <{}, AppState>{
 
   constructor() {
@@ -121,7 +125,7 @@ export default class App extends React.Component <{}, AppState>{
 
   startIndex = () => {
     try {
-        const response = axios.post("http://localhost:8000/index-confluence").then(response => {});
+        const response = api.post(`/index-confluence`).then(response => {});
     } catch (error) {
       console.error(error);
     }
@@ -162,7 +166,11 @@ export default class App extends React.Component <{}, AppState>{
   search = () => {
     this.setState({isLoading: true});
     try {
-        const response = axios.get<SearchResult[]>("http://localhost:8000/search?query=" + this.state.query).then(
+        const response = api.get<SearchResult[]>("/search", {
+          params: {
+            query: this.state.query
+          }
+        }).then(
           response => {
             if (response.data.length == 0) {
               response.data = [{content: [{content: "No results found", bold: false}], score: 0, author: "", 

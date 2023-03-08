@@ -24,6 +24,13 @@ def _split_into_paragraphs(text, minimum_length=512):
     return paragraphs
 
 
+def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
+    result = paragraph.content
+    if paragraph.document.title is not None:
+        result += '; ' + paragraph.document.title
+    return result
+
+
 def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Paragraph]:
     logging.getLogger().info(f"Indexing {len(documents)} documents")
 
@@ -55,7 +62,7 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
         # Create a list of all the paragraphs in the documents
         paragraphs = [paragraph for document in db_documents for paragraph in document.paragraphs]
         paragraph_ids = [paragraph.id for paragraph in paragraphs]
-        paragraph_contents = [paragraph.content for paragraph in paragraphs]
+        paragraph_contents = [_add_metadata_for_indexing(paragraph) for paragraph in paragraphs]
 
     Bm25Index.get().update()
 

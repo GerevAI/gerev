@@ -11,6 +11,17 @@ from schemas import Paragraph
 INDEX_PATH = '/tmp/storage/bm25_index.bin'
 
 
+def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
+    result = paragraph.content
+    if paragraph.document.title is not None:
+        result += ' ' + paragraph.document.title
+    if paragraph.document.author is not None:
+        result += ' ' + paragraph.document.author
+    if paragraph.document.integration_name is not None:
+        result += ' ' + paragraph.document.integration_name
+    return result
+
+
 class Bm25Index:
     instance = None
 
@@ -38,13 +49,15 @@ class Bm25Index:
     def update(self):
         with Session() as session:
             all_paragraphs = session.query(Paragraph).all()
-            corpus = [nltk.word_tokenize(paragraph.content) for paragraph in all_paragraphs]
+            corpus = [nltk.word_tokenize(_add_metadata_for_indexing(paragraph)) for paragraph in all_paragraphs]
             id_map = [paragraph.id for paragraph in all_paragraphs]
             self.index = BM25Okapi(corpus)
             self.id_map = id_map
         self._save()
 
     def search(self, query: str, top_k: int) -> List[int]:
+        if self.index is None:
+            return []
         tokenized_query = nltk.word_tokenize(query)
         bm25_scores = self.index.get_scores(tokenized_query)
         top_n = np.argpartition(bm25_scores, -top_k)[-top_k:]
