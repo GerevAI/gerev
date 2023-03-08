@@ -78,11 +78,19 @@ def _cross_encode(
         query: str,
         candidates: List[Candidate],
         top_k: int,
-        use_answer: bool = False) -> List[Candidate]:
+        use_answer: bool = False,
+        use_titles: bool = False) -> List[Candidate]:
     if use_answer:
         contents = [candidate.content[candidate.answer_start:candidate.answer_end] for candidate in candidates]
     else:
         contents = [candidate.content for candidate in candidates]
+    
+    if use_titles:
+        contents = [
+            candidate.document.title + ' [SEP] ' + content
+            for content, candidate in zip(contents, candidates)
+        ]
+
     scores = cross_encoder.predict([(query, content) for content in contents])
     for candidate, score in zip(candidates, scores):
         candidate.score = score.item()
@@ -136,6 +144,6 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k)
         candidates = _find_answers_in_candidates(candidates, query)
-        candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True)
+        candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True, use_titles=True)
 
         return [candidate.to_search_result() for candidate in candidates]
