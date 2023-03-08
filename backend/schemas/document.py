@@ -15,6 +15,7 @@ class Document(Base):
     title: Mapped[Optional[str]] = mapped_column(String(128))
     author: Mapped[Optional[str]] = mapped_column(String(64))
     url: Mapped[Optional[str]] = mapped_column(String(512))
+    location: Mapped[Optional[str]] = mapped_column(String(512))
     timestamp: Mapped[Optional[DateTime]] = mapped_column(DateTime())
     paragraphs: Mapped[List['Paragraph']] = relationship(
         back_populates='document',

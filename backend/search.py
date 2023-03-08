@@ -40,6 +40,7 @@ class SearchResult:
     author: str
     title: str
     url: str
+    location: str
     platform: str
     time: datetime
     type: ResultType
@@ -69,6 +70,7 @@ class Candidate:
                             title=self.document.title,
                             url=self.document.url,
                             time=self.document.timestamp,
+                            location=self.document.location,
                             platform=self.document.integration_name,
                             type=ResultType.DOCUMENT)
 

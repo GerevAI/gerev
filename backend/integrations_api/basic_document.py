@@ -9,6 +9,7 @@ class BasicDocument:
     content: str
     timestamp: datetime
     author: str
+    location: str
     url: str
 
     # todo: this is temporary. needs to be automatically infered by the generating integration.

@@ -45,6 +45,7 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
                 integration_id=document.id,
                 title=document.title,
                 author=document.author,
+                location=document.location,
                 url=document.url,
                 timestamp=document.timestamp,
                 paragraphs=[
