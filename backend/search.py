@@ -87,7 +87,7 @@ def _cross_encode(
     
     if use_titles:
         contents = [
-            candidate.document.title + ' [SEP] ' + content
+            content + ' [SEP] ' + candidate.document.title
             for content, candidate in zip(contents, candidates)
         ]
 
@@ -139,10 +139,11 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
             return []
         candidates = [Candidate(content=paragraph.content, document=paragraph.document, score=0.0)
                       for paragraph in paragraphs]
+        # print candidate titles
         # calculate small cross-encoder scores to leave just a few candidates
-        candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES)
+        candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
-        candidates = _cross_encode(cross_encoder_large, query, candidates, top_k)
+        candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_titles=True)
         candidates = _find_answers_in_candidates(candidates, query)
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True, use_titles=True)
 
