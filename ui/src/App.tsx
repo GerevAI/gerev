@@ -65,7 +65,6 @@ export default class App extends React.Component <{}, AppState>{
       isNoResults: false,
       query: "",
       results: [],
-
       searchDuration: 0
     }
   }
@@ -73,7 +72,7 @@ export default class App extends React.Component <{}, AppState>{
 
   render() {
     return (
-      <div className="bg-[#221f2e] w-[99vw] h-screen">
+      <div className="w-[98vw]">
         <div className='absolute'>
           <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
@@ -84,7 +83,7 @@ export default class App extends React.Component <{}, AppState>{
         {/* front search page*/}
         {
           this.state.results.length === 0 &&    
-            <div className='fixed flex flex-col items-center top-40 mx-auto w-full'>
+            <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className='text-7xl text-center text-[#A78BF6] mt-4 mr-7'></GiSocks>
                   <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] via-[#B8ADFF_50.45%] to-[#B8ADFF_74.45%]">
@@ -109,7 +108,7 @@ export default class App extends React.Component <{}, AppState>{
         {/* results page */}
         {
           this.state.results.length > 0 && 
-          <div className="fixed flex flex-row top-20 left-5 w-full">
+          <div className="relative flex flex-row top-20 left-5 w-full">
             <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
@@ -123,14 +122,17 @@ export default class App extends React.Component <{}, AppState>{
               <div className='w-6/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
-                      <div className="mb-4 pt-2">
+                      <div key={index} className="mb-4 pt-2">
                         <a className="relative text-sm float-right text-white right-2 top-2">{result.score.toFixed(2)}%</a>
                         <div className="flex flex-row items-start">
                           <span>
                             {this.getIconByPlatform(result.platform as Platform)}
                           </span>
                           <p key={index} className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                            <span className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium ">{result.title}</span>
+                            <span className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" 
+                                  onClick={() => window.open(result.url, "_blank")}>
+                              {result.title}
+                            </span>
                             <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                               <img className="inline-block mr-2" src={BlueFolder}></img>
                               <span className="ml-0 text-[#D5D5D5]">{result.location} ·&thinsp;</span>
