@@ -76,11 +76,7 @@ class SlackDataSource(DataSource):
                                          integration_name='slack', location=conv.name,
                                          url=url, type=ResultType.MESSAGE)
 
-        if last_msg is not None:
-            documents.append(last_msg)
+            if last_msg is not None:
+                documents.append(last_msg)
 
         return documents
-
-
-if __name__ == '__main__':
-    print(SlackDataSource().get_documents())
