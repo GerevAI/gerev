@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 # import base document and then register all classes
 from schemas.base import Base
 
-from sqlalchemy.orm import declarative_base
 if not os.path.exists('/tmp/storage/'):
     os.mkdir('/tmp/storage/')
 engine = create_engine('sqlite:////tmp/storage/db.sqlite3')

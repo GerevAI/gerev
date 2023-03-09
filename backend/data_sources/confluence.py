@@ -39,6 +39,7 @@ class ConfluenceDataSource(DataSource):
             md_text = markdown.markdown(text)
             soup = BeautifulSoup(md_text, features='html.parser')
             plain_text = soup.get_text(separator="\n")
+            url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
             parsed_docs.append(BasicDocument(title=fetched_raw_page['title'],
                                              content=plain_text,
                                              author=author,
@@ -46,7 +47,7 @@ class ConfluenceDataSource(DataSource):
                                              id=doc_id,
                                              integration_name='confluence',
                                              location=raw_page['space_name'],
-                                             url="doc_url"))
+                                             url=url))
 
         logging.info(f'Parsed {len(parsed_docs)} documents')
         return parsed_docs

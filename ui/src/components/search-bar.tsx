@@ -73,6 +73,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                         </div>
                       )
                     })}
+                    <span className="absolute right-0 ml-4 text-white text-xs">Use arrows ↑ ↓ to navigate</span>
                   </div>
                  }
             </div>
@@ -80,19 +81,18 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
     }
 
     search = () => {
-      this.setState({ hideSuggestions: true });
+      this.setState({ hideSuggestions: true, activeSuggestion: 0 });
       this.props.onSearch();
     }
 
     onKeyDown = async (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === 'Enter') {
-        console.log(this.state.suggestions[this.state.activeSuggestion]);
         if (this.state.activeSuggestion > 0) {
           await this.props.onQueryChange(this.props.query + this.state.suggestions[this.state.activeSuggestion]);
         }
         this.search()
       } else if (event.key === 'Escape') {
-        this.setState({ hideSuggestions: true });
+        this.setState({ hideSuggestions: true, activeSuggestion: 0 });
       } else if (event.key === 'ArrowDown') {
         event.preventDefault();
         if (this.state.activeSuggestion < this.state.suggestions.length - 1) {
