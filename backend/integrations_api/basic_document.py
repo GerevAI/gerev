@@ -1,10 +1,19 @@
 from datetime import datetime
 from dataclasses import dataclass
+from enum import Enum
+
+
+class ResultType(Enum):
+    DOCUMENT = "document"
+    MESSAGE = "message"
+    COMMENT = "comment"
+    PERSON = "person"
 
 
 @dataclass
 class BasicDocument:
     id: int
+    type: ResultType
     title: str
     content: str
     timestamp: datetime

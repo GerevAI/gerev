@@ -12,6 +12,7 @@ class Document(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     integration_name: Mapped[str] = mapped_column(String(32))
     integration_id: Mapped[int]
+    type: Mapped[Optional[str]] = mapped_column(String(32))
     title: Mapped[Optional[str]] = mapped_column(String(128))
     author: Mapped[Optional[str]] = mapped_column(String(64))
     url: Mapped[Optional[str]] = mapped_column(String(512))

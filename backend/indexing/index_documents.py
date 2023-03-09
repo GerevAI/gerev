@@ -1,7 +1,7 @@
 import logging
 from typing import List
 
-import integrations_api
+from integrations_api import BasicDocument
 from schemas import Document, Paragraph
 from models import bi_encoder
 from indexing.faiss_index import FaissIndex
@@ -21,6 +21,10 @@ def _split_into_paragraphs(text, minimum_length=512):
         if len(current_paragraph) > minimum_length:
             paragraphs.append(current_paragraph)
             current_paragraph = ''
+
+    if len(current_paragraph) > 0:
+        paragraphs.append(current_paragraph)
+
     return paragraphs
 
 
@@ -31,7 +35,7 @@ def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
     return result
 
 
-def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Paragraph]:
+def index_documents(documents: List[BasicDocument]) -> List[Paragraph]:
     logging.getLogger().info(f"Indexing {len(documents)} documents")
 
     with Session() as session:
@@ -43,6 +47,7 @@ def index_documents(documents: List[integrations_api.BasicDocument]) -> List[Par
             db_document = Document(
                 integration_name=document.integration_name,
                 integration_id=document.id,
+                type=document.type.value,
                 title=document.title,
                 author=document.author,
                 location=document.location,

@@ -8,6 +8,7 @@ from typing import List
 from dataclasses import dataclass
 from sentence_transformers import CrossEncoder
 
+from integrations_api.basic_document import ResultType
 from schemas import Paragraph, Document
 from db_engine import Session
 from indexing.faiss_index import FaissIndex
@@ -25,12 +26,6 @@ nltk.download('punkt')
 class TextPart:
     content: str
     bold: bool
-
-
-class ResultType(Enum):
-    DOCUMENT = "document"
-    COMMENT = "comment"
-    PERSON = "person"
 
 
 @dataclass
@@ -72,7 +67,7 @@ class Candidate:
                             time=self.document.timestamp,
                             location=self.document.location,
                             platform=self.document.integration_name,
-                            type=ResultType.DOCUMENT)
+                            type=self.document.type)
 
 
 def _cross_encode(

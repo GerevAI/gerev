@@ -8,6 +8,8 @@ import EnterImage from './assets/images/enter.svg';
 import BlueFolder from './assets/images/blue-folder.svg';
 import Yuval from './assets/images/yuval.png';
 import { GiSocks } from "react-icons/gi";
+import Slack from './assets/images/slack.svg';
+import Confluence from './assets/images/confluence.svg';
 
 
 
@@ -191,12 +193,12 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   getIconByPlatform = (platform: Platform) => {
-    let classes = "inline mt-2 mr-2 text-4xl";
+    let classes = "inline mt-2 mr-2 h-10";
     switch (platform) {
       case Platform.Confluence:
-        return <FaConfluence className={classes + " fill-blue-500"}></FaConfluence>
+        return <img className={classes} src={Confluence}></img>
       case Platform.Slack:
-        return <FaSlack className={classes}></FaSlack>
+        return <img className={classes} src={Slack}></img>
       case Platform.Drive:
         return <FaGoogleDrive className={classes}></FaGoogleDrive>
     }

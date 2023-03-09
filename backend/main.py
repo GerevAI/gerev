@@ -1,6 +1,7 @@
 from fastapi import FastAPI, BackgroundTasks
 
 from data_sources.confluence import ConfluenceDataSource
+from data_sources.slack import SlackDataSource
 from search import search_documents
 from indexing import index_documents
 from indexing.faiss_index import FaissIndex
@@ -46,9 +47,17 @@ async def example_index(background_tasks: BackgroundTasks):
 
 @app.post("/index-confluence")
 async def index_confluence(background_tasks: BackgroundTasks):
-    logger.debug("Start indexing example documents")
+    logger.debug("Start indexing confluence documents")
     confluence = ConfluenceDataSource()
     docs = confluence.get_documents()
+    background_tasks.add_task(index_documents, docs)
+
+
+@app.post("/index-slack")
+async def index_slack(background_tasks: BackgroundTasks):
+    logger.debug("Start indexing slack documents")
+    slack = SlackDataSource()
+    docs = slack.get_documents()
     background_tasks.add_task(index_documents, docs)
 
 

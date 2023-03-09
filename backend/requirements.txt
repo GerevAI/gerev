@@ -10,3 +10,4 @@ markdown
 beautifulsoup4
 html2text
 python-dotenv
+slack_sdk

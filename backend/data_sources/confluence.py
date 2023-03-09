@@ -10,7 +10,7 @@ from atlassian import Confluence
 from bs4 import BeautifulSoup
 
 from data_sources.data_source import DataSource
-from integrations_api.basic_document import BasicDocument
+from integrations_api.basic_document import BasicDocument, ResultType
 
 
 class ConfluenceDataSource(DataSource):
@@ -47,7 +47,8 @@ class ConfluenceDataSource(DataSource):
                                              id=doc_id,
                                              integration_name='confluence',
                                              location=raw_page['space_name'],
-                                             url=url))
+                                             url=url,
+                                             type=ResultType.DOCUMENT))
 
         logging.info(f'Parsed {len(parsed_docs)} documents')
         return parsed_docs
