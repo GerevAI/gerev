@@ -2,53 +2,19 @@ import * as React from "react";
 
 import axios from 'axios';
 
-import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
-
 import EnterImage from './assets/images/enter.svg';
-import BlueFolder from './assets/images/blue-folder.svg';
-import Yuval from './assets/images/yuval.png';
 import { GiSocks } from "react-icons/gi";
-import Slack from './assets/images/slack.svg';
-import Confluence from './assets/images/confluence.svg';
 
 
 
 import './assets/css/App.css';
 import SearchBar from "./components/search-bar";
+import { SearchResult, SearchResultProps } from "./components/search-result";
 
-
-export interface TextPart{
-  content: string
-  bold: boolean
-}
-
-export enum ResultType {
-  Docment,
-  Comment,
-  Person
-}
-
-export enum Platform {
-  Confluence = "confluence",
-  Slack = "slack",
-  Drive = "drive"
-}
-
-export interface SearchResult {
-  title: string 
-  author: string
-  time: string
-  content: TextPart[]
-  score: number
-  location: string
-  platform: string 
-  type: ResultType
-  url: string
-}
 
 export interface AppState {
   query: string
-  results: SearchResult[]
+  results: SearchResultProps[]
   searchDuration: number
   isLoading: boolean
   isNoResults: boolean
@@ -124,43 +90,7 @@ export default class App extends React.Component <{}, AppState>{
               <div className='w-6/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
-                      <div key={index} className="mb-4 pt-2">
-                        <a className="relative text-sm float-right text-white right-2 top-2">{result.score.toFixed(2)}%</a>
-                        <div className="flex flex-row items-start">
-                          <span>
-                            {this.getIconByPlatform(result.platform as Platform)}
-                          </span>
-                          <p key={index} className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                            <span className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" 
-                                  onClick={() => window.open(result.url, "_blank")}>
-                              {result.title}
-                            </span>
-                            <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
-                              <img className="inline-block mr-2" src={BlueFolder}></img>
-                              <span className="ml-0 text-[#D5D5D5]">{result.location} ·&thinsp;</span>
-                              <span className="flex flex-row">
-                                <img className="inline-block ml-2 mr-2 h-4" src={Yuval}></img>
-                                <span>{result.author} ·</span> 
-                              </span>
-                              <span>
-                                &thinsp;Updated {this.getFormattedTime(result.time)}&thinsp; |&thinsp;
-                              </span>
-                              <span className="flex flex-row items-center">
-                                <FaConfluence className="inline ml-1 mr-2  fill-[#A3A3A3]"></FaConfluence>
-                                <span className="text-[#A3A3A3]">Confluence</span>
-                              </span>
-                            </span>
-                            {result.content.map((text_part, index) => {
-                              return (
-                                <span key={index} className={(text_part.bold ? 'font-bold text-white' : '') + 
-                                    " text-md font-poppins font-medium"}>
-                                  {text_part.content}
-                                </span>
-                              )
-                            })}
-                          </p>
-                        </div>
-                      </div>
+                      <SearchResult key={index} {...result} />
                       )
                     }
                   )}
@@ -186,24 +116,7 @@ export default class App extends React.Component <{}, AppState>{
   handleQueryChange = (query: string) => {
     this.setState({query: query});
   }
-
-  getFormattedTime = (time: string) => {
-    let date = new Date(time);
-    return date.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
-  }
-
-  getIconByPlatform = (platform: Platform) => {
-    let classes = "inline mt-2 mr-2 h-10";
-    switch (platform) {
-      case Platform.Confluence:
-        return <img className={classes} src={Confluence}></img>
-      case Platform.Slack:
-        return <img className={classes} src={Slack}></img>
-      case Platform.Drive:
-        return <FaGoogleDrive className={classes}></FaGoogleDrive>
-    }
-  }
-      
+  
   clear = () => {
     this.setState({query: "", results: []});
   }
@@ -217,7 +130,7 @@ export default class App extends React.Component <{}, AppState>{
     let start = new Date().getTime();
 
     try {
-        const response = api.get<SearchResult[]>("/search", {
+        const response = api.get<SearchResultProps[]>("/search", {
           params: {
             query: this.state.query
           }

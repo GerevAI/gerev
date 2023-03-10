@@ -60,6 +60,7 @@ class Bm25Index:
             return []
         tokenized_query = nltk.word_tokenize(query)
         bm25_scores = self.index.get_scores(tokenized_query)
+        top_k = min(top_k, len(bm25_scores))
         top_n = np.argpartition(bm25_scores, -top_k)[-top_k:]
         bm25_hits = [{'id': self.id_map[idx], 'score': bm25_scores[idx]} for idx in top_n]
         bm25_hits = sorted(bm25_hits, key=lambda x: x['score'], reverse=True)
