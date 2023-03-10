@@ -79,7 +79,7 @@ class Candidate:
             image_bytes = BytesIO(response.content)
             data_uri = f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
 
-        return SearchResult(score=int(math.floor((self.score + 12) / 24 * 100)),
+        return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
                             author=self.document.author,
                             author_image_url=self.document.author_image_url,
