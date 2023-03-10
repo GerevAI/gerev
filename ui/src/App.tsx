@@ -5,12 +5,10 @@ import axios from 'axios';
 import EnterImage from './assets/images/enter.svg';
 import { GiSocks } from "react-icons/gi";
 
-
-
 import './assets/css/App.css';
 import SearchBar from "./components/search-bar";
 import { SearchResult, SearchResultProps } from "./components/search-result";
-
+import { addToSearchHistory } from "./autocomplete";
 
 export interface AppState {
   query: string
@@ -141,6 +139,7 @@ export default class App extends React.Component <{}, AppState>{
             this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds,
               isNoResults: response.data.length == 0
             });
+            addToSearchHistory(this.state.query);
           }
         );
     } catch (error) {

@@ -2,6 +2,7 @@ import * as React from "react";
 
 import ClipLoader from "react-spinners/ClipLoader";
 import { BsSearch, BsXLg } from "react-icons/bs";
+import { getSearchHistorySuggestions } from "../autocomplete";
 
 export interface SearchBarState {
   suggestions: string[]
@@ -26,14 +27,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
         this.state = {
           activeSuggestion: 0,
           hideSuggestions: false,
-          suggestions: [
-            '',
-            'o',
-            'o there',
-            ' yeah!',
-            ' no...',
-            'lllllloooo???'
-          ]
+          suggestions: []
         }
     }
 
@@ -113,6 +107,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
     handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       this.props.onQueryChange(event.target.value);
       this.setState({ hideSuggestions: false });
+      this.setState({ suggestions: getSearchHistorySuggestions(event.target.value) })
     }
 
 }
