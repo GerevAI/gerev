@@ -17,9 +17,9 @@ from indexing.faiss_index import FaissIndex
 from indexing.bm25_index import Bm25Index
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 
-BM_25_CANDIDATES = 40 if torch.cuda.is_available() else 20
-BI_ENCODER_CANDIDATES = 40 if torch.cuda.is_available() else 20
-SMALL_CROSS_ENCODER_CANDIDATES = 15 if torch.cuda.is_available() else 10
+BM_25_CANDIDATES = 100 if torch.cuda.is_available() else 20
+BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
+SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
 
@@ -101,7 +101,7 @@ def _cross_encode(
 
 
 def _assign_answer_sentence(candidate: Candidate, answer: str):
-    paragraph_sentences = re.split(r'[^a-zA-Z0-9\s\-\@\,\']+', candidate.content)
+    paragraph_sentences = re.split(r'[^a-zA-Z0-9\s\-\@\,\'\(\)\$]+', candidate.content)
     sentence = None
     for i, paragraph_sentence in enumerate(paragraph_sentences):
         if answer in paragraph_sentence:
@@ -144,7 +144,7 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
         # print candidate titles
         # calculate small cross-encoder scores to leave just a few candidates
-        candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES, use_titles=True)
+        candidates = _cross_encode(cross_encoder_small, query, candidates, BI_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_titles=True)
         candidates = _find_answers_in_candidates(candidates, query)
