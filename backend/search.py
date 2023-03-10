@@ -89,7 +89,7 @@ def _cross_encode(
     
     if use_titles:
         contents = [
-            candidate.document.title + ' [SEP] ' + content
+            content + ' [SEP] ' + candidate.document.title
             for content, candidate in zip(contents, candidates)
         ]
 
@@ -116,8 +116,9 @@ def _assign_answer_sentence(candidate: Candidate, answer: str):
 
 
 def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List[Candidate]:
-    for candidate in candidates:
-        answer = qa_model(question=query, context=candidate.content)
+    contexts = [candidate.content for candidate in candidates]
+    answers = qa_model(question=[query] * len(contexts), context=contexts)
+    for candidate, answer in zip(candidates, answers):
         _assign_answer_sentence(candidate, answer['answer'])
 
     return candidates
