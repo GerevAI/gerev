@@ -1,8 +1,8 @@
+import concurrent.futures
 import logging
 import os
 from datetime import datetime
 from typing import List, Optional, Dict
-import concurrent.futures
 
 import html2text
 import markdown
@@ -33,6 +33,8 @@ class ConfluenceDataSource(DataSource):
             fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
 
             author = fetched_raw_page['history']['createdBy']['displayName']
+            author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
+            author_image_url = fetched_raw_page['_links']['base'] + author_image
             timestamp = datetime.strptime(fetched_raw_page['history']['createdDate'], "%Y-%m-%dT%H:%M:%S.%fZ")
             html_content = fetched_raw_page['body']['storage']['value']
             text = html_parser.handle(html_content)
@@ -43,6 +45,7 @@ class ConfluenceDataSource(DataSource):
             parsed_docs.append(BasicDocument(title=fetched_raw_page['title'],
                                              content=plain_text,
                                              author=author,
+                                             author_image_url=author_image_url,
                                              timestamp=timestamp,
                                              id=doc_id,
                                              integration_name='confluence',

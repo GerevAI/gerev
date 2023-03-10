@@ -33,6 +33,7 @@ class SearchResult:
     score: float
     content: List[TextPart]
     author: str
+    author_image_url: str
     title: str
     url: str
     location: str
@@ -62,6 +63,7 @@ class Candidate:
         return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
                             author=self.document.author,
+                            author_image_url=self.document.author_image_url,
                             title=self.document.title,
                             url=self.document.url,
                             time=self.document.timestamp,

@@ -5,3 +5,12 @@
     font-display: fallback;
     src: url('../fonts/Poppins-Medium.ttf') format('truetype');
 }
+
+@font-face {
+    font-family: 'Poppins';
+    font-weight: 400;
+    font-style: normal;
+    font-display: fallback;
+    src: url('../fonts/Poppins-Regular.ttf') format('truetype');
+}
+

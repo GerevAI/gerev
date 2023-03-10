@@ -15,6 +15,7 @@ class Document(Base):
     type: Mapped[Optional[str]] = mapped_column(String(32))
     title: Mapped[Optional[str]] = mapped_column(String(128))
     author: Mapped[Optional[str]] = mapped_column(String(64))
+    author_image_url: Mapped[Optional[str]] = mapped_column(String(512))
     url: Mapped[Optional[str]] = mapped_column(String(512))
     location: Mapped[Optional[str]] = mapped_column(String(512))
     timestamp: Mapped[Optional[DateTime]] = mapped_column(DateTime())

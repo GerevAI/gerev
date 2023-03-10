@@ -50,6 +50,7 @@ def index_documents(documents: List[BasicDocument]) -> List[Paragraph]:
                 type=document.type.value,
                 title=document.title,
                 author=document.author,
+                author_image_url=document.author_image_url,
                 location=document.location,
                 url=document.url,
                 timestamp=document.timestamp,

@@ -18,6 +18,7 @@ class BasicDocument:
     content: str
     timestamp: datetime
     author: str
+    author_image_url: str
     location: str
     url: str
 

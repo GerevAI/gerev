@@ -4,7 +4,6 @@ import React, { FC, ReactElement } from 'react';
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
 import BlueFolder from '../assets/images/blue-folder.svg';
-import Yuval from '../assets/images/yuval.png';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
 
@@ -29,6 +28,7 @@ export enum Platform {
 export interface SearchResultProps {
     title: string 
     author: string
+    author_image_url: string
     time: string
     content: TextPart[]
     score: number
@@ -59,9 +59,9 @@ export const SearchResult = (props: SearchResultProps) => {
                     }
                     {props.location} ·&thinsp;
                 </span>
-                <span className="flex flex-row">
-                    <img className="inline-block ml-2 mr-2 h-4" src={Yuval}></img>
-                    <span>{props.author} ·</span> 
+                <span className="flex flex-row items-center">
+                    <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_url}></img>
+                    <span className='capitalize'>{props.author} ·</span> 
                 </span>
                 <span>
                     &thinsp;Updated {getFormattedTime(props.time)}&thinsp; |&thinsp;
@@ -84,11 +84,11 @@ export const SearchResult = (props: SearchResultProps) => {
                     </span>
                 }
                 {props.type == ResultType.Message && 
-                    <p className="bg-[#352C45] p-2 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
+                    <p className="bg-[#352C45] p-2 px-4 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                     {props.content.map((text_part, index) => {
                     return (
                         <span key={index} className={(text_part.bold ? 'font-bold text-white' : '') + 
-                            " fony-[14px] font-medium"}>
+                            " fony-[14px] font-regular"}>
                         {text_part.content}
                         </span>
                     )})} 
