@@ -105,9 +105,10 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
     }
 
     handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      this.props.onQueryChange(event.target.value);
+      let query = event.target.value
+      this.props.onQueryChange(query);
       this.setState({ hideSuggestions: false });
-      this.setState({ suggestions: getSearchHistorySuggestions(event.target.value) })
+      this.setState({ suggestions: ['', ...getSearchHistorySuggestions(query)] })
     }
 
 }
