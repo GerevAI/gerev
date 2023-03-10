@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import List
 
 from integrations_api import BasicDocument
@@ -9,14 +10,16 @@ from indexing.bm25_index import Bm25Index
 from db_engine import Session
 
 
-def _split_into_paragraphs(text, minimum_length=512):
+def _split_into_paragraphs(text, minimum_length=256):
     """
     split into paragraphs and batch small paragraphs together into the same paragraph
     """
     paragraphs = []
     current_paragraph = ''
-    for paragraph in text.split('\n\n'):
-        current_paragraph += ' ' + paragraph
+    for paragraph in re.split(r'\n\s*\n', text):
+        if len(current_paragraph) > 0:
+            current_paragraph += ' '
+        current_paragraph += paragraph.strip()
 
         if len(current_paragraph) > minimum_length:
             paragraphs.append(current_paragraph)
