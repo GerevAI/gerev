@@ -1,19 +1,17 @@
 import base64
 import datetime
+import math
 import os
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from io import BytesIO
-from typing import List, Optional
-
+from typing import List
+from typing import Optional
+import re
 import nltk
 import requests
 import torch
-import torch
-import nltk
-
-from typing import List
-from dataclasses import dataclass
+from sentence_transformers import CrossEncoder
 
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
