@@ -55,7 +55,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                 </div>
                 {
                   !this.state.hideSuggestions && this.props.showSuggestions && this.props.query.length > 2 &&
-                  <div className="bg-[#2A2A2A] absolute w-[38%] mt-[-14px] rounded-xl">
+                  <div className="relative bg-[#2A2A2A] w-full mt-[-14px] rounded-xl">
                     {this.state.suggestions.map((suggestion, index) => {
                       return (
                         <div onClick={() => this.onSuggestionClick(suggestion)} key={index} 
@@ -64,10 +64,13 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                                        '')}>
                           <span className="ml-4 text-white">{this.props.query}</span>
                           <span className="text-gray-400">{suggestion}</span>
+                          
                         </div>
+                        
                       )
                     })}
-                    <span className="absolute right-0 ml-4 text-white text-xs">Use arrows ↑ ↓ to navigate</span>
+                    {this.state.suggestions.length > 0 && 
+                    <div className="relative right-0 text-right mr-4 text-white text-xs">Use arrows ↑ ↓ to navigate</div>}
                   </div>
                  }
             </div>

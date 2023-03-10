@@ -81,7 +81,7 @@ export default class App extends React.Component <{}, AppState>{
             </span>
             <div className="flex flex-col items-start w-10/12">
               <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={false} />
+                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)
               </span>
