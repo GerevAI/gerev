@@ -1,19 +1,22 @@
+import base64
 import datetime
-from enum import Enum
-
-import torch
-import nltk
-
-from typing import List
+import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from io import BytesIO
+from typing import List, Optional
+
+import nltk
+import requests
+import torch
 from sentence_transformers import CrossEncoder
 
-from integrations_api.basic_document import ResultType
-from schemas import Paragraph, Document
 from db_engine import Session
-from indexing.faiss_index import FaissIndex
 from indexing.bm25_index import Bm25Index
+from indexing.faiss_index import FaissIndex
+from integrations_api.basic_document import ResultType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
+from schemas import Paragraph, Document
 
 BM_25_CANDIDATES = 50 if torch.cuda.is_available() else 20
 BI_ENCODER_CANDIDATES = 50 if torch.cuda.is_available() else 20
@@ -33,13 +36,14 @@ class SearchResult:
     score: float
     content: List[TextPart]
     author: str
-    author_image_url: str
     title: str
     url: str
     location: str
     platform: str
     time: datetime
     type: ResultType
+    author_image_url: Optional[str]
+    author_image_data: Optional[str]
 
 
 @dataclass
@@ -60,10 +64,23 @@ class Candidate:
             suffix = self.content[self.answer_end:]
             content.append(TextPart(suffix, False))
 
+        data_uri = None
+        if self.document.integration_name == 'confluence':
+            url = self.document.author_image_url
+            if "anonymous.svg" in url:
+                url = url.replace(".svg", ".png")
+
+            username = os.getenv('CONFLUENCE_USERNAME')
+            password = os.getenv('CONFLUENCE_PASSWORD')
+            response = requests.get(url=url, headers={'Accept': 'application/json'}, auth=(username, password))
+            image_bytes = BytesIO(response.content)
+            data_uri = f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
+
         return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
                             author=self.document.author,
                             author_image_url=self.document.author_image_url,
+                            author_image_data=data_uri,
                             title=self.document.title,
                             url=self.document.url,
                             time=self.document.timestamp,
@@ -140,10 +157,13 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
         # print candidate titles
         # calculate small cross-encoder scores to leave just a few candidates
-        candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES, use_titles=True)
+        candidates = _cross_encode(cross_encoder_small, query, candidates, SMALL_CROSS_ENCODER_CANDIDATES,
+                                   use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_titles=True)
         candidates = _find_answers_in_candidates(candidates, query)
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True, use_titles=True)
 
-        return [candidate.to_search_result() for candidate in candidates]
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            result = list(executor.map(lambda c: c.to_search_result(), candidates))
+            return result

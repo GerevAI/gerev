@@ -1,5 +1,5 @@
 
-import React, { FC, ReactElement } from 'react';
+import React from 'react';
 
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
@@ -29,6 +29,7 @@ export interface SearchResultProps {
     title: string 
     author: string
     author_image_url: string
+    author_image_data: string
     time: string
     content: TextPart[]
     score: number
@@ -60,7 +61,7 @@ export const SearchResult = (props: SearchResultProps) => {
                     {props.location} ·&thinsp;
                 </span>
                 <span className="flex flex-row items-center">
-                    <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_url}></img>
+                    <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_data ? props.author_image_data : props.author_image_url}></img>
                     <span className='capitalize'>{props.author} ·</span> 
                 </span>
                 <span>
@@ -76,7 +77,7 @@ export const SearchResult = (props: SearchResultProps) => {
                     <span>
                     {props.content.map((text_part, index) => {
                     return (
-                        <span key={index} className={(text_part.bold ? 'font-bold text-white' : '') + 
+                        <span key={index} style={{wordBreak: 'break-word'}} className={(text_part.bold ? 'font-bold text-white' : '') + 
                             " text-md font-poppins font-medium"}>
                         {text_part.content}
                         </span>
