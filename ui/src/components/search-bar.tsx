@@ -69,7 +69,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                         
                       )
                     })}
-                    {this.state.suggestions.length > 0 && 
+                    {this.state.suggestions.length > 1 && 
                     <div className="relative right-0 text-right mr-4 text-white text-xs">Use arrows ↑ ↓ to navigate</div>}
                   </div>
                  }

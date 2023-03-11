@@ -90,8 +90,19 @@ class ConfluenceDataSource(DataSource):
 
         return parsed_docs
 
+    def _get_all_spaces(self):
+        # Sometimes the confluence connection fails, so we retry a few times
+        retries = 3
+        for i in range(retries):
+            try:
+                return self._confluence.get_all_spaces()['results']
+            except Exception as e:
+                logging.error(f'Confluence connection failed: {e}')
+                if i == retries - 1:
+                    raise e
+
     def get_documents(self) -> List[BasicDocument]:
-        spaces = self._confluence.get_all_spaces()['results']
+        spaces = self._get_all_spaces()
         raw_docs = []
         for space in spaces:
             raw_docs.extend(self._list_space_docs(space))
