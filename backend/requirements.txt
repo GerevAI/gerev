@@ -6,8 +6,6 @@ fastapi
 uvicorn
 rank_bm25
 atlassian-python-api
-markdown
 beautifulsoup4
-html2text
 python-dotenv
 slack_sdk
