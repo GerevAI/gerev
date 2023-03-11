@@ -1,11 +1,10 @@
 import concurrent.futures
 import logging
 import os
+import re
 from datetime import datetime
 from typing import List, Optional, Dict
 
-import html2text
-import markdown
 from atlassian import Confluence
 from bs4 import BeautifulSoup
 
@@ -25,8 +24,6 @@ class ConfluenceDataSource(DataSource):
 
     def _parse_documents_worker(self, raw_docs: List[Dict]) -> List[BasicDocument]:
         logging.info(f'Parsing {len(raw_docs)} documents')
-        html_parser = html2text.HTML2Text()
-        html_parser.ignore_links = True
 
         parsed_docs = []
         for raw_page in raw_docs:
@@ -38,11 +35,14 @@ class ConfluenceDataSource(DataSource):
             author_image_url = fetched_raw_page['_links']['base'] + author_image
             timestamp = datetime.strptime(fetched_raw_page['history']['createdDate'], "%Y-%m-%dT%H:%M:%S.%fZ")
             html_content = fetched_raw_page['body']['storage']['value']
-            text = html_parser.handle(html_content)
-            md_text = markdown.markdown(text)
-            soup = BeautifulSoup(md_text, features='html.parser')
+
+            # Becuase documents only contain text, we use a colon to separate subtitles from the text
+            html_content = ConfluenceDataSource._add_colon_to_subtitles(html_content)
+
+            soup = BeautifulSoup(html_content, features='html.parser')
             plain_text = soup.get_text(separator="\n")
             url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
+
             parsed_docs.append(BasicDocument(title=fetched_raw_page['title'],
                                              content=plain_text,
                                              author=author,
@@ -109,3 +109,7 @@ class ConfluenceDataSource(DataSource):
             raw_docs.extend(self._list_space_docs(space))
 
         self._parse_documents_in_parallel(raw_docs)
+
+    @staticmethod
+    def _add_colon_to_subtitles(text):
+        return re.sub(r'(?=<\/h[234567]>)', ': ', text)
