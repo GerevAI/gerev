@@ -32,11 +32,15 @@ class IndexingQueue:
             self.queue.put(docs)
             self.condition.notify_all()
 
-    def consume(self) -> List[BasicDocument]:
+    def consume_all(self) -> List[BasicDocument]:
         with self.condition:
             while self.queue.empty():
                 self.condition.wait()
-            return self.queue.get()
+
+            docs = []
+            while not self.queue.empty():
+                docs.extend(self.queue.get())
+            return docs
 
     def get_how_many_left(self) -> int:
         return self.queue.qsize()
