@@ -1,6 +1,5 @@
 import base64
 import datetime
-import math
 import os
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -16,7 +15,7 @@ from sentence_transformers import CrossEncoder
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from integrations_api.basic_document import ResultType
+from data_sources.basic_document import DocumentType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
 
@@ -43,7 +42,7 @@ class SearchResult:
     location: str
     platform: str
     time: datetime
-    type: ResultType
+    type: DocumentType
     author_image_url: Optional[str]
     author_image_data: Optional[str]
 

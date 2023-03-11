@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class ResultType(Enum):
+class DocumentType(Enum):
     DOCUMENT = "document"
     MESSAGE = "message"
     COMMENT = "comment"
@@ -13,7 +13,7 @@ class ResultType(Enum):
 @dataclass
 class BasicDocument:
     id: int
-    type: ResultType
+    type: DocumentType
     title: str
     content: str
     timestamp: datetime

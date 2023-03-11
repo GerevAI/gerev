@@ -1,14 +1,13 @@
 import os
 import torch
 import faiss
-from typing import List
 
 
 INDEX_PATH = '/tmp/storage/index.bin'
 MODEL_DIM = 384
 
 
-class FaissIndex():
+class FaissIndex:
     instance = None
 
     @staticmethod

@@ -10,7 +10,8 @@ from atlassian import Confluence
 from bs4 import BeautifulSoup
 
 from data_sources.data_source import DataSource
-from integrations_api.basic_document import BasicDocument, ResultType
+from data_sources.basic_document import BasicDocument, DocumentType
+from docs_queue import IndexingQueue
 
 
 class ConfluenceDataSource(DataSource):
@@ -51,10 +52,10 @@ class ConfluenceDataSource(DataSource):
                                              integration_name='confluence',
                                              location=raw_page['space_name'],
                                              url=url,
-                                             type=ResultType.DOCUMENT))
+                                             type=DocumentType.DOCUMENT))
 
         logging.info(f'Parsed {len(parsed_docs)} documents')
-        return parsed_docs
+        IndexingQueue.get().feed(docs=parsed_docs)
 
     def _list_space_docs(self, space: Dict) -> List[Dict]:
         logging.info(f'Getting documents from space {space["name"]} ({space["key"]})')
@@ -78,17 +79,13 @@ class ConfluenceDataSource(DataSource):
 
     def _parse_documents_in_parallel(self, raw_docs: List[Dict]) -> List[BasicDocument]:
         workers = 10
-        parsed_docs = []
-
         logging.info(f'Start parsing {len(raw_docs)} documents (with {workers} workers)...')
+
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for i in range(workers):
                 futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
-            for future in futures:
-                parsed_docs.extend(future.result())
-
-        return parsed_docs
+            concurrent.futures.wait(futures)
 
     def _get_all_spaces(self):
         # Sometimes the confluence connection fails, so we retry a few times
@@ -101,10 +98,10 @@ class ConfluenceDataSource(DataSource):
                 if i == retries - 1:
                     raise e
 
-    def get_documents(self) -> List[BasicDocument]:
+    def feed_new_documents(self):
         spaces = self._get_all_spaces()
         raw_docs = []
         for space in spaces:
             raw_docs.extend(self._list_space_docs(space))
 
-        return self._parse_documents_in_parallel(raw_docs)
+        self._parse_documents_in_parallel(raw_docs)

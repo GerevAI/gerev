@@ -6,8 +6,8 @@ from typing import Optional, Dict, List
 from slack_sdk import WebClient
 
 from data_sources.data_source import DataSource
-from integrations_api import BasicDocument
-from integrations_api.basic_document import ResultType
+from data_sources.basic_document import DocumentType, BasicDocument
+from docs_queue import IndexingQueue
 
 
 @dataclass
@@ -53,7 +53,7 @@ class SlackDataSource(DataSource):
 
         return author
 
-    def get_documents(self) -> List[BasicDocument]:
+    def feed_new_documents(self):
         conversations = self._list_conversations()
         self._join_conversations(conversations)
 
@@ -86,9 +86,9 @@ class SlackDataSource(DataSource):
                                          timestamp=readable_timestamp, id=message_id,
                                          integration_name='slack', location=conv.name,
                                          url=message_url, author_image_url=author.image_url,
-                                         type=ResultType.MESSAGE)
+                                         type=DocumentType.MESSAGE)
 
             if last_msg is not None:
                 documents.append(last_msg)
 
-        return documents
+        IndexingQueue.get().feed(docs=documents)
