@@ -1,12 +1,12 @@
 import datetime
-import os
 from dataclasses import dataclass
 from typing import Optional, Dict, List
 
+from pydantic import BaseModel
 from slack_sdk import WebClient
 
-from data_sources.data_source import DataSource
-from data_sources.basic_document import DocumentType, BasicDocument
+from data_source_api.base_data_source import BaseDataSource
+from data_source_api.basic_document import DocumentType, BasicDocument
 from docs_queue import IndexingQueue
 
 
@@ -22,17 +22,27 @@ class SlackAuthor:
     image_url: str
 
 
-class SlackDataSource(DataSource):
+class SlackConfig(BaseModel):
+    token: str
 
-    def __init__(self, config: Optional[Dict] = None):
-        super().__init__(config)
-        # TODO: add validation
-        self._slack = WebClient(token=os.getenv('SLACK_TOKEN'))
-        self._authors_cache: Dict[str, SlackAuthor] = {}
+
+class SlackDataSource(BaseDataSource):
 
     @staticmethod
-    def _is_message(message: Dict) -> bool:
+    def validate_config(config: Dict) -> None:
+        slack_config = SlackConfig(**config)
+        slack = WebClient(token=slack_config.token)
+        slack.auth_test()
+
+    @staticmethod
+    def _is_valid_message(message: Dict) -> bool:
         return 'client_msg_id' in message
+
+    def __init__(self, data_source_id: int, config: Optional[Dict] = None):
+        super().__init__(data_source_id, config)
+        slack_config = SlackConfig(**config)
+        self._slack = WebClient(token=slack_config.token)
+        self._authors_cache: Dict[str, SlackAuthor] = {}
 
     def _list_conversations(self) -> List[SlackConversation]:
         conversations = self._slack.conversations_list()
@@ -62,7 +72,7 @@ class SlackDataSource(DataSource):
             last_msg: Optional[BasicDocument] = None
             messages = self._slack.conversations_history(channel=conv.id)
             for message in messages['messages']:
-                if not self._is_message(message):
+                if not self._is_valid_message(message):
                     if last_msg is not None:
                         documents.append(last_msg)
                         last_msg = None
@@ -84,7 +94,7 @@ class SlackDataSource(DataSource):
                 message_url = f"https://slack.com/app_redirect?channel={conv.id}&message_ts={timestamp}"
                 last_msg = BasicDocument(title=conv.name, content=text, author=author.name,
                                          timestamp=readable_timestamp, id=message_id,
-                                         integration_name='slack', location=conv.name,
+                                         data_source_id=self._data_source_id, location=conv.name,
                                          url=message_url, author_image_url=author.image_url,
                                          type=DocumentType.MESSAGE)
 

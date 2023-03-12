@@ -17,8 +17,8 @@ def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
         result += ' ' + paragraph.document.title
     if paragraph.document.author is not None:
         result += ' ' + paragraph.document.author
-    if paragraph.document.integration_name is not None:
-        result += ' ' + paragraph.document.integration_name
+    if data_source_name := paragraph.document.data_source.type.name:
+        result += ' ' + data_source_name
     return result
 
 

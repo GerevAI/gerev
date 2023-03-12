@@ -1,6 +1,5 @@
-from schemas.document import Document
 from schemas.base import Base
-from sqlalchemy import String, ForeignKey
+from sqlalchemy import String, ForeignKey, Column, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -10,5 +9,5 @@ class Paragraph(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     content: Mapped[str] = mapped_column(String(2048))
 
-    document_id: Mapped[int] = mapped_column(ForeignKey('document.id'))
-    document: Mapped[Document] = relationship(back_populates='paragraphs')
+    document_id = Column(Integer, ForeignKey('document.id'))
+    document = relationship("Document", back_populates="paragraphs")

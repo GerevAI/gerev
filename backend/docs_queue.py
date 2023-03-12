@@ -3,7 +3,7 @@ import threading
 from queue import Queue
 from typing import List
 
-from data_sources.basic_document import BasicDocument
+from data_source_api.basic_document import BasicDocument
 
 
 class IndexingQueue:
