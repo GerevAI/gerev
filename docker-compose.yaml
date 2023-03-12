@@ -4,6 +4,5 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./storage:/var/opt/storage
-      - ./backend:/app
+      - ~/.gerev/storage:/var/opt/storage
     build: .

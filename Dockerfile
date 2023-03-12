@@ -11,6 +11,9 @@ COPY ./backend/models.py /tmp/models.py
 # cache the models
 RUN python3 /tmp/models.py
 
-WORKDIR /app
+COPY ./backend /app
+
+COPY ./ui/build /ui
+
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
