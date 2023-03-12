@@ -7,6 +7,7 @@ import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
 import { IoAddCircleOutline } from "react-icons/io5";
 import { AiFillCheckCircle } from "react-icons/ai";
+import { api } from "../api";
 
 
 export interface DataSourceOption {
@@ -158,6 +159,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          config: config
       }
       
+      try {
+         const response = api.post(`/data-source/add`, payload).then(response => {
+            console.log(response);
+         });
+      } catch (error) {
+         console.error(error);
+      }
+
    }
 
    onSelectChange = (event) => {

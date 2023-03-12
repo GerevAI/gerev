@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import axios from 'axios';
 
 import EnterImage from './assets/images/enter.svg';
 import { GiSocks } from "react-icons/gi";
@@ -12,6 +11,7 @@ import { addToSearchHistory } from "./autocomplete";
 import DataSourcePanel from "./components/data-source-panel";
 import Modal from 'react-modal';
 import { GrFormClose } from "react-icons/gr";
+import { api } from "./api";
 
 export interface AppState {
   query: string
@@ -21,14 +21,6 @@ export interface AppState {
   isNoResults: boolean
   isModalOpen: boolean
 }
-
-let port = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')
-  ? 8000
-  : 80;
-
-const api = axios.create({
-  baseURL: `http://${window.location.hostname}:${port}`,
-})
 
 Modal.setAppElement('#root');
 
