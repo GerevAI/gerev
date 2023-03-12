@@ -18,8 +18,17 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 
-Then start the docker
+build the UI
 
 ```
+cd ui/
+npm install
+npm run build
+```
+
+Then build and the docker
+
+```
+docker build -t gerev .
 docker run --volume ~/.gerev/storage:/opt/storage --gpus all -p 0.0.0.0:80:80 gerev
 ```
