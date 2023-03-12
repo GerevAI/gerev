@@ -74,6 +74,7 @@ def telemetry():
     # Capture an event
     posthog.capture(str(existing_uuid), "run")
 
+telemetry()
 
 app = FastAPI()
 origins = ["*"]
