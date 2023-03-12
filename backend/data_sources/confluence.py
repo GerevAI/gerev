@@ -8,21 +8,62 @@ from typing import List, Optional, Dict
 from atlassian import Confluence
 from bs4 import BeautifulSoup
 
-from data_sources.data_source import DataSource
-from data_sources.basic_document import BasicDocument, DocumentType
+from data_source_api.basic_document import BasicDocument, DocumentType
+from data_source_api.base_data_source import BaseDataSource
+from data_source_api.exception import InvalidDataSourceConfig
 from docs_queue import IndexingQueue
+from pydantic import BaseModel
 
 
-class ConfluenceDataSource(DataSource):
-    def __init__(self, config: Optional[Dict] = None):
-        super().__init__(config)
-        self._confluence = Confluence(
-            url=os.getenv('CONFLUENCE_URL'),
-            username=os.getenv('CONFLUENCE_USERNAME'),
-            password=os.getenv('CONFLUENCE_PASSWORD')
-        )
+class ConfluenceConfig(BaseModel):
+    url: str
+    token: str
 
-    def _parse_documents_worker(self, raw_docs: List[Dict]) -> List[BasicDocument]:
+
+class ConfluenceDataSource(BaseDataSource):
+
+    @staticmethod
+    def _add_colon_to_subtitles(text):
+        return re.sub(r'(?=<\/h[234567]>)', ': ', text)
+
+    @staticmethod
+    def list_spaces(confluence: Confluence) -> List[Dict]:
+        # Usually the confluence connection fails, so we retry a few times
+        retries = 3
+        for i in range(retries):
+            try:
+                return confluence.get_all_spaces()['results']
+            except Exception as e:
+                logging.error(f'Confluence connection failed: {e}')
+                if i == retries - 1:
+                    raise e
+
+    @staticmethod
+    def validate_config(config: Dict) -> None:
+        try:
+            parsed_config = ConfluenceConfig(**config)
+            confluence = Confluence(url=parsed_config.url, token=parsed_config.token)
+            ConfluenceDataSource.list_spaces(confluence=confluence)
+        except Exception as e:
+            raise InvalidDataSourceConfig from e
+
+    def __init__(self, data_source_id: int, config: Optional[Dict] = None):
+        super().__init__(data_source_id, config)
+        confluence_config = ConfluenceConfig(**config)
+        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token)
+
+    def _list_spaces(self) -> List[Dict]:
+        return ConfluenceDataSource.list_spaces(confluence=self._confluence)
+
+    def feed_new_documents(self):
+        spaces = self._list_spaces()
+        raw_docs = []
+        for space in spaces:
+            raw_docs.extend(self._list_space_docs(space))
+
+        self._parse_documents_in_parallel(raw_docs)
+
+    def _parse_documents_worker(self, raw_docs: List[Dict]):
         logging.info(f'Parsing {len(raw_docs)} documents')
 
         parsed_docs = []
@@ -49,7 +90,7 @@ class ConfluenceDataSource(DataSource):
                                              author_image_url=author_image_url,
                                              timestamp=timestamp,
                                              id=doc_id,
-                                             integration_name='confluence',
+                                             data_source_id=self._data_source_id,
                                              location=raw_page['space_name'],
                                              url=url,
                                              type=DocumentType.DOCUMENT))
@@ -81,7 +122,7 @@ class ConfluenceDataSource(DataSource):
         logging.info(f'Got {len(space_docs)} documents from space {space["name"]}')
         return space_docs
 
-    def _parse_documents_in_parallel(self, raw_docs: List[Dict]) -> List[BasicDocument]:
+    def _parse_documents_in_parallel(self, raw_docs: List[Dict]):
         workers = 10
         logging.info(f'Start parsing {len(raw_docs)} documents (with {workers} workers)...')
 
@@ -90,26 +131,3 @@ class ConfluenceDataSource(DataSource):
             for i in range(workers):
                 futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
             concurrent.futures.wait(futures)
-
-    def _get_all_spaces(self):
-        # Sometimes the confluence connection fails, so we retry a few times
-        retries = 3
-        for i in range(retries):
-            try:
-                return self._confluence.get_all_spaces()['results']
-            except Exception as e:
-                logging.error(f'Confluence connection failed: {e}')
-                if i == retries - 1:
-                    raise e
-
-    def feed_new_documents(self):
-        spaces = self._get_all_spaces()
-        raw_docs = []
-        for space in spaces:
-            raw_docs.extend(self._list_space_docs(space))
-
-        self._parse_documents_in_parallel(raw_docs)
-
-    @staticmethod
-    def _add_colon_to_subtitles(text):
-        return re.sub(r'(?=<\/h[234567]>)', ': ', text)

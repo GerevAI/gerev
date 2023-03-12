@@ -2,7 +2,7 @@ import logging
 import re
 from typing import List
 
-from data_sources.basic_document import BasicDocument
+from data_source_api.basic_document import BasicDocument
 from schemas import Document, Paragraph
 from models import bi_encoder
 from indexing.faiss_index import FaissIndex
@@ -13,7 +13,7 @@ from db_engine import Session
 class Indexer:
 
     @staticmethod
-    def index_documents(documents: List[BasicDocument]) -> List[Paragraph]:
+    def index_documents(documents: List[BasicDocument]):
         logging.getLogger().info(f"Indexing {len(documents)} documents")
 
         with Session() as session:
@@ -23,8 +23,7 @@ class Indexer:
                 paragraphs = Indexer._split_into_paragraphs(document.content)
                 # Create a new document in the database
                 db_document = Document(
-                    integration_name=document.integration_name,
-                    integration_id=document.id,
+                    data_source_id=document.data_source_id,
                     type=document.type.value,
                     title=document.title,
                     author=document.author,

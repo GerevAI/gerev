@@ -13,6 +13,7 @@ class DocumentType(Enum):
 @dataclass
 class BasicDocument:
     id: int
+    data_source_id: int
     type: DocumentType
     title: str
     content: str
@@ -22,5 +23,3 @@ class BasicDocument:
     location: str
     url: str
 
-    # todo: this is temporary. needs to be automatically infered by the generating integration.
-    integration_name: str

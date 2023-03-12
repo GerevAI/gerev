@@ -9,3 +9,4 @@ atlassian-python-api
 beautifulsoup4
 python-dotenv
 slack_sdk
+pydantic

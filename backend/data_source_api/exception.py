@@ -1,0 +1,2 @@
+class InvalidDataSourceConfig(Exception):
+    pass

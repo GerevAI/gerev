@@ -12,7 +12,7 @@ class BackgroundIndexer:
         docs_queue_instance = IndexingQueue.get()
 
         while True:
-            logger.info(f'Started another iteration of BackgroundIndexer, waiting for documents...')
+            logger.info(f'waiting for documents...')
             docs_chunk = docs_queue_instance.consume_all()
             logger.info(f'Got chunk of {len(docs_chunk)} documents')
             Indexer.index_documents(docs_chunk)

@@ -1,5 +1,7 @@
 import logging
 from threading import Thread
+import os
+import json
 
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,6 +13,8 @@ from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
+from schemas import DataSource
+from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
 
@@ -30,24 +34,70 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 
+def load_supported_data_sources_to_db():
+    supported_data_source_type = []
+    for file in os.listdir("data_sources"):
+        if file.endswith(".py") and file != "__init__.py":
+            supported_data_source_type.append(file[:-3])
+
+    with Session() as session:
+        for data_source_type in supported_data_source_type:
+            if session.query(DataSourceType).filter_by(name=data_source_type).first():
+                continue
+
+            new_data_source = DataSourceType(name=data_source_type)
+            session.add(new_data_source)
+            session.commit()
+
+
 @app.on_event("startup")
 async def startup_event():
     FaissIndex.create()
     Bm25Index.create()
+    load_supported_data_sources_to_db()
     Thread(target=BackgroundIndexer.run).start()
 
 
 @app.post("/index-confluence")
 async def index_confluence(background_tasks: BackgroundTasks):
+    # TODO: temporary solution, will be added thru api
     logger.debug("Start indexing confluence documents")
-    confluence = ConfluenceDataSource()
+    confluence_config = {"token": os.environ.get("CONFLUENCE_TOKEN"),
+                         "url": os.environ.get("CONFLUENCE_URL")}
+    confluence_json = json.dumps(confluence_config)
+
+    # make data_source row
+    ds = DataSource(type_id=2, config=confluence_json)
+    with Session() as session:
+        session.add(ds)
+        session.commit()
+
+    # get data_source row
+    with Session() as session:
+        confluence_data_source = session.query(DataSource).filter_by(type_id=2).first()
+
+    confluence = ConfluenceDataSource(data_source_id=confluence_data_source.id, config=confluence_config)
     background_tasks.add_task(confluence.feed_new_documents)
 
 
 @app.post("/index-slack")
 async def index_slack(background_tasks: BackgroundTasks):
+    # TODO: temporary solution, will be added thru api
     logger.debug("Start indexing slack documents")
-    slack = SlackDataSource()
+    slack_config = {"token": os.environ.get("SLACK_TOKEN")}
+    slack_json = json.dumps(slack_config)
+
+    # make data_source row
+    ds = DataSource(type_id=1, config=slack_json)
+    with Session() as session:
+        session.add(ds)
+        session.commit()
+
+    # get data_source row
+    with Session() as session:
+        slack_data_source = session.query(DataSource).filter_by(type_id=1).first()
+
+    slack = SlackDataSource(data_source_id=slack_data_source.id, config=slack_config)
     background_tasks.add_task(slack.feed_new_documents)
 
 
