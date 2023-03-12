@@ -2,8 +2,8 @@ import os
 import torch
 import faiss
 
+from paths import FAISS_INDEX_PATH
 
-INDEX_PATH = '/tmp/storage/index.bin'
 MODEL_DIM = 384
 
 
@@ -24,8 +24,8 @@ class FaissIndex:
         return FaissIndex.instance
 
     def __init__(self) -> None:
-        if os.path.exists(INDEX_PATH):
-            index = faiss.read_index(INDEX_PATH)
+        if os.path.exists(FAISS_INDEX_PATH):
+            index = faiss.read_index(FAISS_INDEX_PATH)
         else:
             index = faiss.IndexFlatIP(MODEL_DIM)
             index = faiss.IndexIDMap(index)
@@ -35,7 +35,7 @@ class FaissIndex:
     def update(self, ids: torch.LongTensor, embeddings: torch.FloatTensor):
         self.index.add_with_ids(embeddings.cpu(), ids)
 
-        faiss.write_index(self.index, INDEX_PATH)
+        faiss.write_index(self.index, FAISS_INDEX_PATH)
 
     def search(self, queries: torch.FloatTensor, top_k: int, *args, **kwargs):
         if queries.ndim == 1:
@@ -45,4 +45,4 @@ class FaissIndex:
 
     def clear(self):
         self.index.reset()
-        faiss.write_index(self.index, INDEX_PATH)
+        faiss.write_index(self.index, FAISS_INDEX_PATH)

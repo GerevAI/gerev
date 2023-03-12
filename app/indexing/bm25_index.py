@@ -7,8 +7,7 @@ from typing import List
 
 from db_engine import Session
 from schemas import Paragraph
-
-INDEX_PATH = '/tmp/storage/bm25_index.bin'
+from paths import BM25_INDEX_PATH
 
 
 def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
@@ -30,8 +29,8 @@ class Bm25Index:
         if Bm25Index.instance is not None:
             raise RuntimeError("Index is already initialized")
 
-        if os.path.exists(INDEX_PATH):
-            with open(INDEX_PATH, 'rb') as f:
+        if os.path.exists(BM25_INDEX_PATH):
+            with open(BM25_INDEX_PATH, 'rb') as f:
                 Bm25Index.instance = pickle.load(f)
         else:
             Bm25Index.instance = Bm25Index()
@@ -72,5 +71,5 @@ class Bm25Index:
         self._save()
 
     def _save(self):
-        with open(INDEX_PATH, 'wb') as f:
+        with open(BM25_INDEX_PATH, 'wb') as f:
             pickle.dump(self, f)

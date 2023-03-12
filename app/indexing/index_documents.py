@@ -51,7 +51,7 @@ class Indexer:
         Bm25Index.get().update()
 
         # Encode the paragraphs
-        embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True)
+        embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=False)
 
         # Add the embeddings to the index
         FaissIndex.get().update(paragraph_ids, embeddings)

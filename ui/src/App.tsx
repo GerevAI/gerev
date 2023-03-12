@@ -18,8 +18,12 @@ export interface AppState {
   isNoResults: boolean
 }
 
+let port = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')
+  ? 8000
+  : 80;
+
 const api = axios.create({
-  baseURL: `http://${window.location.hostname}:8000`,
+  baseURL: `http://${window.location.hostname}:${port}`,
 })
 
 export default class App extends React.Component <{}, AppState>{
