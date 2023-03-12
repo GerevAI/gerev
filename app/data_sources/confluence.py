@@ -23,8 +23,14 @@ class ConfluenceConfig(BaseModel):
 class ConfluenceDataSource(BaseDataSource):
 
     @staticmethod
-    def _add_colon_to_subtitles(text):
-        return re.sub(r'(?=<\/h[234567]>)', ': ', text)
+    def _preprocess_html(html):
+        # Becuase documents only contain text, we use a colon to separate subtitles from the text
+        return re.sub(r'(?=<\/h[234567]>)', ': ', html)
+
+    @staticmethod
+    def _preprocess_text(text):
+        # When there is a link immidiately followed by a dot, BeautifulSoup adds whitespace between them. We remove it.
+        return re.sub(r'\s+\.', '.', text)
 
     @staticmethod
     def list_spaces(confluence: Confluence) -> List[Dict]:
@@ -75,13 +81,13 @@ class ConfluenceDataSource(BaseDataSource):
             author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
             author_image_url = fetched_raw_page['_links']['base'] + author_image
             timestamp = datetime.strptime(fetched_raw_page['history']['createdDate'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            
             html_content = fetched_raw_page['body']['storage']['value']
-
-            # Becuase documents only contain text, we use a colon to separate subtitles from the text
-            html_content = ConfluenceDataSource._add_colon_to_subtitles(html_content)
-
+            html_content = ConfluenceDataSource._preprocess_html(html_content)
             soup = BeautifulSoup(html_content, features='html.parser')
             plain_text = soup.get_text(separator="\n")
+            plain_text = ConfluenceDataSource._preprocess_text(plain_text)
+
             url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
 
             parsed_docs.append(BasicDocument(title=fetched_raw_page['title'],

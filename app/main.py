@@ -2,9 +2,13 @@ import logging
 from threading import Thread
 import os
 import json
+import torch
+import posthog
+import uuid
 
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from data_sources.confluence import ConfluenceDataSource
 from data_sources.slack import SlackDataSource
@@ -16,9 +20,61 @@ from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
+from paths import UI_PATH
 
 from api.search import router as search_router
 from api.data_source import router as data_source_router
+
+
+def telemetry():
+    import uuid
+    import os
+
+    # Check if TEST environment variable is set
+    if os.environ.get('TEST') == "1":
+        # Write "test" to UUID file
+        uuid_path = os.path.join(os.environ['HOME'], '.gerev.uuid')
+        with open(uuid_path, 'w') as f:
+            f.write("test")
+        existing_uuid = "test"
+        print("Using test UUID")
+
+    else:
+        # Check if UUID file exists
+        uuid_path = os.path.join(os.environ['HOME'], '.gerev.uuid')
+        if os.path.exists(uuid_path):
+            # Read existing UUID from file
+            with open(uuid_path, 'r') as f:
+                existing_uuid = f.read().strip()
+            print(f"Using existing UUID: {existing_uuid}")
+            # Check if UUID file contains "test"
+            if "test" in existing_uuid:
+                print("Skipping telemetry capture due to 'test' UUID")
+                return
+        else:
+            # Generate a new UUID
+            new_uuid = uuid.uuid4()
+            print(f"Generated new UUID: {new_uuid}")
+            # Write new UUID to file
+            with open(uuid_path, 'w') as f:
+                f.write(str(new_uuid))
+
+            # Use the new UUID as the existing one
+            existing_uuid = new_uuid
+
+    # Capture an event with PostHog
+    import posthog
+
+    posthog.api_key = "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391"
+    posthog.host = 'https://eu.posthog.com'
+
+    # Identify a user with the UUID
+    posthog.identify(str(existing_uuid))
+
+    # Capture an event
+    posthog.capture(str(existing_uuid), "run")
+
+telemetry()
 
 app = FastAPI()
 origins = ["*"]
@@ -55,6 +111,8 @@ def load_supported_data_sources_to_db():
 
 @app.on_event("startup")
 async def startup_event():
+    if not torch.cuda.is_available():
+        logger.warning("CUDA is not available, using CPU. This will make indexing and search very slow!!!")
     FaissIndex.create()
     Bm25Index.create()
     load_supported_data_sources_to_db()
@@ -112,3 +170,5 @@ async def clear_index():
         session.query(Document).delete()
         session.query(Paragraph).delete()
         session.commit()
+
+app.mount('/', StaticFiles(directory=UI_PATH, html=True), name='ui')

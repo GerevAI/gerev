@@ -22,8 +22,12 @@ export interface AppState {
   isModalOpen: boolean
 }
 
+let port = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')
+  ? 8000
+  : 80;
+
 const api = axios.create({
-  baseURL: `http://${window.location.hostname}:8000`,
+  baseURL: `http://${window.location.hostname}:${port}`,
 })
 
 Modal.setAppElement('#root');
