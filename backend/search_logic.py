@@ -11,6 +11,7 @@ import re
 import nltk
 import requests
 import torch
+import urllib.parse
 from sentence_transformers import CrossEncoder
 
 from db_engine import Session
@@ -56,8 +57,24 @@ class Candidate:
     answer_start: int = -1
     answer_end: int = -1
 
+    def _text_anchor(self, url, text) -> str:
+        if '#' not in url:
+            url += '#'
+        text = re.sub(r'\s+', ' ', text)
+        text = text.strip()
+        words = text.split()
+        url += ':~:text='
+        if len(words) > 7:
+            url += urllib.parse.quote(' '.join(words[:3])).replace('-', '%2D')
+            url += ','
+            url += urllib.parse.quote(' '.join(words[-3:])).replace('-', '%2D')
+        else:
+            url += urllib.parse.quote(text).replace('-', '%2D')
+        return url
+
     def to_search_result(self) -> SearchResult:
-        content = [TextPart(self.content[self.answer_start: self.answer_end], True)]
+        answer = TextPart(self.content[self.answer_start: self.answer_end], True)
+        content = [answer]
 
         if self.answer_end < len(self.content) - 1:
             words = self.content[self.answer_end:].split()
@@ -82,7 +99,7 @@ class Candidate:
                             author_image_url=self.document.author_image_url,
                             author_image_data=data_uri,
                             title=self.document.title,
-                            url=self.document.url,
+                            url=self._text_anchor(self.document.url, answer.content),
                             time=self.document.timestamp,
                             location=self.document.location,
                             platform=self.document.data_source.type.name,
@@ -115,7 +132,7 @@ def _cross_encode(
 
 
 def _assign_answer_sentence(candidate: Candidate, answer: str):
-    paragraph_sentences = re.split(r'[^a-zA-Z0-9\s\-\@\,\'\(\)\$]+', candidate.content)
+    paragraph_sentences = re.split(r'([\.\!\?\:\-] |[\"“\(\)])', candidate.content)
     sentence = None
     for i, paragraph_sentence in enumerate(paragraph_sentences):
         if answer in paragraph_sentence:
