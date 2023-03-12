@@ -46,10 +46,9 @@ export const SearchResult = (props: SearchResultProps) => {
             <div className="flex flex-row items-start">
             {getBigIconByPlatform(props.platform as Platform)}
             <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                <span className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" 
-                    onClick={() => window.open(props.url, "_blank")}>
-                {props.title}
-                </span>
+                <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} target='_blank'>
+                    {props.title}
+                </a>
                 <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                 {
                     props.type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
