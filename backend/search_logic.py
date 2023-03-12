@@ -1,6 +1,7 @@
 import base64
 import datetime
-import os
+import json
+
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from io import BytesIO
@@ -56,9 +57,6 @@ class Candidate:
     answer_end: int = -1
 
     def to_search_result(self) -> SearchResult:
-        # if self.answer_start > 0:
-        #     prefix = self.content[:self.answer_start]
-        #     representation.append(ResultPresentation(prefix, False))
         content = [TextPart(self.content[self.answer_start: self.answer_end], True)]
 
         if self.answer_end < len(self.content) - 1:
@@ -72,9 +70,9 @@ class Candidate:
             if "anonymous.svg" in url:
                 url = url.replace(".svg", ".png")
 
-            username = os.getenv('CONFLUENCE_USERNAME')
-            password = os.getenv('CONFLUENCE_PASSWORD')
-            response = requests.get(url=url, headers={'Accept': 'application/json'}, auth=(username, password))
+            config = json.loads(self.document.data_source.config)
+            response = requests.get(url=url, headers={'Accept': 'application/json',
+                                                      "Authorization": f"Bearer {config['token']}"})
             image_bytes = BytesIO(response.content)
             data_uri = f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
 
