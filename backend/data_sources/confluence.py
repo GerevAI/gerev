@@ -95,11 +95,9 @@ class ConfluenceDataSource(BaseDataSource):
                                              url=url,
                                              type=DocumentType.DOCUMENT))
             if len(parsed_docs) >= 50:
-                logging.info(f'Feeding {len(parsed_docs)} documents to indexing queue')
                 IndexingQueue.get().feed(docs=parsed_docs)
                 parsed_docs = []
 
-        logging.info(f'Parsed {len(parsed_docs)} documents')
         IndexingQueue.get().feed(docs=parsed_docs)
 
     def _list_space_docs(self, space: Dict) -> List[Dict]:

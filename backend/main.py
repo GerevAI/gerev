@@ -6,7 +6,6 @@ import json
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.search import router as search_router
 from data_sources.confluence import ConfluenceDataSource
 from data_sources.slack import SlackDataSource
 from db_engine import Session
@@ -17,6 +16,9 @@ from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
+
+from api.search import router as search_router
+from api.data_source import router as data_source_router
 
 app = FastAPI()
 origins = ["*"]
@@ -29,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(search_router)
+app.include_router(data_source_router)
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s')
 logger = logging.getLogger(__name__)
