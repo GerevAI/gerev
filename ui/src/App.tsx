@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import axios from 'axios';
 
 import EnterImage from './assets/images/enter.svg';
 import { GiSocks } from "react-icons/gi";
@@ -9,6 +8,10 @@ import './assets/css/App.css';
 import SearchBar from "./components/search-bar";
 import { SearchResult, SearchResultProps } from "./components/search-result";
 import { addToSearchHistory } from "./autocomplete";
+import DataSourcePanel from "./components/data-source-panel";
+import Modal from 'react-modal';
+import { GrFormClose } from "react-icons/gr";
+import { api } from "./api";
 
 export interface AppState {
   query: string
@@ -16,16 +19,31 @@ export interface AppState {
   searchDuration: number
   isLoading: boolean
   isNoResults: boolean
+  isModalOpen: boolean
 }
 
-let port = (!process.env.NODE_ENV || process.env.NODE_ENV === 'development')
-  ? 8000
-  : 80;
+Modal.setAppElement('#root');
 
-const api = axios.create({
-  baseURL: `http://${window.location.hostname}:${port}`,
-})
-
+const customStyles = {
+  content: {
+    top: '50%',
+    left: '50%',
+    right: 'auto',
+    bottom: 'auto',
+    marginRight: '-50%',
+    transform: 'translate(-50%, -50%)',
+    background: '#221f2e',
+    width: '50vw',
+    border: 'solid #694f94 0.5px',
+    borderRadius: '12px'
+  },
+  overlay: {
+    background: '#0000004a'
+  },
+  special: {
+    stroke: 'white'
+  }
+};
 export default class App extends React.Component <{}, AppState>{
 
   constructor() {
@@ -35,8 +53,25 @@ export default class App extends React.Component <{}, AppState>{
       isNoResults: false,
       query: "",
       results: [],
-      searchDuration: 0
+      searchDuration: 0,
+      isModalOpen: false
     }
+
+    this.openModal = this.openModal.bind(this); // bind the method here
+    this.closeModal = this.closeModal.bind(this); // bind the method here
+
+  }
+
+  openModal() {
+    this.setState({isModalOpen: true});
+  }
+
+  afterOpenModal() {
+    // references are now sync'd and can be accessed.
+  }
+
+  closeModal() {
+    this.setState({isModalOpen: false});
   }
 
 
@@ -48,7 +83,21 @@ export default class App extends React.Component <{}, AppState>{
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
                 Index
           </button>
+          <button onClick={this.openModal} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
+              hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
+                Settings
+          </button>
         </div>
+        <Modal
+          isOpen={this.state.isModalOpen}
+          onRequestClose={this.closeModal}
+          contentLabel="Example Modal"
+          style={customStyles}>
+            <GrFormClose className="text-4xl text-white stroke-white stroke-current hover:cursor-pointer" color="white" stroke="white" path="white" onClick={this.closeModal}></GrFormClose>
+            <DataSourcePanel/>
+        </Modal>
+
+        
 
         {/* front search page*/}
         {
