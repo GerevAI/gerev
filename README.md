@@ -2,7 +2,7 @@
 A heap of socks. Coming soon...
 
 
-## Requirements
+## Installation
 
 Install nvidia container toolkit on the host
 
@@ -16,4 +16,10 @@ sudo apt-get update
 sudo apt-get install -y nvidia-docker2
 
 sudo systemctl restart docker
+```
+
+Then start the docker
+
+```
+docker run --volume ~/.gerev/storage:/opt/storage --gpus all -p 0.0.0.0:80:80 gerev
 ```
