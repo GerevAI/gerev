@@ -4,6 +4,12 @@ services:
     ports:
       - 80:80
     volumes:
-      - ./storage:/var/opt/storage
-      - ./backend:/app
+      - ~/.gerev/storage:/opt/storage
     build: .
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -2,9 +2,11 @@ import logging
 from threading import Thread
 import os
 import json
+import torch
 
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from data_sources.confluence import ConfluenceDataSource
 from data_sources.slack import SlackDataSource
@@ -16,6 +18,7 @@ from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
+from paths import UI_PATH
 
 from api.search import router as search_router
 from api.data_source import router as data_source_router
@@ -55,6 +58,8 @@ def load_supported_data_sources_to_db():
 
 @app.on_event("startup")
 async def startup_event():
+    if not torch.cuda.is_available():
+        logger.warning("CUDA is not available, using CPU. This will make indexing and search very slow!!!")
     FaissIndex.create()
     Bm25Index.create()
     load_supported_data_sources_to_db()
@@ -112,3 +117,5 @@ async def clear_index():
         session.query(Document).delete()
         session.query(Paragraph).delete()
         session.commit()
+
+app.mount('/', StaticFiles(directory=UI_PATH, html=True), name='ui')

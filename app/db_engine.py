@@ -10,8 +10,8 @@ from sqlalchemy.orm import sessionmaker
 # import base document and then register all classes
 from schemas.base import Base
 
-if not os.path.exists('/tmp/storage/'):
-    os.mkdir('/tmp/storage/')
-engine = create_engine('sqlite:////tmp/storage/db.sqlite3')
+from paths import SQLITE_DB_PATH
+
+engine = create_engine(f'sqlite:///{SQLITE_DB_PATH}')
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
