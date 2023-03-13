@@ -1,4 +1,6 @@
-FROM python:3.9
+FROM qdrant/qdrant
+
+RUN apt-get update && apt-get install -y python3 python3-pip
 
 RUN pip install torch
 
@@ -15,10 +17,12 @@ COPY ./app /app
 
 COPY ./ui/build /ui
 
+COPY ./run.sh /app/run.sh
+
 WORKDIR /app
 
 COPY ./app/.env .env
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--env-file", ".env"]
+CMD ["./run.sh"]

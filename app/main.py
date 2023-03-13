@@ -15,7 +15,7 @@ from data_sources.slack import SlackDataSource
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
-from indexing.faiss_index import FaissIndex
+from indexing.qdrant_index import QdrantIndex
 from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
@@ -106,7 +106,7 @@ def load_supported_data_sources_to_db():
 async def startup_event():
     if not torch.cuda.is_available():
         logger.warning("CUDA is not available, using CPU. This will make indexing and search very slow!!!")
-    FaissIndex.create()
+    QdrantIndex.create()
     Bm25Index.create()
     load_supported_data_sources_to_db()
     Thread(target=BackgroundIndexer.run).start()
@@ -157,7 +157,7 @@ async def index_slack(background_tasks: BackgroundTasks):
 
 @app.post("/clear-index")
 async def clear_index():
-    FaissIndex.get().clear()
+    QdrantIndex.get().clear()
     Bm25Index.get().clear()
     with Session() as session:
         session.query(Document).delete()

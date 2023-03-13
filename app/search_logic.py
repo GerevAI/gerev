@@ -16,7 +16,7 @@ from sentence_transformers import CrossEncoder
 
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
-from indexing.faiss_index import FaissIndex
+from indexing.qdrant_index import QdrantIndex
 from data_source_api.basic_document import DocumentType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
@@ -160,7 +160,7 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
     query_embedding = bi_encoder.encode(query, convert_to_tensor=True, show_progress_bar=False)
 
     # Search the index for 100 candidates
-    index = FaissIndex.get()
+    index = QdrantIndex.get()
     results = index.search(query_embedding, BI_ENCODER_CANDIDATES)
     results = results[0]
     results = [int(id) for id in results if id != -1]  # filter out empty results
