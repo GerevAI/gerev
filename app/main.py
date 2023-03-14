@@ -1,24 +1,20 @@
-import json
 import logging
 import os
-from threading import Thread
+from dataclasses import dataclass
 
 import torch
-from fastapi import FastAPI, BackgroundTasks, Request, HTTPException
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import JSONResponse
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
-from data_sources.confluence import ConfluenceDataSource
-from data_sources.slack import SlackDataSource
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from paths import UI_PATH
-from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
@@ -78,9 +74,13 @@ async def shutdown_event():
     BackgroundIndexer.stop()
 
 
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+@app.get("/status")
+async def status():
+    @dataclass
+    class Status:
+        left_to_index: int
+
+    return Status(left_to_index=BackgroundIndexer.get_left_to_index())
 
 
 @app.post("/clear-index")

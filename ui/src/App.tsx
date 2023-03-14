@@ -13,6 +13,8 @@ import Modal from 'react-modal';
 import { api } from "./api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { ClipLoader } from "react-spinners";
+import { RiSettings4Fill } from "react-icons/ri";
 
 export interface AppState {
   query: string
@@ -22,6 +24,13 @@ export interface AppState {
   isNoResults: boolean
   isModalOpen: boolean
   isServerDown: boolean
+  isStartedFetching: boolean
+  leftToIndex: number
+  lastServerDownTimestamp: number
+}
+
+export interface ServerStatus {
+  left_to_index: number
 }
 
 Modal.setAppElement('#root');
@@ -52,13 +61,16 @@ export default class App extends React.Component <{}, AppState>{
   constructor() {
     super({});
     this.state = {
-      isLoading: false,
-      isNoResults: false,
       query: "",
       results: [],
-      searchDuration: 0,
+      isLoading: false,
+      isNoResults: false,
       isModalOpen: false,
-      isServerDown: false
+      isServerDown: false,
+      isStartedFetching: false,
+      leftToIndex: 0,
+      searchDuration: 0,
+      lastServerDownTimestamp: 0
     }
 
     this.openModal = this.openModal.bind(this); // bind the method here
@@ -67,20 +79,37 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   componentDidMount() {
-    this.validateServerIsUp();
+    if (!this.state.isStartedFetching) {
+      this.fetchStatsusForever();
+      this.setState({isStartedFetching: true});
+    }
   }
 
-  async validateServerIsUp() {
-    api.get('/health').then((res) => {
+  async fetchStatsusForever() {
+    let successSleepSeconds = 5;
+    let timeBetweenFailToast = 5;
+    let failSleepSeconds = 1;
+
+    api.get<ServerStatus>('/status').then((res) => {
       if (this.state.isServerDown) {
+        toast.dismiss();
         toast.success("Server online.", {autoClose: 2000});
-        this.setState({isServerDown: false});
       }
+
+      if(this.state.leftToIndex > 0 && res.data.left_to_index == 0) {
+        toast.success("Indexing finished.", {autoClose: 2000});
+      }
+
+      this.setState({isServerDown: false, leftToIndex: res.data.left_to_index});
+      setTimeout(() => this.fetchStatsusForever(), successSleepSeconds * 1000);
     }).catch((err) => {
       this.setState({isServerDown: true});
-      let waitSeconds = 5;
-      toast.error(`Server is down, retrying in ${waitSeconds} seconds...`, {autoClose: waitSeconds * 1000});
-      setTimeout(() => this.validateServerIsUp(), waitSeconds * 1000);
+
+      if (Date.now() - this.state.lastServerDownTimestamp > 5000) {  // if it's 5 seconds since last server down, show a toast
+        toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: timeBetweenFailToast * 1000});
+        this.setState({lastServerDownTimestamp: Date.now()});
+      }
+      setTimeout(() => this.fetchStatsusForever(), failSleepSeconds * 1000);
     })    
   }
   
@@ -117,13 +146,20 @@ export default class App extends React.Component <{}, AppState>{
     return (
     <div>
       <ToastContainer className='z-50' theme="colored" />
+      <RiSettings4Fill onClick={this.openModal} className="z-30 float-right mr-6 mt-6 text-[42px] text-[#8983e0] hover:cursor-pointer hover:rotate-90
+         transition-all duration-300 hover:drop-shadow-2xl"></RiSettings4Fill>
       <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
-        <div className='absolute'>
-          <button onClick={this.openModal} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
-              hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
-                Settings
-          </button>
-        </div>
+        {
+          this.state.leftToIndex > 0 &&
+          <div className="flex flex-col items-center w-[500px] justify-center z-20 relative mx-auto top-6">
+            <div className="relative self-center text-xs text-gray-300 bg-[#191919] border-[#4F4F4F] border-[.8px] font-medium font-inter rounded-full inline-block px-3 py-1 mb-6">
+              <div className="text-[#E4E4E4] text-sm flex flex-row justify-center items-center">
+                <ClipLoader color="#ffffff" loading={true} size={14} aria-label="Loading Spinner"/>
+                <span className="ml-2">Indexing {this.state.leftToIndex} docs...</span>
+              </div>
+            </div>
+          </div>
+        }
         <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
@@ -189,14 +225,6 @@ export default class App extends React.Component <{}, AppState>{
 
       
     );  
-  }
-
-  startIndex = () => {
-    try {
-        const response = api.post(`/index-confluence`).then(response => {});
-    } catch (error) {
-      console.error(error);
-    }
   }
 
   handleQueryChange = (query: string) => {

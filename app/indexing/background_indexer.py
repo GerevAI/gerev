@@ -8,6 +8,11 @@ from indexing.index_documents import Indexer
 class BackgroundIndexer:
     _thread = None
     _stop_event = threading.Event()
+    _left_to_index = 0
+
+    @classmethod
+    def get_left_to_index(cls):
+        return cls._left_to_index
 
     @classmethod
     def start(cls):
@@ -35,6 +40,8 @@ class BackgroundIndexer:
             if not docs_chunk:
                 continue
 
+            BackgroundIndexer._left_to_index = len(docs_chunk)
             logger.info(f'Got chunk of {len(docs_chunk)} documents')
             Indexer.index_documents(docs_chunk)
             logger.info(f'Finished indexing chunk of {len(docs_chunk)} documents')
+            BackgroundIndexer._left_to_index = 0
