@@ -129,4 +129,4 @@ async def clear_index():
 try:
     app.mount('/', StaticFiles(directory=UI_PATH, html=True), name='ui')
 except Exception as e:
-    logger.warning(f"Failed to mount UI: {e}")
+    logger.warning(f"Failed to mount UI (you probably need to build it): {e}")
