@@ -10,8 +10,9 @@ import { SearchResult, SearchResultProps } from "./components/search-result";
 import { addToSearchHistory } from "./autocomplete";
 import DataSourcePanel from "./components/data-source-panel";
 import Modal from 'react-modal';
-import { GrFormClose } from "react-icons/gr";
 import { api } from "./api";
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export interface AppState {
   query: string
@@ -35,7 +36,8 @@ const customStyles = {
     background: '#221f2e',
     width: '50vw',
     border: 'solid #694f94 0.5px',
-    borderRadius: '12px'
+    borderRadius: '12px',
+    padding: '0px'
   },
   overlay: {
     background: '#0000004a'
@@ -77,7 +79,9 @@ export default class App extends React.Component <{}, AppState>{
 
   render() {
     return (
-      <div className="w-[98vw]">
+    <div>
+      <ToastContainer className='z-50' theme="colored" />
+      <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
         <div className='absolute'>
           <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
@@ -93,12 +97,9 @@ export default class App extends React.Component <{}, AppState>{
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
           style={customStyles}>
-            <GrFormClose className="text-4xl text-white stroke-white stroke-current hover:cursor-pointer" color="white" stroke="white" path="white" onClick={this.closeModal}></GrFormClose>
-            <DataSourcePanel/>
+          <DataSourcePanel onClose={this.closeModal}/>
         </Modal>
-
-        
-
+      
         {/* front search page*/}
         {
           this.state.results.length === 0 &&    
@@ -152,6 +153,8 @@ export default class App extends React.Component <{}, AppState>{
 
 
       </div>
+      </div>
+
       
     );  
   }

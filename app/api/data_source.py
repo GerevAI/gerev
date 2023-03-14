@@ -14,11 +14,18 @@ router = APIRouter(
 )
 
 
-@router.get("/list")
+@router.get("/list-types")
 async def list_data_source_types() -> List[str]:
     with Session() as session:
         data_sources = session.query(DataSourceType).all()
         return [data_source.name for data_source in data_sources]
+
+
+@router.get("/list-connected")
+async def list_connected_data_sources() -> List[str]:
+    with Session() as session:
+        data_sources = session.query(DataSource).all()
+        return [data_source.type.name for data_source in data_sources]
 
 
 class AddDataSource(BaseModel):
