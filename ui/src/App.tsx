@@ -119,10 +119,6 @@ export default class App extends React.Component <{}, AppState>{
       <ToastContainer className='z-50' theme="colored" />
       <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
         <div className='absolute'>
-          <button onClick={this.startIndex} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
-              hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
-                Index
-          </button>
           <button onClick={this.openModal} className='bg-[#886fda] ml-3 text-white p-2 rounded border-2 border-white-700
               hover:bg-[#ddddddd1] hover:text-[#060117] transition duration-500 ease-in-out m-2'>
                 Settings
