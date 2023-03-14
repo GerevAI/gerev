@@ -21,6 +21,7 @@ export interface AppState {
   isLoading: boolean
   isNoResults: boolean
   isModalOpen: boolean
+  isServerDown: boolean
 }
 
 Modal.setAppElement('#root');
@@ -56,13 +57,33 @@ export default class App extends React.Component <{}, AppState>{
       query: "",
       results: [],
       searchDuration: 0,
-      isModalOpen: false
+      isModalOpen: false,
+      isServerDown: false
     }
 
     this.openModal = this.openModal.bind(this); // bind the method here
     this.closeModal = this.closeModal.bind(this); // bind the method here
 
   }
+
+  componentDidMount() {
+    this.validateServerIsUp();
+  }
+
+  async validateServerIsUp() {
+    api.get('/health').then((res) => {
+      if (this.state.isServerDown) {
+        toast.success("Server online.", {autoClose: 2000});
+        this.setState({isServerDown: false});
+      }
+    }).catch((err) => {
+      this.setState({isServerDown: true});
+      let waitSeconds = 5;
+      toast.error(`Server is down, retrying in ${waitSeconds} seconds...`, {autoClose: waitSeconds * 1000});
+      setTimeout(() => this.validateServerIsUp(), waitSeconds * 1000);
+    })    
+  }
+  
 
   openModal() {
     this.setState({isModalOpen: true});
@@ -76,6 +97,21 @@ export default class App extends React.Component <{}, AppState>{
     this.setState({isModalOpen: false});
   }
 
+  getTitleGradient() {
+    if (this.state.isServerDown) {
+      return "from-[#333333_24.72%] via-[#333333_50.45%] to-[#333333_74.45%]"
+    }
+
+    return "from-[#FFFFFF_24.72%] via-[#B8ADFF_50.45%] to-[#B8ADFF_74.45%]"
+  }
+
+  getSocksColor() {
+    if (this.state.isServerDown) {
+      return " text-[#333333]"
+    }
+
+    return " text-[#A78BF6]"
+  }
 
   render() {
     return (
@@ -105,12 +141,12 @@ export default class App extends React.Component <{}, AppState>{
           this.state.results.length === 0 &&    
             <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
-                  <GiSocks className='text-7xl text-center text-[#A78BF6] mt-4 mr-7'></GiSocks>
-                  <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] via-[#B8ADFF_50.45%] to-[#B8ADFF_74.45%]">
+                  <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
+                  <span className={("text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l " + this.getTitleGradient())}>
                     gerev.ai
                   </span>
                 </h1>
-                <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
+                <SearchBar isDisabled={this.state.isServerDown} query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                           onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
 
                 <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
@@ -134,7 +170,7 @@ export default class App extends React.Component <{}, AppState>{
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
             </span>
             <div className="flex flex-col items-start w-10/12">
-              <SearchBar query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
+              <SearchBar isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)

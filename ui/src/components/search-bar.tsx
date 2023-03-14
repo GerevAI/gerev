@@ -13,6 +13,7 @@ export interface SearchBarState {
 export interface SearchBarProps {
     query: string
     isLoading: boolean
+    isDisabled: boolean
     showReset: boolean
     showSuggestions: boolean
     onSearch: () => void
@@ -31,9 +32,16 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
         }
     }
 
+    getBorderGradient() {
+      if (this.props.isDisabled) {
+        return 'from-[#222222] via-[#333333] to-[#222222]';
+      }
+      return 'from-[#8E59D1] via-[#85a6ec] to-[#b385ec]';
+    }
+
     render() {
         return ( 
-            <div className="h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r from-[#8E59D1] via-[#85a6ec] to-[#b385ec]">
+            <div className={("h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r " + this.getBorderGradient())}>
               <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>  
                 <button onClick={this.search} className='mx-2 text-white p-2 rounded
                   hover:text-[#493294] transition duration-500 ease-in-out flex items-center'>
@@ -46,7 +54,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                   /> : <BsSearch size={20} className="text-[#D2D2D2] hover:text-[#ebebeb] hover:cursor-pointer"></BsSearch>}
                 </button>
 
-                <input type="text" className='w-full font-poppins font-medium leading-7 text-lg p-2 rounded text-[#C9C9C9] bg-transparent !outline-none'
+                <input disabled={this.props.isDisabled} type="text" className='w-full font-poppins font-medium leading-7 text-lg p-2 rounded text-[#C9C9C9] bg-transparent !outline-none'
                         placeholder='Search' value={this.props.query} onChange={this.handleChange} onKeyDown={this.onKeyDown} />
                 {
                   this.props.showReset &&

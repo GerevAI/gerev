@@ -78,6 +78,11 @@ async def shutdown_event():
     BackgroundIndexer.stop()
 
 
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
+
+
 @app.post("/index-confluence")
 async def index_confluence(background_tasks: BackgroundTasks):
     # TODO: temporary solution, will be added thru api
