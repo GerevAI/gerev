@@ -32,10 +32,9 @@ class IndexingQueue:
             self.queue.put(docs)
             self.condition.notify_all()
 
-    def consume_all(self) -> List[BasicDocument]:
+    def consume_all(self, timeout=1) -> List[BasicDocument]:
         with self.condition:
-            while self.queue.empty():
-                self.condition.wait()
+            self.condition.wait(timeout=timeout)
 
             docs = []
             while not self.queue.empty():

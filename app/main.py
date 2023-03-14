@@ -70,7 +70,12 @@ async def startup_event():
     FaissIndex.create()
     Bm25Index.create()
     load_supported_data_sources_to_db()
-    Thread(target=BackgroundIndexer.run).start()
+    BackgroundIndexer.start()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    BackgroundIndexer.stop()
 
 
 @app.post("/index-confluence")
