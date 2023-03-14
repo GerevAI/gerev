@@ -132,7 +132,7 @@ def _cross_encode(
 
 
 def _assign_answer_sentence(candidate: Candidate, answer: str):
-    paragraph_sentences = re.split(r'([\.\!\?\:\-\*] |[\"“\(\)])', candidate.content)
+    paragraph_sentences = re.split(r'([\.\!\?\:\-] |[\"“\(\)])', candidate.content)
     sentence = None
     for i, paragraph_sentence in enumerate(paragraph_sentences):
         if answer in paragraph_sentence:
