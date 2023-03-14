@@ -83,49 +83,6 @@ async def health():
     return {"status": "ok"}
 
 
-@app.post("/index-confluence")
-async def index_confluence(background_tasks: BackgroundTasks):
-    # TODO: temporary solution, will be added thru api
-    logger.debug("Start indexing confluence documents")
-    confluence_config = {"token": os.environ.get("CONFLUENCE_TOKEN"),
-                         "url": os.environ.get("CONFLUENCE_URL")}
-    confluence_json = json.dumps(confluence_config)
-
-    # make data_source row
-    ds = DataSource(type_id=2, config=confluence_json)
-    with Session() as session:
-        session.add(ds)
-        session.commit()
-
-    # get data_source row
-    with Session() as session:
-        confluence_data_source = session.query(DataSource).filter_by(type_id=2).first()
-
-    confluence = ConfluenceDataSource(data_source_id=confluence_data_source.id, config=confluence_config)
-    background_tasks.add_task(confluence.feed_new_documents)
-
-
-@app.post("/index-slack")
-async def index_slack(background_tasks: BackgroundTasks):
-    # TODO: temporary solution, will be added thru api
-    logger.debug("Start indexing slack documents")
-    slack_config = {"token": os.environ.get("SLACK_TOKEN")}
-    slack_json = json.dumps(slack_config)
-
-    # make data_source row
-    ds = DataSource(type_id=1, config=slack_json)
-    with Session() as session:
-        session.add(ds)
-        session.commit()
-
-    # get data_source row
-    with Session() as session:
-        slack_data_source = session.query(DataSource).filter_by(type_id=1).first()
-
-    slack = SlackDataSource(data_source_id=slack_data_source.id, config=slack_config)
-    background_tasks.add_task(slack.feed_new_documents)
-
-
 @app.post("/clear-index")
 async def clear_index():
     FaissIndex.get().clear()
