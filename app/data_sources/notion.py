@@ -1,9 +1,6 @@
 import concurrent.futures
 import logging
-import os
-import re
-from datetime import datetime
-from typing import List, Optional, Dict
+from typing import Optional, Dict
 
 from notion_client import Client
 
@@ -54,7 +51,7 @@ class NotionDataSource(BaseDataSource):
         notion_pages = self._notion.search(filter={"property": "object", "value": "page"}).get("results")
         self._parse_pages_in_parallel(notion_pages)
 
-    def _parse_pages_worker(self, raw_pages: List[Dict]):
+    def _parse_pages_worker(self, raw_pages):
         parsed_docs = []
         for page in raw_pages:
             page_id = page["id"]
@@ -82,12 +79,12 @@ class NotionDataSource(BaseDataSource):
 
         IndexingQueue.get().feed(docs=parsed_docs)
 
-    def _parse_pages_in_parallel(self, pages: List[Dict]):
+    def _parse_pages_in_parallel(self, pages):
         workers = 10
         logging.info(f'Start parsing {len(pages)} documents (with {workers} workers)...')
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for i in range(workers):
-                futures.append(executor.submit(self._parse_documents_worker, pages[i::workers]))
+                futures.append(executor.submit(self._parse_pages_worker, pages[i::workers]))
             concurrent.futures.wait(futures)
