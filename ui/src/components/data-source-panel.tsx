@@ -40,6 +40,7 @@ export interface DataSourcePanelState {
    isAddingLoading: boolean
    newUrl: string
    newToken: string
+   newBigText: string
 }
 
 export interface DataSourcePanelProps {
@@ -101,7 +102,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          dataSourceTypes: [
          ],
          newUrl: '',
-         newToken: ''
+         newToken: '',
+         newBigText: ''
       }
    }
 
@@ -152,7 +154,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source as Platform)}></img>
-                                 <h1 className="text-white capitalize">{data_source}</h1>
+                                 <h1 className="text-white">{getPlatformDisplayName(data_source as Platform)}</h1>
                                  <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
                               </div>
                            )
@@ -259,7 +261,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               }
 
                               {this.state.selectedDataSource.value === 'google_drive' && (
-                                 <div></div>
+                                 <span className="leading-9 text-lg text-white">
+                                    Follow <a href='https://github.com/gerevai/gerev' className="inline underline" target="_blank">these instructions</a>
+                                 </span>
                               )}
                            </div>
 
@@ -280,6 +284,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </h1>
                                     <input value={this.state.newToken} onChange={(event) => this.setState({ newToken: event.target.value })}
                                        className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="paste-your-token-here"></input>
+                                 </div>
+                              }
+                              {
+                                 this.hasBigText() &&
+                                 <div className="flex flex-col w-full">
+                                    <h1 className="text-lg block text-white mb-4">JSON file content:</h1>
+                                    <textarea value={this.state.newBigText} onChange={(event) => this.setState({ newBigText: event.target.value })}
+                                       className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder="Paste JSON here"></textarea>
                                  </div>
                               }
                               <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
@@ -316,6 +328,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack";
    }
 
+   hasBigText = () => {
+      return this.state.selectedDataSource?.value === "google_drive";
+   }
+
    submit = () => {
       if (!this.state.selectedDataSource) return;
 
@@ -326,6 +342,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             break;
          case "slack":
             config = { token: this.state.newToken } as SlackConfig;
+         case "google_drive":
+            config = JSON.parse(this.state.newBigText)
       }
 
       let payload = {
@@ -335,8 +353,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAddingLoading: true });
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully");
-         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "" });
-         this.props.onAdded(this.state.selectedDataSource.value);
+         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "", newBigText: ""  });
+            this.props.onAdded(this.state.selectedDataSource.value);
       }).catch(error => {
          toast.error("Error adding data source");
          this.setState({ isAddingLoading: false });

@@ -44,7 +44,7 @@ app.include_router(data_source_router)
 
 
 @app.on_event("startup")
-@repeat_every(seconds=5)
+@repeat_every(seconds=60)
 def check_for_new_documents():
     with Session() as session:
         data_sources: List[DataSource] = session.query(DataSource).all()
