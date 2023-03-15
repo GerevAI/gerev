@@ -14,7 +14,7 @@ import { api } from "./api";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
-import { RiSettings4Fill } from "react-icons/ri";
+import { FiSettings } from "react-icons/fi";
 
 export interface AppState {
   query: string
@@ -146,8 +146,8 @@ export default class App extends React.Component <{}, AppState>{
     return (
     <div>
       <ToastContainer className='z-50' theme="colored" />
-      <RiSettings4Fill onClick={this.openModal} className="z-30 float-right mr-6 mt-6 text-[42px] text-[#8983e0] hover:cursor-pointer hover:rotate-90
-         transition-all duration-300 hover:drop-shadow-2xl"></RiSettings4Fill>
+      <FiSettings onClick={this.openModal} stroke={"#8983e0"} className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90
+         transition-all duration-300 hover:drop-shadow-2xl"></FiSettings>
       <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
         {
           this.state.leftToIndex > 0 &&

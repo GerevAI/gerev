@@ -34,8 +34,8 @@ class BaseDataSource(ABC):
 
     def index(self) -> None:
         try:
-            self._feed_new_documents()
             self._set_last_index_time()
+            self._feed_new_documents()
         except Exception as e:
             logging.error(f"Error while indexing data source {self._data_source_id}: {e}")
 

@@ -48,7 +48,7 @@ def check_for_new_documents():
     with Session() as session:
         data_sources: List[DataSource] = session.query(DataSource).all()
         for data_source in data_sources:
-            # every data source should be checked once every 60 minutes
+            # data source should be checked once every hour
             if (datetime.now() - data_source.last_indexed_at).total_seconds() <= 60 * 60:
                 continue
 

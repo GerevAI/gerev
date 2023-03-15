@@ -55,7 +55,7 @@ class ConfluenceDataSource(BaseDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         confluence_config = ConfluenceConfig(**self._config)
-        self._confluence = Confluence(url=confluence_config.url)
+        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token)
 
     def _list_spaces(self) -> List[Dict]:
         return ConfluenceDataSource.list_spaces(confluence=self._confluence)
@@ -69,9 +69,10 @@ class ConfluenceDataSource(BaseDataSource):
         self._parse_documents_in_parallel(raw_docs)
 
     def _parse_documents_worker(self, raw_docs: List[Dict]):
-        logging.info(f'Parsing {len(raw_docs)} documents')
+        logging.info(f'Worker parsing {len(raw_docs)} documents')
 
         parsed_docs = []
+        total_fed = 0
         for raw_page in raw_docs:
             last_modified = datetime.strptime(raw_page['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
             if last_modified < self._last_index_time:
@@ -102,15 +103,19 @@ class ConfluenceDataSource(BaseDataSource):
                                              url=url,
                                              type=DocumentType.DOCUMENT))
             if len(parsed_docs) >= 50:
+                total_fed += len(parsed_docs)
                 IndexingQueue.get().feed(docs=parsed_docs)
                 parsed_docs = []
 
         IndexingQueue.get().feed(docs=parsed_docs)
+        total_fed += len(parsed_docs)
+        if total_fed > 0:
+            logging.info(f'Worker fed {total_fed} documents')
 
     def _list_space_docs(self, space: Dict) -> List[Dict]:
         logging.info(f'Getting documents from space {space["name"]} ({space["key"]})')
         start = 0
-        limit = 500
+        limit = 200  # limit when expanding the version
 
         space_docs = []
         while True:
@@ -125,15 +130,21 @@ class ConfluenceDataSource(BaseDataSource):
 
             start += limit
 
-        logging.info(f'Got {len(space_docs)} documents from space {space["name"]}')
         return space_docs
 
     def _parse_documents_in_parallel(self, raw_docs: List[Dict]):
         workers = 10
-        logging.info(f'Start parsing {len(raw_docs)} documents (with {workers} workers)...')
+        logging.info(f'Parsing {len(raw_docs)} documents (with {workers} workers)...')
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for i in range(workers):
                 futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
             concurrent.futures.wait(futures)
+
+
+# if __name__ == '__main__':
+#     import os
+#     config = {"url": os.environ['CONFLUENCE_URL'], "token": os.environ['CONFLUENCE_TOKEN']}
+#     confluence = ConfluenceDataSource(config=config, data_source_id=0)
+#     confluence._feed_new_documents()
