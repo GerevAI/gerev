@@ -3,8 +3,7 @@ import os
 
 IS_IN_DOCKER = os.geteuid() == 0
 
-current_user = os.getlogin()
-STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{current_user}/.gerev/storage/')
+STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
 
 if not STORAGE_PATH.exists():
     STORAGE_PATH.mkdir(parents=True)

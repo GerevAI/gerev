@@ -18,15 +18,7 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 
-build the UI
-
-```
-cd ui/
-npm install
-npm run build
-```
-
-Then build and the docker
+Then pull and run the docker
 
 ```
 docker build -t gerev .

@@ -1,7 +1,7 @@
 faiss-cpu
 transformers
 sentence_transformers
-sqlalchemy
+sqlalchemy>=2.0.4
 fastapi
 uvicorn
 rank_bm25
@@ -12,4 +12,8 @@ slack_sdk
 pydantic
 python-multipart
 posthog
-fastapi-utils
+fastapi-restful
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+oauth2client

@@ -17,8 +17,8 @@ COPY ./ui/build /ui
 
 WORKDIR /app
 
-COPY ./app/.env .env
+VOLUME [ "/opt/storage" ]
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--env-file", ".env"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
