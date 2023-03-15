@@ -117,8 +117,9 @@ export default class App extends React.Component <{}, AppState>{
     }).catch((err) => {
       this.setState({isServerDown: true});
 
-      if (Date.now() - this.state.lastServerDownTimestamp > 5000) {  // if it's 5 seconds since last server down, show a toast
-        toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: timeBetweenFailToast * 1000});
+      if (Date.now() - this.state.lastServerDownTimestamp > 6000) {  // if it's 6 seconds since last server down, show a toast
+        toast.dismiss();
+        toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: (timeBetweenFailToast-1) * 1000});
         this.setState({lastServerDownTimestamp: Date.now()});
       }
       setTimeout(() => this.fetchStatsusForever(), failSleepSeconds * 1000);
