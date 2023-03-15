@@ -7,7 +7,7 @@ from slack_sdk import WebClient
 
 from data_source_api.base_data_source import BaseDataSource
 from data_source_api.basic_document import DocumentType, BasicDocument
-from docs_queue import IndexingQueue
+from indexing_queue import IndexingQueue
 
 
 @dataclass

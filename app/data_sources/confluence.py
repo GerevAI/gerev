@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource
 from data_source_api.exception import InvalidDataSourceConfig
-from docs_queue import IndexingQueue
+from indexing_queue import IndexingQueue
 from pydantic import BaseModel
 
 

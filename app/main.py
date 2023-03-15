@@ -1,17 +1,16 @@
-from datetime import datetime
 import json
 import logging
 import os
 from dataclasses import dataclass
+from datetime import datetime
 from typing import List
 
 import torch
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import JSONResponse
 from fastapi_utils.tasks import repeat_every
-
+from starlette.responses import JSONResponse
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
@@ -20,6 +19,7 @@ from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
+from indexing_queue import IndexingQueue
 from paths import UI_PATH
 from schemas import DataSource
 from schemas.data_source_type import DataSourceType
@@ -103,9 +103,11 @@ async def shutdown_event():
 async def status():
     @dataclass
     class Status:
-        left_to_index: int
+        docs_in_indexing: int
+        docs_left_to_index: int
 
-    return Status(left_to_index=BackgroundIndexer.get_left_to_index())
+    return Status(docs_in_indexing=BackgroundIndexer.get_currently_indexing(),
+                  docs_left_to_index=IndexingQueue.get().get_how_many_left())
 
 
 @app.post("/clear-index")

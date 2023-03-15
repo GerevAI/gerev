@@ -43,6 +43,7 @@ export interface DataSourcePanelState {
 }
 
 export interface DataSourcePanelProps {
+   onAdded: () => void
    onClose: () => void
 }
 
@@ -337,6 +338,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          toast.success("Data source added successfully");
          this.setState({ connectedDataSources: [...this.state.connectedDataSources, this.state.selectedDataSource.value],
             isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "" });
+         this.props.onAdded();
       }).catch(error => {
          toast.error("Error adding data source");
          this.setState({ isAddingLoading: false });

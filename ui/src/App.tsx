@@ -25,12 +25,15 @@ export interface AppState {
   isModalOpen: boolean
   isServerDown: boolean
   isStartedFetching: boolean
-  leftToIndex: number
+  isPreparingIndexing: boolean
+  docsLeftToIndex: number
+  docsInIndexing: number
   lastServerDownTimestamp: number
 }
 
 export interface ServerStatus {
-  left_to_index: number
+  docs_in_indexing: number
+  docs_left_to_index: number
 }
 
 Modal.setAppElement('#root');
@@ -68,7 +71,9 @@ export default class App extends React.Component <{}, AppState>{
       isModalOpen: false,
       isServerDown: false,
       isStartedFetching: false,
-      leftToIndex: 0,
+      isPreparingIndexing: false,
+      docsLeftToIndex: 0,
+      docsInIndexing: 0,
       searchDuration: 0,
       lastServerDownTimestamp: 0
     }
@@ -96,11 +101,18 @@ export default class App extends React.Component <{}, AppState>{
         toast.success("Server online.", {autoClose: 2000});
       }
 
-      if(this.state.leftToIndex > 0 && res.data.left_to_index == 0) {
+      let isPreparingIndexing = this.state.isPreparingIndexing;
+      if (this.state.isPreparingIndexing && (res.data.docs_in_indexing > 0 || res.data.docs_left_to_index > 0)) {
+        isPreparingIndexing = false;
+      }
+
+      if(this.state.docsInIndexing > 0 && (res.data.docs_in_indexing == 0 && res.data.docs_left_to_index == 0)) {
         toast.success("Indexing finished.", {autoClose: 2000});
       }
 
-      this.setState({isServerDown: false, leftToIndex: res.data.left_to_index});
+      this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
+                     docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
+                     
       setTimeout(() => this.fetchStatsusForever(), successSleepSeconds * 1000);
     }).catch((err) => {
       this.setState({isServerDown: true});
@@ -111,6 +123,29 @@ export default class App extends React.Component <{}, AppState>{
       }
       setTimeout(() => this.fetchStatsusForever(), failSleepSeconds * 1000);
     })    
+  }
+
+  shouldShowIndexingStatus() {
+    return this.state.isPreparingIndexing || this.state.docsInIndexing > 0 || this.state.docsLeftToIndex > 0;
+  }
+
+  getIndexingStatusText() {
+    if (this.state.isPreparingIndexing) {
+      return "Fetching docs to index...";
+    }
+
+    if (this.state.docsInIndexing > 0) {
+      let text = "Indexing " + this.state.docsInIndexing + " documents...";
+      if (this.state.docsLeftToIndex > 0) {
+        text += " (" + this.state.docsLeftToIndex + " left)";
+      }
+
+      return text;
+    }
+
+    if (this.state.docsLeftToIndex > 0) {
+      return "Preparing to index " + this.state.docsLeftToIndex + " documents...";
+    }
   }
   
 
@@ -150,12 +185,12 @@ export default class App extends React.Component <{}, AppState>{
          transition-all duration-300 hover:drop-shadow-2xl"></FiSettings>
       <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
         {
-          this.state.leftToIndex > 0 &&
+          this.shouldShowIndexingStatus() &&
           <div className="flex flex-col items-center w-[500px] justify-center z-20 relative mx-auto top-6">
             <div className="relative self-center text-xs text-gray-300 bg-[#191919] border-[#4F4F4F] border-[.8px] font-medium font-inter rounded-full inline-block px-3 py-1 mb-6">
               <div className="text-[#E4E4E4] text-sm flex flex-row justify-center items-center">
                 <ClipLoader color="#ffffff" loading={true} size={14} aria-label="Loading Spinner"/>
-                <span className="ml-2">Indexing {this.state.leftToIndex} docs...</span>
+                <span className="ml-2">{this.getIndexingStatusText()}</span>
               </div>
             </div>
           </div>
@@ -165,7 +200,7 @@ export default class App extends React.Component <{}, AppState>{
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
           style={customStyles}>
-          <DataSourcePanel onClose={this.closeModal}/>
+          <DataSourcePanel onClose={this.closeModal} onAdded={() => {this.setState({isPreparingIndexing: true})}}></DataSourcePanel>
         </Modal>
       
         {/* front search page*/}
