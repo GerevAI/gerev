@@ -1,7 +1,9 @@
-from pathlib import Path
+import sys
 import os
 
-_in_docker = os.geteuid() == 0 
+from pathlib import Path
+
+_in_docker = False if (sys.platform == "win32" or not hasattr(os, "geteuid")) else os.geteuid()
 
 STORAGE_PATH = Path('/opt/storage/') if _in_docker else Path('~/.gerev/storage/')
 
