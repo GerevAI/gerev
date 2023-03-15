@@ -34,7 +34,6 @@ export interface SlackConfig {
 
 export interface DataSourcePanelState {
    dataSourceTypes: SelectOption[]
-   connectedDataSources: string[]
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
@@ -43,7 +42,8 @@ export interface DataSourcePanelState {
 }
 
 export interface DataSourcePanelProps {
-   onAdded: () => void
+   connectedDataSources: string[]
+   onAdded: (dataSourceType: string) => void
    onClose: () => void
 }
 
@@ -97,18 +97,16 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          selectedDataSource: { value: 'unknown', label: 'unknown' },
          dataSourceTypes: [
          ],
-         connectedDataSources: [],
          newUrl: '',
          newToken: ''
       }
    }
 
    async componentDidMount() {
-      this.listAvailableDataSources();
-      this.listConnectedDataSources();
+      this.listAvailableDataSourceTypes();
    }
 
-   async listAvailableDataSources() {
+   async listAvailableDataSourceTypes() {
       try {
          const response = await api.get('/data-source/list-types');
          let types = this.dataSourceNamesToSelectOptions(response.data);
@@ -116,14 +114,6 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             dataSourceTypes: types,
             selectedDataSource: types[1]
          })
-      } catch (error) {
-      }
-   }
-
-   async listConnectedDataSources() {
-      try {
-         const response = await api.get('/data-source/list-connected');
-         this.setState({ connectedDataSources: response.data })
       } catch (error) {
       }
    }
@@ -152,10 +142,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                !this.state.isAdding && (
                   <div>
                      <h1 className="text-2xl block text-white mb-4">
-                        {this.state.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
+                        {this.props.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
                      </h1>
                      <div className="flex flex-row w-[100%] flex-wrap">
-                        {this.state.connectedDataSources.map((data_source) => {
+                        {this.props.connectedDataSources.map((data_source) => {
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source as Platform)}></img>
@@ -336,9 +326,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAddingLoading: true });
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully");
-         this.setState({ connectedDataSources: [...this.state.connectedDataSources, this.state.selectedDataSource.value],
-            isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "" });
-         this.props.onAdded();
+         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "" });
+         this.props.onAdded(this.state.selectedDataSource.value);
       }).catch(error => {
          toast.error("Error adding data source");
          this.setState({ isAddingLoading: false });

@@ -15,11 +15,13 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
+import {AiFillWarning} from "react-icons/ai";
 
 export interface AppState {
   query: string
   results: SearchResultProps[]
   searchDuration: number
+  connectedDataSources: string[]
   isLoading: boolean
   isNoResults: boolean
   isModalOpen: boolean
@@ -66,6 +68,7 @@ export default class App extends React.Component <{}, AppState>{
     this.state = {
       query: "",
       results: [],
+      connectedDataSources: [],
       isLoading: false,
       isNoResults: false,
       isModalOpen: false,
@@ -83,10 +86,20 @@ export default class App extends React.Component <{}, AppState>{
 
   }
 
+  
   componentDidMount() {
     if (!this.state.isStartedFetching) {
       this.fetchStatsusForever();
       this.setState({isStartedFetching: true});
+      this.listConnectedDataSources();
+    }
+  }
+
+  async listConnectedDataSources() {
+    try {
+       const response = await api.get('/data-source/list-connected');
+       this.setState({ connectedDataSources: response.data })
+    } catch (error) {
     }
   }
 
@@ -99,6 +112,7 @@ export default class App extends React.Component <{}, AppState>{
       if (this.state.isServerDown) {
         toast.dismiss();
         toast.success("Server online.", {autoClose: 2000});
+        this.listConnectedDataSources();
       }
 
       let isPreparingIndexing = this.state.isPreparingIndexing;
@@ -183,26 +197,45 @@ export default class App extends React.Component <{}, AppState>{
     return (
     <div>
       <ToastContainer className='z-50' theme="colored" />
-      <FiSettings onClick={this.openModal} stroke={"#8983e0"} className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90
-         transition-all duration-300 hover:drop-shadow-2xl"></FiSettings>
-      <div className={"w-[98vw] z-10" + (this.state.isModalOpen ? ' filter blur-sm' : '')}>
+      <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
+        className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
+      </FiSettings>
         {
           this.shouldShowIndexingStatus() &&
-          <div className="flex flex-col items-center w-[500px] justify-center z-20 relative mx-auto top-6">
-            <div className="relative self-center text-xs text-gray-300 bg-[#191919] border-[#4F4F4F] border-[.8px] font-medium font-inter rounded-full inline-block px-3 py-1 mb-6">
-              <div className="text-[#E4E4E4] text-sm flex flex-row justify-center items-center">
+          <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
+            <div className="text-xs bg-[#191919] border-[#4F4F4F] border-[.8px] rounded-full inline-block px-3 py-1">
+              <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
                 <ClipLoader color="#ffffff" loading={true} size={14} aria-label="Loading Spinner"/>
                 <span className="ml-2">{this.getIndexingStatusText()}</span>
               </div>
             </div>
           </div>
         }
+        {
+          this.state.connectedDataSources.length == 0 &&
+          <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
+            <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
+              <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
+                <AiFillWarning color="red" size={20}/>
+                <span className="ml-2">No sources added. </span>
+                <a className="font-medium ml-1 text-[red] animate-pulse hover:cursor-pointer inline-flex items-center transition duration-150 ease-in-out group"
+                    onClick={this.openModal}>
+                    Go add some{' '}
+                    <span className="tracking-normal group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        }
+      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length == 0  ? ' filter blur-sm' : '')}>
         <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
           style={customStyles}>
-          <DataSourcePanel onClose={this.closeModal} onAdded={() => {this.setState({isPreparingIndexing: true})}}></DataSourcePanel>
+          <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
+                        onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
+                        connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
         </Modal>
       
         {/* front search page*/}
