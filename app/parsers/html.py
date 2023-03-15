@@ -9,5 +9,5 @@ def html_to_text(html: str) -> str:
     plain_text = soup.get_text(separator="\n\n")
 
     # When there is a link immidiately followed by a symbol, BeautifulSoup adds whitespace between them. We remove it.
-    plain_text = re.sub(r'\s+(?=[\.\?\!\:])', '', plain_text)
+    plain_text = re.sub(r'\s+(?=[\.\?\!\:\,])', '', plain_text)
     return plain_text
