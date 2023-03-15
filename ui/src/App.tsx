@@ -1,4 +1,7 @@
 import * as React from "react";
+import { v4 as uuidv4 } from 'uuid';
+import posthog from 'posthog-js';
+
 
 
 import EnterImage from './assets/images/enter.svg';
@@ -22,6 +25,7 @@ import {AiFillWarning} from "react-icons/ai";
 import {IoMdLock} from "react-icons/io";
 
 export interface AppState {
+  uuid: string
   query: string
   results: SearchResultProps[]
   searchDuration: number
@@ -74,6 +78,7 @@ export default class App extends React.Component <{}, AppState>{
   constructor() {
     super({});
     this.state = {
+      uuid: "",
       query: "",
       results: [],
       connectedDataSources: [],
@@ -98,7 +103,12 @@ export default class App extends React.Component <{}, AppState>{
 
   
   componentDidMount() {
-    // check if stored discord key in local storage
+    if (localStorage.getItem('uuid') == null) {
+      let uuid = uuidv4();
+      localStorage.setItem('uuid', uuid);
+    }
+    posthog.identify(localStorage.getItem('uuid')!);
+
     if (localStorage.getItem('discord_key') != null) {
       this.setState({didPassDiscord: true});
     }
@@ -390,6 +400,8 @@ export default class App extends React.Component <{}, AppState>{
 
     this.setState({isLoading: true});
     let start = new Date().getTime();
+
+    posthog.capture('search');
 
     try {
         const response = api.get<SearchResultProps[]>("/search", {

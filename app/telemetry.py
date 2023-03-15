@@ -38,7 +38,7 @@ def send_startup_telemetry():
             existing_uuid = new_uuid
 
     # Capture an event with PostHog
-    posthog.api_key = "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391"
+    posthog.api_key = "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391Pm"
     posthog.host = 'https://eu.posthog.com'
 
     # Identify a user with the UUID
