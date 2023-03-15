@@ -137,7 +137,7 @@ function getBigIconByPlatform (platform: Platform) {
     }
 }
 
-function getPlatformDisplayName(platform: Platform) {
+export function getPlatformDisplayName(platform: Platform) {
     switch (platform) {
       case Platform.Confluence:
         return PlatformDisplayName.Confluence

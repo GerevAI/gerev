@@ -1,11 +1,12 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
-import { Platform } from "./search-result";
+import { Platform, getPlatformDisplayName } from "./search-result";
 
 import Confluence from '../assets/images/confluence.svg';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
 import Slack from '../assets/images/slack.svg';
+import GoogleDrive from '../assets/images/google-drive.svg'
 
 
 import { AiFillCheckCircle } from "react-icons/ai";
@@ -53,6 +54,8 @@ function getBigIconByPlatform(platform: Platform) {
          return Confluence
       case Platform.Slack:
          return Slack;
+      case Platform.Drive:
+         return GoogleDrive;
    }
 }
 
@@ -122,7 +125,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       return dataSourceNames.map((data_source) => {
          return {
             value: data_source,
-            label: this.capitilize(data_source)
+            label: getPlatformDisplayName(data_source as Platform)
          }
       })
    }
@@ -254,6 +257,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  </span>
                               )
                               }
+
+                              {this.state.selectedDataSource.value === 'google_drive' && (
+                                 <div></div>
+                              )}
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
