@@ -12,3 +12,4 @@ slack_sdk
 pydantic
 python-multipart
 posthog
+fastapi-utils

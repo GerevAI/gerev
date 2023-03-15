@@ -1,9 +1,10 @@
 from pathlib import Path
 import os
 
-_in_docker = os.geteuid() == 0 
+_in_docker = os.geteuid() == 0
 
-STORAGE_PATH = Path('/opt/storage/') if _in_docker else Path('~/.gerev/storage/')
+current_user = os.getlogin()
+STORAGE_PATH = Path('/opt/storage/') if _in_docker else Path(f'/home/{current_user}/.gerev/storage/')
 
 if not STORAGE_PATH.exists():
     STORAGE_PATH.mkdir(parents=True)

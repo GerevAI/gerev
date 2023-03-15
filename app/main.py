@@ -1,20 +1,27 @@
+from datetime import datetime
+import json
 import logging
 import os
 from dataclasses import dataclass
+from typing import List
 
 import torch
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import JSONResponse
+from fastapi_utils.tasks import repeat_every
+
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
+from data_source_api.utils import get_class_by_data_source_name
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from paths import UI_PATH
+from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
@@ -33,6 +40,24 @@ app.add_middleware(
 )
 app.include_router(search_router)
 app.include_router(data_source_router)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=60)
+def check_for_new_documents():
+    with Session() as session:
+        data_sources: List[DataSource] = session.query(DataSource).all()
+        for data_source in data_sources:
+            # every data source should be checked once every 60 minutes
+            if (datetime.now() - data_source.last_indexed_at).total_seconds() <= 60 * 60:
+                continue
+
+            logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
+            data_source_cls = get_class_by_data_source_name(data_source.type.name)
+            config = json.loads(data_source.config)
+            data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
+                                                   last_index_time=data_source.last_indexed_at)
+            data_source_instance.index()
 
 
 @app.exception_handler(Exception)

@@ -91,7 +91,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    constructor(props) {
       super(props);
       this.state = {
-         isAdding: true,
+         isAdding: false,
          isAddingLoading: false,
          selectedDataSource: { value: 'unknown', label: 'unknown' },
          dataSourceTypes: [

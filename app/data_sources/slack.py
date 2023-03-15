@@ -38,9 +38,9 @@ class SlackDataSource(BaseDataSource):
     def _is_valid_message(message: Dict) -> bool:
         return 'client_msg_id' in message
 
-    def __init__(self, data_source_id: int, config: Optional[Dict] = None):
-        super().__init__(data_source_id, config)
-        slack_config = SlackConfig(**config)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        slack_config = SlackConfig(**self._config)
         self._slack = WebClient(token=slack_config.token)
         self._authors_cache: Dict[str, SlackAuthor] = {}
 
@@ -63,15 +63,26 @@ class SlackDataSource(BaseDataSource):
 
         return author
 
-    def feed_new_documents(self):
+    def _feed_new_documents(self) -> None:
         conversations = self._list_conversations()
         self._join_conversations(conversations)
 
+        last_index_unix = self._last_index_time.timestamp()
         documents = []
         for conv in conversations:
             last_msg: Optional[BasicDocument] = None
-            messages = self._slack.conversations_history(channel=conv.id)
-            for message in messages['messages']:
+
+            messages = []
+            has_more = True
+            cursor = None
+            while has_more:
+                response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
+                                                             limit=1000, cursor=cursor)
+                messages.extend(response['messages'])
+                if has_more := response["has_more"]:
+                    cursor = response["response_metadata"]["next_cursor"]
+
+            for message in messages:
                 if not self._is_valid_message(message):
                     if last_msg is not None:
                         documents.append(last_msg)

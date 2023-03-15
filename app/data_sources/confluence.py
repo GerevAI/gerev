@@ -1,9 +1,8 @@
 import concurrent.futures
 import logging
-import os
 import re
 from datetime import datetime
-from typing import List, Optional, Dict
+from typing import List, Dict
 
 from atlassian import Confluence
 from bs4 import BeautifulSoup
@@ -24,12 +23,12 @@ class ConfluenceDataSource(BaseDataSource):
 
     @staticmethod
     def _preprocess_html(html):
-        # Becuase documents only contain text, we use a colon to separate subtitles from the text
+        # Documents contain text only, we use a colon to separate subtitles from the text
         return re.sub(r'(?=<\/h[234567]>)', ': ', html)
 
     @staticmethod
     def _preprocess_text(text):
-        # When there is a link immidiately followed by a dot, BeautifulSoup adds whitespace between them. We remove it.
+        # When there is a link immediately followed by a dot, BeautifulSoup adds whitespace between them. We remove it.
         return re.sub(r'\s+\.', '.', text)
 
     @staticmethod
@@ -38,7 +37,7 @@ class ConfluenceDataSource(BaseDataSource):
         retries = 3
         for i in range(retries):
             try:
-                return confluence.get_all_spaces()['results']
+                return confluence.get_all_spaces(expand='status')['results']
             except Exception as e:
                 logging.error(f'Confluence connection failed: {e}')
                 if i == retries - 1:
@@ -53,15 +52,15 @@ class ConfluenceDataSource(BaseDataSource):
         except Exception as e:
             raise InvalidDataSourceConfig from e
 
-    def __init__(self, data_source_id: int, config: Optional[Dict] = None):
-        super().__init__(data_source_id, config)
-        confluence_config = ConfluenceConfig(**config)
-        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        confluence_config = ConfluenceConfig(**self._config)
+        self._confluence = Confluence(url=confluence_config.url)
 
     def _list_spaces(self) -> List[Dict]:
         return ConfluenceDataSource.list_spaces(confluence=self._confluence)
 
-    def feed_new_documents(self):
+    def _feed_new_documents(self) -> None:
         spaces = self._list_spaces()
         raw_docs = []
         for space in spaces:
@@ -74,14 +73,16 @@ class ConfluenceDataSource(BaseDataSource):
 
         parsed_docs = []
         for raw_page in raw_docs:
+            last_modified = datetime.strptime(raw_page['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
+            if last_modified < self._last_index_time:
+                continue
+
             doc_id = raw_page['id']
             fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
 
             author = fetched_raw_page['history']['createdBy']['displayName']
             author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
             author_image_url = fetched_raw_page['_links']['base'] + author_image
-            timestamp = datetime.strptime(fetched_raw_page['history']['createdDate'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            
             html_content = fetched_raw_page['body']['storage']['value']
             html_content = ConfluenceDataSource._preprocess_html(html_content)
             soup = BeautifulSoup(html_content, features='html.parser')
@@ -94,7 +95,7 @@ class ConfluenceDataSource(BaseDataSource):
                                              content=plain_text,
                                              author=author,
                                              author_image_url=author_image_url,
-                                             timestamp=timestamp,
+                                             timestamp=last_modified,
                                              id=doc_id,
                                              data_source_id=self._data_source_id,
                                              location=raw_page['space_name'],
@@ -113,7 +114,8 @@ class ConfluenceDataSource(BaseDataSource):
 
         space_docs = []
         while True:
-            new_batch = self._confluence.get_all_pages_from_space(space['key'], start=start, limit=limit)
+            new_batch = self._confluence.get_all_pages_from_space(space['key'], start=start, limit=limit,
+                                                                  expand='version')
             for doc in new_batch:
                 doc['space_name'] = space['name']
 
