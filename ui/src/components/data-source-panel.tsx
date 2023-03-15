@@ -155,10 +155,25 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            )
                         })
                         }
-                        <div onClick={() => { this.setState({ isAdding: true }) }} className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#ffffff] border-b-[.5px] transition duration-300 ease-in-out">
+                        {
+                           // for every data source type that is not connected, show an add button
+                           this.state.dataSourceTypes.map((data_source) => {
+                              if (!this.props.connectedDataSources.includes(data_source.value)) {
+                                 return (
+                                    <div onClick={() => { this.setState({ isAdding: true, selectedDataSource: data_source }) }} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                       <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source.value as Platform)}></img>
+                                       {/* <h1 className="text-white">Add</h1> */}
+                                       <h1 className="text-gray-500">{getPlatformDisplayName(data_source.value as Platform)}</h1>
+                                       <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
+                                    </div>
+                                 )
+                              }
+                           })
+                        }
+                        {/* <div onClick={() => { this.setState({ isAdding: true }) }} className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#ffffff] border-b-[.5px] transition duration-300 ease-in-out">
                            <h1 className="text-white">Add</h1>
                            <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
-                        </div>
+                        </div> */}
                      </div>
                   </div>)
             }
@@ -319,6 +334,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             break;
          case "slack":
             config = { token: this.state.newToken } as SlackConfig;
+            break;
+         case "google_drive":
+            config = JSON.parse(this.state.newBigText)
+            break;
       }
 
       let payload = {
