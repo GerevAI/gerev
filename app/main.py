@@ -9,8 +9,9 @@ import torch
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi_utils.tasks import repeat_every
 from starlette.responses import JSONResponse
+from fastapi_restful.tasks import repeat_every
+
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router

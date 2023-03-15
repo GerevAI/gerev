@@ -6,6 +6,7 @@ import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 import BlueFolder from '../assets/images/blue-folder.svg';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
+import GoogleDrive from '../assets/images/google-drive.svg';
 
 export interface TextPart{
     content: string
@@ -22,7 +23,13 @@ export enum ResultType {
 export enum Platform {
     Confluence = "confluence",
     Slack = "slack",
-    Drive = "drive"
+    Drive = "google_drive"
+}
+
+export enum PlatformDisplayName {
+    Confluence = "Confluence",
+    Slack = "Slack",
+    Drive = "Google Drive"
 }
 
 export interface SearchResultProps {
@@ -68,7 +75,7 @@ export const SearchResult = (props: SearchResultProps) => {
                 </span>
                 <span className="flex flex-row items-center">  
                     {getSmallIconByPlatform(props.platform as Platform)}
-                    <span className="text-[#A3A3A3]">{props.platform}</span>
+                    <span className="text-[#A3A3A3]">{getPlatformDisplayName(props.platform as Platform)}</span>
                 </span>
                 </span>
                 
@@ -126,6 +133,17 @@ function getBigIconByPlatform (platform: Platform) {
       case Platform.Slack:
         return <img className={classes} src={Slack}></img>
       case Platform.Drive:
-        return <FaGoogleDrive className={classes}></FaGoogleDrive>
+        return <img className={classes} src={GoogleDrive}></img>
+    }
+}
+
+export function getPlatformDisplayName(platform: Platform) {
+    switch (platform) {
+      case Platform.Confluence:
+        return PlatformDisplayName.Confluence
+      case Platform.Slack:
+        return PlatformDisplayName.Slack
+      case Platform.Drive:
+        return PlatformDisplayName.Drive
     }
 }

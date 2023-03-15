@@ -11,6 +11,7 @@ from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
+from parsers.html import html_to_text
 from pydantic import BaseModel
 
 
@@ -20,17 +21,6 @@ class ConfluenceConfig(BaseModel):
 
 
 class ConfluenceDataSource(BaseDataSource):
-
-    @staticmethod
-    def _preprocess_html(html):
-        # Documents contain text only, we use a colon to separate subtitles from the text
-        return re.sub(r'(?=<\/h[234567]>)', ': ', html)
-
-    @staticmethod
-    def _preprocess_text(text):
-        # When there is a link immediately followed by a dot, BeautifulSoup adds whitespace between them. We remove it.
-        return re.sub(r'\s+\.', '.', text)
-
     @staticmethod
     def list_spaces(confluence: Confluence) -> List[Dict]:
         # Usually the confluence connection fails, so we retry a few times
@@ -85,10 +75,7 @@ class ConfluenceDataSource(BaseDataSource):
             author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
             author_image_url = fetched_raw_page['_links']['base'] + author_image
             html_content = fetched_raw_page['body']['storage']['value']
-            html_content = ConfluenceDataSource._preprocess_html(html_content)
-            soup = BeautifulSoup(html_content, features='html.parser')
-            plain_text = soup.get_text(separator="\n")
-            plain_text = ConfluenceDataSource._preprocess_text(plain_text)
+            plain_text = html_to_text(html_content)
 
             url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
 
