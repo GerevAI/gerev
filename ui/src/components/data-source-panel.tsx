@@ -262,7 +262,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  <span className="leading-9 text-lg text-white">
-                                    Follow <a href='https://github.com/gerevai/gerev' className="inline underline" target="_blank">these instructions</a>
+                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
                            </div>
