@@ -202,7 +202,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. Paste here your confluence url</span>
+                                       <span>1. {'Go to your Confluene -\> top-right profile picture -\> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -\> Create token -\> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
@@ -268,12 +268,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.hasToken() &&
                                  <div className="flex flex-col">
-                                    <h1 className="text-lg block text-white mb-4">Bot User OAuth Token</h1>
+                                    <h1 className="text-lg block text-white mb-4">
+                                       {this.state.selectedDataSource.value == "slack" ? "Bot User OAuth Token" : "Personal Access Token"}
+                                    </h1>
                                     <input value={this.state.newToken} onChange={(event) => this.setState({ newToken: event.target.value })}
                                        className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="paste-your-token-here"></input>
                                  </div>
                               }
-                              <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 flex-row items-center justify-center bg-[#352C45]
+                              <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
                                   hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
                                  {!this.state.isAddingLoading && <h1 className="text-white">Submit</h1>}
                                  {
