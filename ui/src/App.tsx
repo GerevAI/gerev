@@ -266,18 +266,18 @@ export default class App extends React.Component <{}, AppState>{
         {/* results page */}
         {
           this.state.results.length > 0 && 
-          <div className="relative flex flex-row top-20 left-5 w-full">
+          <div className="relative flex flex-row top-20 left-5 w-full sm:w-11/12">
             <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
             </span>
-            <div className="flex flex-col items-start w-10/12">
+            <div className="flex flex-col items-start w-10/12 sm:w-full">
               <SearchBar isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)
               </span>
-              <div className='w-6/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
+              <div className='w-6/12 sm:w-8/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
                       <SearchResult key={index} {...result} />
