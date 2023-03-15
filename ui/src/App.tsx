@@ -248,7 +248,7 @@ export default class App extends React.Component <{}, AppState>{
                     gerev.ai
                   </span>
                 </h1>
-                <SearchBar isDisabled={this.state.isServerDown} query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
+                <SearchBar widthPercentage={32} isDisabled={this.state.isServerDown} query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                           onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
 
                 <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
@@ -272,7 +272,7 @@ export default class App extends React.Component <{}, AppState>{
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
             </span>
             <div className="flex flex-col items-start w-10/12 sm:w-full">
-              <SearchBar isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
+              <SearchBar widthPercentage={40} isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)

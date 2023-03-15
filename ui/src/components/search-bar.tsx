@@ -12,6 +12,7 @@ export interface SearchBarState {
 
 export interface SearchBarProps {
     query: string
+    widthPercentage: number
     isLoading: boolean
     isDisabled: boolean
     showReset: boolean
@@ -41,7 +42,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
 
     render() {
         return ( 
-            <div className={("h-[49.5px] w-[500px] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r " + this.getBorderGradient())}>
+            <div style={{width: `${this.props.widthPercentage}%`}} className={`h-[49.5px] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r ${this.getBorderGradient()}`}>
               <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>  
                 <button onClick={this.search} className='mx-2 text-white p-2 rounded
                   hover:text-[#493294] transition duration-500 ease-in-out flex items-center'>
