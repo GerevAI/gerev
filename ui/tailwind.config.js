@@ -7,6 +7,8 @@ module.exports = {
     extend: {
       fontFamily: {
         'poppins': ['Poppins'],
+        'source-sans-pro': ['Source Sans Pro'],
+        inter: ['Inter', 'sans-serif'],
       }
     },
   },

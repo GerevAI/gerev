@@ -14,3 +14,26 @@
     src: url('../fonts/Poppins-Regular.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-weight: 600;
+    font-style: normal;
+    font-display: fallback;
+    src: url('../fonts/SourceSansPro-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Source Sans Pro';
+    font-weight: 900;
+    font-style: normal;
+    font-display: fallback;
+    src: url('../fonts/SourceSansPro-Black.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-weight: 600;
+    font-style: normal;
+    font-display: fallback;
+    src: url('../fonts/Inter-SemiBold.ttf') format('truetype');
+}

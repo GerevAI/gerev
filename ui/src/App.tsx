@@ -2,6 +2,9 @@ import * as React from "react";
 
 
 import EnterImage from './assets/images/enter.svg';
+import WarningImage from './assets/images/warning.svg';
+import DiscordImage from './assets/images/discord.png';
+
 import { GiSocks } from "react-icons/gi";
 
 import './assets/css/App.css';
@@ -16,6 +19,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
+import {IoMdLock} from "react-icons/io";
 
 export interface AppState {
   query: string
@@ -28,6 +32,8 @@ export interface AppState {
   isServerDown: boolean
   isStartedFetching: boolean
   isPreparingIndexing: boolean
+  didPassDiscord: boolean
+  discordCodeInput: string
   docsLeftToIndex: number
   docsInIndexing: number
   lastServerDownTimestamp: number
@@ -39,6 +45,8 @@ export interface ServerStatus {
 }
 
 Modal.setAppElement('#root');
+
+const discordCode = "gerev-is-spelled-with-a-hard-g";
 
 const customStyles = {
   content: {
@@ -75,10 +83,12 @@ export default class App extends React.Component <{}, AppState>{
       isServerDown: false,
       isStartedFetching: false,
       isPreparingIndexing: false,
+      discordCodeInput: "",
+      didPassDiscord: false,
       docsLeftToIndex: 0,
       docsInIndexing: 0,
       searchDuration: 0,
-      lastServerDownTimestamp: 0
+      lastServerDownTimestamp: 0,
     }
 
     this.openModal = this.openModal.bind(this); // bind the method here
@@ -88,6 +98,11 @@ export default class App extends React.Component <{}, AppState>{
 
   
   componentDidMount() {
+    // check if stored discord key in local storage
+    if (localStorage.getItem('discord_key') != null) {
+      this.setState({didPassDiscord: true});
+    }
+    
     if (!this.state.isStartedFetching) {
       this.fetchStatsusForever();
       this.setState({isStartedFetching: true});
@@ -193,6 +208,28 @@ export default class App extends React.Component <{}, AppState>{
     return " text-[#A78BF6]"
   }
 
+  verifyDiscordCode = () => {
+    if (this.state.discordCodeInput == discordCode) {
+      this.saveDiscordPassed();
+    } else {
+      toast.error("Invalid code. Join Discord!", {autoClose: 2000});
+    }
+  }
+
+  onDiscordCodeChange = (event) => {
+    if (event.target.value == discordCode) {
+      this.saveDiscordPassed();
+    } else {
+      this.setState({discordCodeInput: event.target.value});
+    }
+  }
+
+  saveDiscordPassed = () => {
+    localStorage.setItem('discord_key', 'true');
+    this.setState({didPassDiscord: true});
+    toast.success("Code accepted. Welcome!", {autoClose: 3000});
+  }
+
   render() {
     return (
     <div>
@@ -221,7 +258,7 @@ export default class App extends React.Component <{}, AppState>{
                 <a className="font-medium ml-1 text-[red] animate-pulse hover:cursor-pointer inline-flex items-center transition duration-150 ease-in-out group"
                     onClick={this.openModal}>
                     Go add some{' '}
-                    <span className="tracking-normal group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+                    <a className="tracking-normal group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
                 </a>
               </div>
             </div>
@@ -237,10 +274,51 @@ export default class App extends React.Component <{}, AppState>{
                         onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
                         connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
         </Modal>
+
+        {/* Discord page */}
+        {
+          !this.state.didPassDiscord && 
+            <div className='relative flex flex-col items-center top-20 mx-auto w-full'>
+              <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
+                  <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
+                  <span className={("text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l " + this.getTitleGradient())}>
+                    gerev.ai
+                  </span>
+              </h1>
+              <div className="flex flex-col items-start w-[660px] h-[440px] bg-[#36393F] rounded-xl">
+                <div className="flex flex-col justify-center items-start  p-3">
+                  <span className="flex flex-row text-white text-3xl font-bold m-5 mt-5 mb-6 font-sans items-center">
+                    <span>Are you on Discord?</span>
+                    <img src={DiscordImage} className="relative inline h-10 ml-4 opacity-80 animate-pulse"></img>
+                  </span>
+                    <div className="flex flex-row w-[97%] bg-[#faa61a1a] p-3 ml-1 border-[2px] border-[#FAA61A] rounded-[5px]">
+                      <img className="ml-2 h-10" src={WarningImage}></img>
+                      <a className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
+                        <span className="inline">gerev.ai is currently only available to Discord community members.</span>
+                        <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                          <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
+                        </a>
+                      </a>
+                    </div>
+                    <div className="flex flex-col items-start justify-center ml-2 mt-9 w-[100%]">
+                      <span className="text-[#B9BBBE] font-source-sans-pro font-black text-[22px]">ENTER DISCORD AUTH CODE</span>
+                      <input onPaste={this.onDiscordCodeChange} value={this.state.discordCodeInput} onChange={this.onDiscordCodeChange} className="bg-[#18191C] h-14 font-source-sans-pro font-black text-xl text-[#DCDDDE] rounded w-[94%] px-4 mt-4" placeholder="123456"></input>
+                    </div>
+                </div>      
+                <div className="flex flex-row justify-between p-4 w-[100%]  mt-7 rounded-b-xl h-[100px] bg-[#2F3136]">
+                  <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="flex hover:bg-[#404ab3] justify-center items-center font-inter bg-[#5865F2] rounded h-12 p-2 text-white w-40 inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                    <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
+                  </a>
+                  <button onClick={this.verifyDiscordCode} className="font-inter bg-[#5865F2] hover:bg-[#404ab3] rounded h-12 p-2 text-white w-40">Verify</button>
+                </div>
+              </div>
+
+            </div>
+        }
       
         {/* front search page*/}
         {
-          this.state.results.length === 0 &&    
+          this.state.didPassDiscord && this.state.results.length === 0 &&    
             <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
