@@ -1,4 +1,5 @@
 import requests
+import concurrent.futures
 
 from typing import Dict
 
@@ -33,24 +34,26 @@ class GitlabDataSource(BaseDataSource):
         super().__init__(*args, **kwargs)
         # Create a access token with sufficient permissions in https://gitlab.com/-/profile/personal_access_tokens
         self.gitlab_config = GitlabConfig(**self._config)
+        self.session = requests.Session()
+        self.session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.api_token})
 
     def _feed_new_documents(self) -> None:
-        session = requests.Session()
-        session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.api_token})
+        projects_response = self.session.get(PROJECTS_URL)
+        projects = projects_response.json()
 
-        projects_response = session.get(PROJECTS_URL)
-        projects_json = projects_response.json()
+        self._parse_projects_in_parallel(projects)
+
+    def _parse_projects_worker(self, projects):
 
         documents = []
 
-        for project in projects_json:
+        for project in projects:
             project_id = project["id"]
             issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues"
-            issues_response = session.get(issues_url)
+            issues_response = self.session.get(issues_url)
             issues_json = issues_response.json()
 
             for issue in issues_json:
-                print(f"- {issue['title']}")
                 documents.append(BasicDocument(
                     id=issue["id"],
                     data_source_id=self._data_source_id,
@@ -65,7 +68,7 @@ class GitlabDataSource(BaseDataSource):
                 ))
 
             pull_requests_url = f"{GITLAB_BASE_URL}/projects/{project_id}/merge_requests"
-            pull_requests_response = session.get(pull_requests_url)
+            pull_requests_response = self.session.get(pull_requests_url)
             pull_requests_json = pull_requests_response.json()
 
             for pull_request in pull_requests_json:
@@ -83,3 +86,12 @@ class GitlabDataSource(BaseDataSource):
                 ))
 
         IndexingQueue.get().feed(documents)
+
+    def _parse_projects_in_parallel(self, projects):
+        workers = 10
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = []
+            for i in range(workers):
+                futures.append(executor.submit(self._parse_project, projects[i::workers]))
+            concurrent.futures.wait(futures)
