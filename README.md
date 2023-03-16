@@ -1,10 +1,25 @@
 # gerev
-A heap of socks. Coming soon...
+gerev is a open-source workplace search engine, it's most easily described as _"Google for your company"_.
+
+
+add image:
+
+![gerev](./images/MegaCard.png)
+
+
+## Integrations
+ - [x] Slack
+ - [x] Confluence
+ - [x] Google Docs
+ - [ ] Notion (In Progress...)
+ - [ ] Google Sheets (Coming Soon...)
+ - [ ] Google Slides (Coming Soon...)
+ - [ ] Google Calendar (Coming Soon...)
 
 
 ## Installation
 
-Install nvidia container toolkit on the host
+Install nvidia container toolkit on the host machine.
 
 ```
 distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
@@ -18,9 +33,9 @@ sudo apt-get install -y nvidia-docker2
 sudo systemctl restart docker
 ```
 
-Then pull and run the docker
 
-```
-docker build -t gerev .
-docker run --volume ~/.gerev/storage:/opt/storage --gpus all -p 0.0.0.0:80:80 gerev
+Then run the docker container like so:
+
+```bash
+sudo docker run --gpus all -p 80:80 gerev/gerev:0.0.1
 ```
