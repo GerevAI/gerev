@@ -1,4 +1,4 @@
-# gerev
+# Workplace search reimagined
 self hosted workplace search engine, search your entire company from a single place.
 
 ![gerev](./images/product-example.png)
