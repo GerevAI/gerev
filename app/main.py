@@ -1,6 +1,6 @@
-from telemetry import send_startup_telemetry
+from telemetry import Posthog
 
-send_startup_telemetry()
+Posthog.send_startup_telemetry()
 
 import json
 import logging

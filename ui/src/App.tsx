@@ -22,7 +22,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
-import {IoMdLock} from "react-icons/io";
 
 export interface AppState {
   uuid: string
@@ -282,12 +281,6 @@ export default class App extends React.Component <{}, AppState>{
           {
           !this.state.didPassDiscord && 
             <div className='absolute z-30 flex flex-col items-center top-40 mx-auto w-full'>
-              {/* <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
-                  <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
-                  <span className={("text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l " + this.getTitleGradient())}>
-                    gerev.ai
-                  </span>
-              </h1> */}
               <div className="flex flex-col items-start w-[660px] h-[440px] bg-[#36393F] rounded-xl">
                 <div className="flex flex-col justify-center items-start  p-3">
                   <span className="flex flex-row text-white text-3xl font-bold m-5 mt-5 mb-6 font-sans items-center">
