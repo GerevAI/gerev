@@ -50,7 +50,7 @@ export interface ServerStatus {
 
 Modal.setAppElement('#root');
 
-const discordCode = "gerev-is-spelled-with-a-hard-g";
+const discordCode = "gerev-is-pronounced-with-a-hard-g";
 
 const customStyles = {
   content: {
@@ -191,7 +191,11 @@ export default class App extends React.Component <{}, AppState>{
   
 
   openModal() {
-    this.setState({isModalOpen: true});
+    if (this.state.didPassDiscord) {
+      this.setState({isModalOpen: true});
+    } else {
+      toast.error("You must pass the discord verification first.", {autoClose: 3000});
+    }
   }
 
   afterOpenModal() {
@@ -259,7 +263,7 @@ export default class App extends React.Component <{}, AppState>{
           </div>
         }
         {
-          this.state.connectedDataSources.length == 0 &&
+          this.state.connectedDataSources.length == 0 && this.state.didPassDiscord &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -274,27 +278,16 @@ export default class App extends React.Component <{}, AppState>{
             </div>
           </div>
         }
-      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length == 0  ? ' filter blur-sm' : '')}>
-        <Modal
-          isOpen={this.state.isModalOpen}
-          onRequestClose={this.closeModal}
-          contentLabel="Example Modal"
-          style={customStyles}>
-          <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
-                        connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
-        </Modal>
-
-        {/* Discord page */}
-        {
+          {/* Discord page */}
+          {
           !this.state.didPassDiscord && 
-            <div className='relative flex flex-col items-center top-20 mx-auto w-full'>
-              <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
+            <div className='absolute z-30 flex flex-col items-center top-40 mx-auto w-full'>
+              {/* <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
                   <span className={("text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l " + this.getTitleGradient())}>
                     gerev.ai
                   </span>
-              </h1>
+              </h1> */}
               <div className="flex flex-col items-start w-[660px] h-[440px] bg-[#36393F] rounded-xl">
                 <div className="flex flex-col justify-center items-start  p-3">
                   <span className="flex flex-row text-white text-3xl font-bold m-5 mt-5 mb-6 font-sans items-center">
@@ -325,10 +318,20 @@ export default class App extends React.Component <{}, AppState>{
 
             </div>
         }
-      
+      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length == 0  ? ' filter blur-sm' : '')}>
+        <Modal
+          isOpen={this.state.isModalOpen}
+          onRequestClose={this.closeModal}
+          contentLabel="Example Modal"
+          style={customStyles}>
+          <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
+                        onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
+                        connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
+        </Modal>
+
         {/* front search page*/}
         {
-          this.state.didPassDiscord && this.state.results.length === 0 &&    
+          this.state.results.length === 0 &&    
             <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
