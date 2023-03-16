@@ -8,7 +8,7 @@ The process involves creating a service account with an email address, then shar
 
 ![Create a project](./create-new-project.png)
 
-2. Go to [Enable Google Drive API for the project](https://console.cloud.google.com/apis/library/drive.googleapis.com)
+2. Enable [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) for the project
 
 <!-- (https://console.cloud.google.com/flows/enableapi?apiid=iam.googleapis.com&redirect=https://console.cloud.google.com&_ga=2.116924806.1008578598.1678803320-418131787.1678643755) -->
 
