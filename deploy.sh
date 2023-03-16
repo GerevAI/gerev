@@ -1,16 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 VERSION=0.0.1
 
-cd ui
+cd ui || exit 1
 
 npm install
 npm run build
 
 cd ..
 
-sudo docker build -t gerev/gerev:$VERSION .
-sudo docker tag gerev/gerev:$VERSION gerev/gerev:latest
-
-sudo docker push gerev/gerev:$VERSION
-sudo docker push gerev/gerev:latest
-
+sudo docker buildx create --use
+sudo docker buildx build --platform linux/amd64,linux/arm64 \
+  -t gerev/gerev:$VERSION . \
+  -t gerev/gerev:latest --push
