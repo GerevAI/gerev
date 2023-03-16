@@ -34,4 +34,5 @@ sudo systemctl restart docker
 Then run the docker container like so:
 
 ```bash
-sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev```
+sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+```
