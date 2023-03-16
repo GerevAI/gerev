@@ -16,6 +16,7 @@ self hosted workplace search engine, search your entire company from a single pl
 
 ## Installation
 
+### Nvidia hardware
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -33,6 +34,12 @@ sudo systemctl restart docker
 
 Then run the docker container like so:
 
+### Nvidia hardware
 ```bash
 sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+```
+
+### CPU only (no GPU)
+```
+sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
