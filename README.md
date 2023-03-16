@@ -4,7 +4,7 @@ gerev is a open-source workplace search engine, it's most easily described as _"
 
 add image:
 
-![gerev](./images/MegaCard.png)
+![gerev](./images/product-example.png)
 
 
 ## Integrations
