@@ -34,26 +34,31 @@ class GoogleDriveDataSource(BaseDataSource):
         self._http_auth = self._credentials.authorize(Http())
         self._drive = build('drive', 'v3', http=self._http_auth)
 
+    def _should_index_file(self, file):
+        return file['kind'] == 'drive#file' and file['mimeType'] == 'application/vnd.google-apps.document'
+
     def _feed_new_documents(self) -> None:
         files = self._drive.files().list(fields='files(kind,id,name,mimeType,owners,webViewLink,modifiedTime,parents)').execute()
         files = files['files']
+        files = [file for file in files if self._should_index_file(file)]
         documents = []
 
         logging.getLogger().info(f'got {len(files)} documents from google drive.')
 
         for file in files:
-            if file['kind'] != 'drive#file':
-                continue
-            if file['mimeType'] != 'application/vnd.google-apps.document':
-                continue
             last_modified =  datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
             if last_modified < self._last_index_time:
                 continue
             id = file['id']
             content = self._drive.files().export(fileId=id, mimeType='text/html').execute().decode('utf-8')
             content = html_to_text(content)
-            parent = self._drive.files().get(fileId=file['parents'][0], fields='name').execute()
-            parent_name = parent['name']
+            try:
+                parent = self._drive.files().get(fileId=file['parents'][0], fields='name').execute()
+                parent_name = parent['name']
+            except Exception as e:
+                logging.exception(f"Error while getting folder name of google docs file {file['name']}")
+                parent_name = ''
+
             documents.append(BasicDocument(
                 id=id,
                 data_source_id=self._data_source_id,
