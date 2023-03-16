@@ -1,5 +1,5 @@
-# gerev
-open-source workplace search engine, described as _"Google for your company"_, focused on developers.
+# Workplace search reimagined
+self hosted workplace search engine, search your entire company from a single place.
 
 ![gerev](./images/product-example.png)
 
@@ -16,6 +16,7 @@ open-source workplace search engine, described as _"Google for your company"_, f
 
 ## Installation
 
+### Nvidia hardware
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -33,6 +34,12 @@ sudo systemctl restart docker
 
 Then run the docker container like so:
 
+### Nvidia hardware
 ```bash
-sudo docker run --gpus all -p 80:80 gerev/gerev:0.0.1
+sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+```
+
+### CPU only (no GPU)
+```
+sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
