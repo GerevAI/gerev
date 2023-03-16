@@ -1,5 +1,5 @@
 # gerev
-open-source workplace search engine, described as _"Google for your company"_, focused on developers.
+self hosted workplace search engine, search your entire company from a single place.
 
 ![gerev](./images/product-example.png)
 
@@ -34,5 +34,4 @@ sudo systemctl restart docker
 Then run the docker container like so:
 
 ```bash
-sudo docker run --gpus all -p 80:80 gerev/gerev:0.0.1
-```
+sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev```
