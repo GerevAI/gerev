@@ -1,8 +1,5 @@
 # gerev
-gerev is a open-source workplace search engine, it's most easily described as _"Google for your company"_.
-
-
-add image:
+open-source workplace search engine, described as _"Google for your company"_, focused on developers.
 
 ![gerev](./images/product-example.png)
 
