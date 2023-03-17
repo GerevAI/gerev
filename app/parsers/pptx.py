@@ -1,7 +1,7 @@
 from pptx import Presentation
 
 
-def pptx_to_txt(input_filename: str, slides_seperator: str = "\n\n") -> str:
+def pptx_to_text(input_filename: str, slides_seperator: str = "\n\n") -> str:
     presentation = Presentation(input_filename)
     presentation_text = ""
 
