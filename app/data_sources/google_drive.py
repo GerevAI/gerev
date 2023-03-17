@@ -99,7 +99,7 @@ class GoogleDriveDataSource(BaseDataSource):
                     # delete file
                     os.remove(file_to_download)
                 except Exception as error:
-                    print(f'An error occurred: {error}')
+                    logging.exception(f'Error occured parsing file "{file["name"]}" from google drive')
 
             try:
                 parent = self._drive.files().get(fileId=file['parents'][0], fields='name').execute()
