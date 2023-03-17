@@ -49,6 +49,8 @@ class Bm25Index:
         with Session() as session:
             all_paragraphs = session.query(Paragraph).all()
             corpus = [nltk.word_tokenize(_add_metadata_for_indexing(paragraph)) for paragraph in all_paragraphs]
+            if len(corpus) == 0:
+                return
             id_map = [paragraph.id for paragraph in all_paragraphs]
             self.index = BM25Okapi(corpus)
             self.id_map = id_map

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import requests
 import concurrent.futures
 
@@ -14,7 +16,7 @@ PROJECTS_URL = f"{GITLAB_BASE_URL}/projects?membership=true"
 
 
 class GitlabConfig(BaseModel):
-    api_token: str
+    access_token: str
 
 
 class GitlabDataSource(BaseDataSource):
@@ -23,7 +25,7 @@ class GitlabDataSource(BaseDataSource):
         try:
             parsed_config = GitlabConfig(**config)
             session = requests.Session()
-            session.headers.update({"PRIVATE-TOKEN": parsed_config.api_token})
+            session.headers.update({"PRIVATE-TOKEN": parsed_config.access_token})
             projects_response = session.get(PROJECTS_URL)
             if projects_response.status_code != 200:
                 raise ValueError("Invalid api key")
@@ -35,7 +37,7 @@ class GitlabDataSource(BaseDataSource):
         # Create a access token with sufficient permissions in https://gitlab.com/-/profile/personal_access_tokens
         self.gitlab_config = GitlabConfig(**self._config)
         self.session = requests.Session()
-        self.session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.api_token})
+        self.session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.access_token})
 
     def _feed_new_documents(self) -> None:
         projects_response = self.session.get(PROJECTS_URL)
@@ -54,17 +56,21 @@ class GitlabDataSource(BaseDataSource):
             issues_json = issues_response.json()
 
             for issue in issues_json:
+                last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                if last_modified < self._last_index_time:
+                    continue
+
                 documents.append(BasicDocument(
                     id=issue["id"],
                     data_source_id=self._data_source_id,
                     type=DocumentType.DOCUMENT,
                     title=issue['title'],
-                    content=issue["description"],
+                    content=issue["description"] if not None else "",
                     author=issue['author']['name'],
                     author_image_url=issue['author']['avatar_url'],
                     location=project["web_url"],
                     url=issue['web_url'],
-                    timestamp=issue["updated_at"]
+                    timestamp=last_modified
                 ))
 
             pull_requests_url = f"{GITLAB_BASE_URL}/projects/{project_id}/merge_requests"
@@ -72,17 +78,21 @@ class GitlabDataSource(BaseDataSource):
             pull_requests_json = pull_requests_response.json()
 
             for pull_request in pull_requests_json:
+                last_modified = datetime.strptime(pull_request["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                if last_modified < self._last_index_time:
+                    continue
+
                 documents.append(BasicDocument(
                     id=pull_request["id"],
                     data_source_id=self._data_source_id,
                     type=DocumentType.DOCUMENT,
                     title=pull_request['title'],
-                    content=pull_request["description"],
+                    content=pull_request["description"] if not None else "",
                     author=pull_request['author']['name'],
                     author_image_url=pull_request['author']['avatar_url'],
                     location=project["web_url"],
                     url=pull_request['web_url'],
-                    timestamp=pull_request["updated_at"]
+                    timestamp=last_modified
                 ))
 
         IndexingQueue.get().feed(documents)
@@ -93,5 +103,5 @@ class GitlabDataSource(BaseDataSource):
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
             futures = []
             for i in range(workers):
-                futures.append(executor.submit(self._parse_project, projects[i::workers]))
+                futures.append(executor.submit(self._parse_projects_worker, projects[i::workers]))
             concurrent.futures.wait(futures)

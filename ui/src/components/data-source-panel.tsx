@@ -6,6 +6,7 @@ import Confluence from '../assets/images/confluence.svg';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
 import Slack from '../assets/images/slack.svg';
+import Gitlab from "../assets/images/gitlab.svg"
 import GoogleDrive from '../assets/images/google-drive.svg'
 
 
@@ -33,6 +34,10 @@ export interface SlackConfig {
    token: string;
 }
 
+export interface GitlabConfig{
+    access_token : string
+}
+
 export interface DataSourcePanelState {
    dataSourceTypes: SelectOption[]
    isAdding: boolean
@@ -57,6 +62,8 @@ function getBigIconByPlatform(platform: Platform) {
          return Slack;
       case Platform.Drive:
          return GoogleDrive;
+      case Platform.Gitlab:
+         return Gitlab;
    }
 }
 
@@ -223,6 +230,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                  )
                               }
+                              {
+                                 this.state.selectedDataSource.value === 'gitlab' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Gitlab -\> top-right profile picture -\> Preferences'}</span>
+                                       <span>2. {'Access Tokens -\> Name it'}</span>
+                                       <span>3. {"Remove expiration date, check read_api checkbox create and copy the token"}</span>
+                                    </span>
+                                 )
+                              }
                               {this.state.selectedDataSource.value === 'slack' && (
                                  <span className=" flex flex-col leading-9 text-lg text-white">
                                     <span className="flex flex-row items-center">1.
@@ -335,7 +351,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    hasToken = () => {
-      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack";
+      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack" || this.state.selectedDataSource?.value === "gitlab" ;
    }
 
    hasBigText = () => {
@@ -356,6 +372,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          case "google_drive":
             config = JSON.parse(this.state.newBigText)
             break;
+         case "gitlab" :
+            config = {access_token: this.state.newToken}
       }
 
       let payload = {

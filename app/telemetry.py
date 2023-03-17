@@ -24,7 +24,7 @@ class Posthog:
                 existing_uuid = f.read().strip()
                 return existing_uuid
 
-        return None
+        return []
 
     @classmethod
     def _create_uuid_file(cls, user_uuid: str):

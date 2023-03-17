@@ -7,6 +7,7 @@ import BlueFolder from '../assets/images/blue-folder.svg';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
 import GoogleDrive from '../assets/images/google-drive.svg';
+import Gitlab from '../assets/images/gitlab.svg';
 
 export interface TextPart{
     content: string
@@ -23,13 +24,15 @@ export enum ResultType {
 export enum Platform {
     Confluence = "confluence",
     Slack = "slack",
-    Drive = "google_drive"
+    Drive = "google_drive",
+    Gitlab = "gitlab"
 }
 
 export enum PlatformDisplayName {
     Confluence = "Confluence",
     Slack = "Slack",
-    Drive = "Google Drive"
+    Drive = "Google Drive",
+    Gitlab = "Gitlab"
 }
 
 export interface SearchResultProps {
@@ -134,6 +137,8 @@ function getBigIconByPlatform (platform: Platform) {
         return <img className={classes} src={Slack}></img>
       case Platform.Drive:
         return <img className={classes} src={GoogleDrive}></img>
+      case Platform.Gitlab:
+        return <img className={classes} src={Gitlab}></img>
     }
 }
 
@@ -145,5 +150,7 @@ export function getPlatformDisplayName(platform: Platform) {
         return PlatformDisplayName.Slack
       case Platform.Drive:
         return PlatformDisplayName.Drive
+      case Platform.Gitlab:
+        return PlatformDisplayName.Gitlab
     }
 }

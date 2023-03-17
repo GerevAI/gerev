@@ -51,6 +51,9 @@ class Indexer:
 
         Bm25Index.get().update()
 
+        if len(paragraph_contents) == 0:
+            return
+
         # Encode the paragraphs
         show_progress_bar = not IS_IN_DOCKER
         embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=show_progress_bar)
@@ -65,6 +68,8 @@ class Indexer:
         """
         split into paragraphs and batch small paragraphs together into the same paragraph
         """
+        if text is None:
+            return []
         paragraphs = []
         current_paragraph = ''
         for paragraph in re.split(r'\n\s*\n', text):

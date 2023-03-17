@@ -1,9 +1,13 @@
 from pathlib import Path
+
+import sys
 import os
 
-IS_IN_DOCKER = os.geteuid() == 0
-
-STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
+IS_IN_DOCKER = False if (sys.platform == "win32" or not hasattr(os, "geteuid")) else os.geteuid()
+if os.name == 'nt':
+    STORAGE_PATH = Path(".gerev\\storage")
+else:
+    STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
 
 if not STORAGE_PATH.exists():
     STORAGE_PATH.mkdir(parents=True)
