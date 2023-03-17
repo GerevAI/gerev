@@ -170,9 +170,9 @@ export default class App extends React.Component <{}, AppState>{
 
   getIndexingStatusText() {
     // multiply left-to-index by 50 and add ~ because currently we push 50~ docs to the queue at a time
-    if (this.state.isPreparingIndexing) {
-      return "Fetching docs to index...";
-    }
+    // if (this.state.isPreparingIndexing) {
+    //   return "Fetching docs to index...";
+    // }
 
     if (this.state.docsInIndexing > 0) {
       let text = "Indexing " + this.state.docsInIndexing + " documents...";
