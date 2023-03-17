@@ -9,6 +9,7 @@ self hosted workplace search engine, search your entire company from a single pl
  - [x] Confluence
  - [x] Google Docs
  - [ ] Notion (In Progress...)
+ - [ ] Blue Folder (Coming Soon...)
  - [ ] Google Sheets (Coming Soon...)
  - [ ] Google Slides (Coming Soon...)
  - [ ] Google Calendar (Coming Soon...)
