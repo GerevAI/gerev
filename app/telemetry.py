@@ -18,8 +18,7 @@ class Posthog:
 
     RUN_EVENT = "run"
     DAILY_EVENT = "daily"
-
-    TEST_UUID = "test"
+    _should_capture = False
     _identified_uuid: Optional[str] = None
 
     @classmethod
@@ -42,29 +41,24 @@ class Posthog:
             logger.info(f"Skipping identify due to already identified UUID {cls._identified_uuid}")
             return
 
-        if os.environ.get('TEST') == "1":
-            cls._create_uuid_file(cls.TEST_UUID)
-            cls._identified_uuid = cls.TEST_UUID
-            logger.info("Identified as test UUID")
+        if not os.environ.get('CAPTURE_TELEMETRY'):
+            logger.info("Skipping identify due to CAPTURE_TELEMETRY not being set")
             return
 
-        existing_uuid = cls._read_uuid_file()
-        if cls.TEST_UUID in existing_uuid:
-            cls._identified_uuid = cls.TEST_UUID
-            logger.info("Identified as test UUID")
-            return
-
-        if existing_uuid is None:
+        user_uuid = cls._read_uuid_file()
+        if user_uuid is None:
             new_uuid = str(uuid.uuid4())
             logger.info(f"Generated new UUID: {new_uuid}")
             cls._create_uuid_file(new_uuid)
-            cls._identified_uuid = new_uuid
+            user_uuid = new_uuid
         else:
-            cls._identified_uuid = existing_uuid
-            logger.info(f"Using existing UUID: {cls._identified_uuid}")
+            logger.info(f"Using existing UUID: {user_uuid}")
 
         try:
-            posthog.identify(cls._identified_uuid)
+            posthog.api_key = cls.API_KEY
+            posthog.host = cls.HOST
+            posthog.identify(user_uuid)
+            cls._identified_uuid = user_uuid
         except Exception as e:
             logger.exception("Failed to identify posthog UUID")
 
@@ -73,12 +67,7 @@ class Posthog:
         if cls._identified_uuid is None:
             cls._identify()
 
-        if cls._identified_uuid is None:
-            logger.error(f"Failed to identify UUID, skipping event {event}")
-            return
-
-        if cls._identified_uuid == cls.TEST_UUID:
-            logger.info(f"Skipping event {event} due to test UUID")
+        if not cls._should_capture:
             return
 
         try:
