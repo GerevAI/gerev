@@ -90,12 +90,21 @@ class GoogleDriveDataSource(BaseDataSource):
             'supportsAllDrives': True,
         } if is_shared_drive else {}
 
-        # Todo: add pagination
-        files = self._drive.files().list(
-            fields='files(kind,id,name,mimeType,lastModifyingUser,webViewLink,modifiedTime,parents)',
-            pageSize=1000,
-            **kwargs
-        ).execute()['files']
+        files = []
+
+        next_page_token = None
+        while True:
+            if next_page_token:
+                kwargs['pageToken'] = next_page_token
+            response = self._drive.files().list(
+                fields='nextPageToken,files(kind,id,name,mimeType,lastModifyingUser,webViewLink,modifiedTime,parents)',
+                pageSize=100,
+                **kwargs
+            ).execute()
+            files.extend(response['files'])
+            next_page_token = response.get('nextPageToken')
+            if next_page_token is None:
+                break
 
         files = [file for file in files if self._should_index_file(file)]
 
