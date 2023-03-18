@@ -6,6 +6,8 @@ COPY ./app/requirements.txt /tmp/requirements.txt
 
 RUN pip install -r /tmp/requirements.txt
 
+ENV CAPTURE_TELEMETRY=1
+
 COPY ./app/models.py /tmp/models.py
 
 # cache the models
