@@ -10,10 +10,9 @@ import React from 'react';
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
 // This imports the full-color icons
-import BlueFolder from '../assets/images/blue-folder.svg';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
-import Drive from '../assets/images/google-drive.svg'
+import GoogleDrive from '../assets/images/google-drive.svg'
 
 export interface TextPart {
   content: string
@@ -30,10 +29,10 @@ export enum ResultType {
 export enum Platform {
   Confluence = "confluence",
   Slack = "slack",
-  Drive = "drive"
+  GoogleDrive = "google drive"
 }
 
-// These are the attributes of a <SearchResult/> element.
+// These are the attributes of a <SearchResult/> react component.
 export interface SearchResultProps {
   title: string
   author: string
@@ -78,7 +77,7 @@ export const SearchResult = (props: SearchResultProps) => {
             </span>
             <span className="flex flex-row items-center">
               {getSmallIconByPlatform(props.platform as Platform)}
-              <span className="text-[#A3A3A3]">{props.platform}</span>
+              <span className="text-[#A3A3A3]">{getPlatformDisplayName(props.platform)}</span>
             </span>
           </span>
 
@@ -112,18 +111,22 @@ export const SearchResult = (props: SearchResultProps) => {
   );
 }
 
-function titleCase(text) {
-  text = text.split(" ");
+export function getPlatformDisplayName(platform: Platform) {
+  // This converts the platform name to title case for display purposes.
+  // example input : "google drive"
+  // example output: "Google Drive"
+  let list = platform.split("");
   let output = "";
-  for (let i = 0; i < text.length; i++) {
-    output += text[i].charAt(0).toUpperCase();
+  console.log(list)
+  for (let i = 0; i < list.length; i++) {
+    if (i === 0 || list[i-1] === " ") {
+      list[i] = list[i].toUpperCase();
+    }
+    output += list[i];
   }
   return output;
 }
 
-export function getPlatformDisplayName(platform: Platform) {
-  return titleCase(platform);
-}
 function getFormattedTime(time: string) {
   let date = new Date(time);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -136,7 +139,7 @@ function getSmallIconByPlatform(platform: Platform) {
       return <FaConfluence className={classes}></FaConfluence>
     case Platform.Slack:
       return <FaSlack className={classes}></FaSlack>
-    case Platform.Drive:
+    case Platform.GoogleDrive:
       return <FaGoogleDrive className={classes}></FaGoogleDrive>
   }
 }
@@ -150,23 +153,24 @@ function ProfilePic(profilePicture, platform, ResultType) {
   */
   platform = platform.toLowerCase();
   let profileStyle = "rounded-full w-full h-full object-cover";
-  if (platform === "slack") {
+  let lilLogoStyle = "company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white"
+  if (platform === "slack" && ResultType === "comment") {
     return (
       <div className="w-full h-full">
         <img className={profileStyle} alt="Profile" src={profilePicture} />
-        <img src={Slack} alt={platform} className="company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white" />
+        <img src={Slack} alt={platform} className={lilLogoStyle} />
       </div>
     );
   }
   else {
-    let classes = "w-full h-full object-cover"
+    let classes = "w-full h-full"
     if (platform === "confluence") {
       return (
         <img className={classes} alt="Profile" src={Confluence} />
       );
     }
-    if (platform === "drive") {
-      return <img className={classes} alt="Profile" src={Drive} />
+    if (platform === "google drive") {
+      return <img className={classes} alt="Profile" src={GoogleDrive} />
     }
   }
 }
