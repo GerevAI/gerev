@@ -64,7 +64,7 @@ class GoogleDriveDataSource(BaseDataSource):
     def _index_files_from_drive(self, drive) -> List[dict]:        
         is_shared_drive = drive['id'] is not None
 
-        print(f'Indexing drive {drive["name"]}')
+        logging.info(f'Indexing drive {drive["name"]}')
 
         kwargs = {
             'corpora': 'drive',
