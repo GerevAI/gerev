@@ -98,7 +98,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 kwargs['pageToken'] = next_page_token
             response = self._drive.files().list(
                 fields='nextPageToken,files(kind,id,name,mimeType,lastModifyingUser,webViewLink,modifiedTime,parents)',
-                pageSize=100,
+                pageSize=1000,
                 **kwargs
             ).execute()
             files.extend(response['files'])
