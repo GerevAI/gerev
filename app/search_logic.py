@@ -17,7 +17,7 @@ from sentence_transformers import CrossEncoder
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from data_source_api.basic_document import DocumentType
+from data_source_api.basic_document import DocumentType, FileType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
 
@@ -44,7 +44,8 @@ class SearchResult:
     location: str
     platform: str
     time: datetime
-    type: DocumentType
+    document_type: DocumentType
+    file_type: FileType
     author_image_url: Optional[str]
     author_image_data: Optional[str]
 
@@ -82,7 +83,7 @@ class Candidate:
             content.append(TextPart(suffix, False))
 
         data_uri = None
-        if self.document.data_source.type.name == 'confluence':
+        if self.document.data_source.document_type.name == 'confluence':
             url = self.document.author_image_url
             if "anonymous.svg" in url:
                 url = url.replace(".svg", ".png")
@@ -102,8 +103,9 @@ class Candidate:
                             url=self._text_anchor(self.document.url, answer.content),
                             time=self.document.timestamp,
                             location=self.document.location,
-                            platform=self.document.data_source.type.name,
-                            type=self.document.type)
+                            platform=self.document.data_source.document_type.name,
+                            document_type=self.document.type,
+                            file_type=self.document.file_type)
 
 
 def _cross_encode(

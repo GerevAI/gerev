@@ -25,7 +25,7 @@ async def list_data_source_types() -> List[str]:
 async def list_connected_data_sources() -> List[str]:
     with Session() as session:
         data_sources = session.query(DataSource).all()
-        return [data_source.type.name for data_source in data_sources]
+        return [data_source.document_type.name for data_source in data_sources]
 
 
 class AddDataSource(BaseModel):

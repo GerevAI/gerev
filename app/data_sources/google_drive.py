@@ -10,7 +10,7 @@ from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
 from data_source_api.base_data_source import BaseDataSource
-from data_source_api.basic_document import BasicDocument, DocumentType
+from data_source_api.basic_document import BasicDocument, DocumentType, FileType
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
@@ -142,7 +142,8 @@ class GoogleDriveDataSource(BaseDataSource):
                 author_image_url=file['lastModifyingUser']['photoLink'],
                 location=parent_name,
                 url=file['webViewLink'],
-                timestamp=last_modified
+                timestamp=last_modified,
+                file_type=FileType.from_mime_type(mime_type=file['mimeType'])
             ))
 
         IndexingQueue.get().feed(documents)

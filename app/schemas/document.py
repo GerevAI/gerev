@@ -12,6 +12,7 @@ class Document(Base):
     data_source_id = Column(Integer, ForeignKey('data_source.id'))
     data_source = relationship("DataSource", back_populates="documents")
     type: Mapped[Optional[str]] = mapped_column(String(32))
+    file_type: Mapped[Optional[str]] = mapped_column(String(32))
     title: Mapped[Optional[str]] = mapped_column(String(128))
     author: Mapped[Optional[str]] = mapped_column(String(64))
     author_image_url: Mapped[Optional[str]] = mapped_column(String(512))

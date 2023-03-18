@@ -26,6 +26,7 @@ class Indexer:
                 db_document = Document(
                     data_source_id=document.data_source_id,
                     type=document.type.value,
+                    file_type=document.file_type.value,
                     title=document.title,
                     author=document.author,
                     author_image_url=document.author_image_url,
