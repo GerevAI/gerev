@@ -3,9 +3,10 @@ import io
 import logging
 from datetime import datetime
 from typing import Dict, List
+from functools import lru_cache
 
 from apiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, HttpError
 from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -60,6 +61,22 @@ class GoogleDriveDataSource(BaseDataSource):
             return False
         
         return True
+
+    @lru_cache(maxsize=512)
+    def _get_parent_name(self, parent_id) -> dict:
+        # The drive api returns just 'Drive' for the names of shared drives, so just skip it.
+        try:
+            result = self._drive.files().get(fileId=parent_id, fields='name,parents', supportsAllDrives=True).execute()
+            if 'parents' in result and result['parents']:
+                parent_name = self._get_parent_name(result['parents'][0])
+                return parent_name + '/' + result['name'] if parent_name else result['name']
+            else:
+                return result['name'] if result['name'] != 'Drive' else ''
+        except Exception as e:
+            logging.exception(f"Error while getting folder name of id {id}")
+
+    def _get_parents_string(self, file):
+        return self._get_parent_name(file['parents'][0]) if file['parents'] else ''
 
     def _index_files_from_drive(self, drive) -> List[dict]:        
         is_shared_drive = drive['id'] is not None
@@ -120,15 +137,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 except Exception as error:
                     logging.exception(f'Error occured parsing file "{file["name"]}" from google drive')
             
-            try:
-                if is_shared_drive:
-                    parent = self._drive.drives().get(driveId=drive['id'], fields='name').execute()
-                else:
-                    parent = self._drive.files().get(fileId=file['parents'][0], fields='name').execute()
-                parent_name = parent['name']
-            except Exception as e:
-                logging.exception(f"Error while getting folder name of google docs file {file['name']}")
-                parent_name = ''
+            parent_name = self._get_parents_string(file)
 
             last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
