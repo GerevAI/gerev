@@ -10,10 +10,10 @@ import React from 'react';
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
 // This imports the full-color icons
-import BlueFolder from './assets/images/blue-folder.svg';
-import Slack from './assets/images/slack.svg';
-import Confluence from './assets/images/confluence.svg';
-import Drive from './assets/images/google-drive.svg'
+import BlueFolder from '../assets/images/blue-folder.svg';
+import Slack from '../assets/images/slack.svg';
+import Confluence from '../assets/images/confluence.svg';
+import Drive from '../assets/images/google-drive.svg'
 
 export interface TextPart {
   content: string
@@ -51,9 +51,9 @@ export interface SearchResultProps {
 export const SearchResult = (props: SearchResultProps) => {
   return (
     <div className="mb-4 pt-2">
-      <a className="relative text-sm float-right text-white right-2 top-2">{props.score}%</a>
+      <a className="relative text-sm float-right text-white right-2 top-2" href={props.url}>{props.score}%</a>
       <div className="flex flex-row items-start">
-        <div className="relative w-[60px]">
+        <div className="relative w-[60px] h-[60px]">
           {ProfilePic(props.author_image_url, props.platform as Platform, props.type)}
         </div>
         <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
@@ -62,16 +62,15 @@ export const SearchResult = (props: SearchResultProps) => {
           </a>
           <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
             {
-              props.type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
+              props.type === ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
             }
             <span className="ml-0 text-[#D5D5D5]">
               {
-                props.type == ResultType.Message && <span>#</span>
+                props.type === ResultType.Message && <span>#</span>
               }
               {props.location} ·&thinsp;
             </span>
             <span className="flex flex-row items-center">
-              <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_data ? props.author_image_data : props.author_image_url}></img>
               <span className='capitalize'>{props.author} ·</span>
             </span>
             <span>
@@ -83,7 +82,7 @@ export const SearchResult = (props: SearchResultProps) => {
             </span>
           </span>
 
-          {props.type == ResultType.Docment &&
+          {props.type === ResultType.Docment &&
             <span>
               {props.content.map((text_part, index) => {
                 return (
@@ -95,7 +94,7 @@ export const SearchResult = (props: SearchResultProps) => {
               })}
             </span>
           }
-          {props.type == ResultType.Message &&
+          {props.type === ResultType.Message &&
             <p className="bg-[#352C45] p-2 px-4 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
               {props.content.map((text_part, index) => {
                 return (
@@ -113,7 +112,18 @@ export const SearchResult = (props: SearchResultProps) => {
   );
 }
 
+function titleCase(text) {
+  text = text.split(" ");
+  let output = "";
+  for (let i = 0; i < text.length; i++) {
+    output += text[i].charAt(0).toUpperCase();
+  }
+  return output;
+}
 
+export function getPlatformDisplayName(platform: Platform) {
+  return titleCase(platform);
+}
 function getFormattedTime(time: string) {
   let date = new Date(time);
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -131,17 +141,6 @@ function getSmallIconByPlatform(platform: Platform) {
   }
 }
 
-function getBigColorIconByPlatform(platform: Platform) {
-  let classes = "company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white";
-  switch (platform) {
-    case Platform.Confluence:
-      return <img className={classes} src={Confluence} alt={platform}></img>
-    case Platform.Slack:
-      return <img className={classes} src={Slack} alt={platform}></img>
-    case Platform.Drive:
-      return <FaGoogleDrive className={classes}></FaGoogleDrive>
-  }
-}
 
 function ProfilePic(profilePicture, platform, ResultType) {
   /*
@@ -153,9 +152,9 @@ function ProfilePic(profilePicture, platform, ResultType) {
   let profileStyle = "rounded-full w-full h-full object-cover";
   if (platform === "slack") {
     return (
-      <div>
+      <div className="w-full h-full">
         <img className={profileStyle} alt="Profile" src={profilePicture} />
-        {getBigColorIconByPlatform(platform)}
+        <img src={Slack} alt={platform} className="company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white" />
       </div>
     );
   }
