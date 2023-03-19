@@ -25,7 +25,7 @@ Gerev enables you to search your entire company from a single place.
  - [ ] Microsoft Teams
  
 ### Natural Langauge
-allows searching using natural language. such as "How to do X", "how to connect to Y", "Do we support Z"
+Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ## Installation
 - 1. Install *Nvidia for docker* 
