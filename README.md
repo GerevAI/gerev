@@ -4,7 +4,7 @@ Tired of searching for that one docuement you know exists somewhere, but not sur
 ![first image](./images/Everything.png)
 
 ## Listening?
-You should try Gerev out! Gerev allows you to search your entire company from a single place.
+Gerev enables you to search your entire company from a single place.
 
 ## Made for devs
 ### Find docs
