@@ -1,10 +1,15 @@
+## Join Discord for early access code!
+
+![Discord Banner](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=banner2)
 # Gerev - Workplace search for Devs
+
+
 Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
 
 ![first image](./images/Everything.png)
 
 ## Listening?
-You should try Gerev out! Gerev allows you to search your entire company from a single place.
+Gerev enables you to search your entire company from a single place.
 
 ## Made for devs
 ### Find docs
@@ -25,13 +30,13 @@ You should try Gerev out! Gerev allows you to search your entire company from a 
  - [ ] Microsoft Teams
  
 ### Natural Langauge
-allows searching using natural language. such as "How to do X", "how to connect to Y", "Do we support Z"
+Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ## Installation
-- 1. Install *Nvidia for docker* 
-- 2. Run docker
-- 
-### Nvidia hardware
+1. Install *Nvidia for docker* 
+2. Run docker
+ 
+## Nvidia for docker
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -47,6 +52,7 @@ sudo systemctl restart docker
 ```
 
 
+## Run docker
 Then run the docker container like so:
 
 ### Nvidia hardware
