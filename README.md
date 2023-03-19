@@ -23,10 +23,6 @@ You should try Gerev out! Gerev allows you to search your entire company from a 
  - [ ] Gitlab Issues (In PR)
  - [ ] Notion (In Progress...)
  - [ ] Microsoft Teams
- - [ ] Sharepoint
- - [ ] OneDrive
- - [ ] Gmail
- - [ ] Wiki Crawler
  
 ### Natural Langauge
 allows searching using natural language. such as "How to do X", "how to connect to Y", "Do we support Z"
