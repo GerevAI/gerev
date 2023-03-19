@@ -288,7 +288,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.state.selectedDataSource.value === 'bookstack' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>TODO</span>
+                                       <span>1. {'Go to your BookStack -\> top-right profile picture -\> Edit Profile'}</span>
+                                       <span>2. {'API Tokens\n -\> Create token -\> Name it -> Save'}</span>
+                                       <span>3. {"Copy the token as '[Token ID]:[Token Secret]'"}</span>
                                     </span>
                                  )
                               }
