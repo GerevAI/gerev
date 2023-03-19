@@ -28,7 +28,9 @@ You should try Gerev out! Gerev allows you to search your entire company from a 
 allows searching using natural language. such as "How to do X", "how to connect to Y", "Do we support Z"
 
 ## Installation
-
+- 1. Install *Nvidia for docker* 
+- 2. Run docker
+- 
 ### Nvidia hardware
 Install nvidia container toolkit on the host machine.
 
@@ -49,7 +51,7 @@ Then run the docker container like so:
 
 ### Nvidia hardware
 ```bash
-sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ### CPU only (no GPU)
