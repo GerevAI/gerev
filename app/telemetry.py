@@ -37,10 +37,6 @@ class Posthog:
 
     @classmethod
     def _identify(cls):
-        if cls._identified_uuid is not None:
-            logger.info(f"Skipping identify due to already identified UUID {cls._identified_uuid}")
-            return
-
         if not os.environ.get('CAPTURE_TELEMETRY'):
             logger.info("Skipping identify due to CAPTURE_TELEMETRY not being set")
             return
@@ -72,6 +68,7 @@ class Posthog:
 
         try:
             posthog.capture(cls._identified_uuid, event)
+            logger.info(f"Sent event {event} to posthog")
         except Exception as e:
             logger.error(f"Failed to send event {event} to posthog: {e}")
 
