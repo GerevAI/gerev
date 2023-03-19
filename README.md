@@ -4,7 +4,7 @@
 # Gerev - Workplace search for Devs
 
 
-Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
+Tired of searching for that one document you know exists somewhere, but not sure exactly where?
 
 ![first image](./images/Everything.png)
 
