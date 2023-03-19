@@ -1,3 +1,4 @@
+Discord Early Access Token:
 ![Discord Banner](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=banner2)
 
 # Gerev - Workplace search for Devs
