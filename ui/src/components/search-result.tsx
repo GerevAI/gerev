@@ -2,10 +2,12 @@
 import React from 'react';
 
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
+import { FiBook } from "react-icons/fi"
 
 import BlueFolder from '../assets/images/blue-folder.svg';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
+import Bookstack from '../assets/images/bookstack.svg';
 
 import GoogleDoc from '../assets/images/google-doc.svg';
 import GoogleDocx from '../assets/images/google-docx.svg';
@@ -34,13 +36,15 @@ export enum FileType {
 export enum Platform {
     Confluence = "confluence",
     Slack = "slack",
-    Drive = "google_drive"
+    Drive = "google_drive",
+    Bookstack = "bookstack"
 }
 
 export enum PlatformDisplayName {
     Confluence = "Confluence",
     Slack = "Slack",
-    Drive = "Google Drive"
+    Drive = "Google Drive",
+    Bookstack = "BookStack"
 }
 
 export interface SearchResultProps {
@@ -134,6 +138,8 @@ function getSmallIconByPlatform(platform: Platform) {
         return <FaSlack className={classes}></FaSlack>
       case Platform.Drive:
         return <FaGoogleDrive className={classes}></FaGoogleDrive>
+      case Platform.Bookstack:
+        return <FiBook className={classes}></FiBook>
     }
 }
 
@@ -156,7 +162,10 @@ function getBigIconByPlatform (platform: Platform, fileType: FileType) {
         } else if (fileType == FileType.Pptx) {
             image = GooglePptx;
         }   
-        break;     
+        break;
+      case Platform.Bookstack:
+        image = Bookstack;
+        break;
     }
 
     return <img className={classes} src={image}></img>
@@ -170,5 +179,7 @@ export function getPlatformDisplayName(platform: Platform) {
         return PlatformDisplayName.Slack
       case Platform.Drive:
         return PlatformDisplayName.Drive
+      case Platform.Bookstack:
+        return PlatformDisplayName.Bookstack
     }
 }

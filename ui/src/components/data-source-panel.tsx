@@ -7,6 +7,7 @@ import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
 import Slack from '../assets/images/slack.svg';
 import GoogleDrive from '../assets/images/google-drive.svg'
+import Bookstack from '../assets/images/bookstack.svg';
 
 
 import { AiFillCheckCircle } from "react-icons/ai";
@@ -33,6 +34,12 @@ export interface SlackConfig {
    token: string;
 }
 
+export interface BookstackConfig {
+   url: string;
+   token_id: string;
+   token_secret: string;
+}
+
 export interface DataSourcePanelState {
    dataSourceTypes: SelectOption[]
    isAdding: boolean
@@ -57,6 +64,8 @@ function getBigIconByPlatform(platform: Platform) {
          return Slack;
       case Platform.Drive:
          return GoogleDrive;
+      case Platform.Bookstack:
+         return Bookstack;
    }
 }
 
@@ -275,6 +284,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
+
+                              {
+                                 this.state.selectedDataSource.value === 'bookstack' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>TODO</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
@@ -331,11 +348,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    hasUrl = () => {
-      return this.state.selectedDataSource?.value === "confluence";
+      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "bookstack";
    }
 
    hasToken = () => {
-      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack";
+      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack" || this.state.selectedDataSource?.value === "bookstack";
    }
 
    hasBigText = () => {
@@ -355,6 +372,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             break;
          case "google_drive":
             config = JSON.parse(this.state.newBigText)
+            break;
+         case "bookstack":
+            let [token_id, token_secret] = this.state.newToken.split(":");
+            config = { url: this.state.newUrl, token_id: token_id, token_secret: token_secret } as BookstackConfig;
             break;
       }
 
