@@ -31,7 +31,7 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 1. Install *Nvidia for docker* 
 2. Run docker
  
-### Nvidia hardware
+## Nvidia for docker
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -47,6 +47,7 @@ sudo systemctl restart docker
 ```
 
 
+## Run docker
 Then run the docker container like so:
 
 ### Nvidia hardware
