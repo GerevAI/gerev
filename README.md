@@ -1,7 +1,7 @@
 # Gerev - Workplace search for Devs
 Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
 
-![gerev](./images/everything.png)
+![gerev](./images/Everything.png)
 
 ## Listening?
 You should try Gerev out! Gerev allows you to search your entire company from a single place.
