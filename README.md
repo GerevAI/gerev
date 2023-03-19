@@ -1,5 +1,8 @@
-# Gerev - Workplace search for Devs
+## Join Discord for early access code!
+
 ![Discord Banner](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=banner2)
+# Gerev - Workplace search for Devs
+
 
 Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
 
