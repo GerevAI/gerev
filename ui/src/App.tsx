@@ -224,7 +224,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   verifyDiscordCode = () => {
-    if (this.state.discordCodeInput == discordCode) {
+    if (this.state.discordCodeInput.trim() == discordCode) {
       this.saveDiscordPassed();
     } else {
       toast.error("Invalid code. Join Discord!", {autoClose: 2000});
