@@ -303,7 +303,7 @@ export default class App extends React.Component <{}, AppState>{
                     <div className="flex flex-row w-[97%] bg-[#faa61a1a] p-3 ml-1 border-[2px] border-[#FAA61A] rounded-[5px]">
                       <img className="ml-2 h-10" src={WarningImage}></img>
                       <a className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
-                        <span className="inline">gerev.ai is currently only available to Discord community members.</span>
+                        <span className="inline">gerev.ai is currently only available to our Discord community members.</span>
                         <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
                           <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
                         </a>
