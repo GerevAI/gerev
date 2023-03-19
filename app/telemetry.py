@@ -41,6 +41,8 @@ class Posthog:
             logger.info("Skipping identify due to CAPTURE_TELEMETRY not being set")
             return
 
+        cls._should_capture = True
+
         user_uuid = cls._read_uuid_file()
         if user_uuid is None:
             new_uuid = str(uuid.uuid4())

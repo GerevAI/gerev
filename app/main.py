@@ -1,9 +1,10 @@
+import logging
 from telemetry import Posthog
 
 try:
     Posthog.send_startup_telemetry()
 except:
-    print("Failed to send startup telemetry")
+    logging.exception("Failed to send startup telemetry")
 
 import json
 import logging
