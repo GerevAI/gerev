@@ -1,6 +1,7 @@
 ## Join Discord for early access code!
 
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)
+![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
+
 [Join here!](https://discord.gg/zZZrUBZd)
 # Gerev - Workplace search for Devs
 
