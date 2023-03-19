@@ -1,3 +1,10 @@
+from telemetry import Posthog
+
+try:
+    Posthog.send_startup_telemetry()
+except:
+    print("Failed to send startup telemetry")
+
 import json
 import logging
 import os
@@ -11,7 +18,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.responses import JSONResponse
 from fastapi_restful.tasks import repeat_every
-
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
@@ -59,6 +65,15 @@ def check_for_new_documents():
             data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
                                                    last_index_time=data_source.last_indexed_at)
             data_source_instance.index()
+
+
+@app.on_event("startup")
+@repeat_every(wait_first=60 * 60 * 24, seconds=60 * 60 * 24)
+def send_daily_telemetry():
+    try:
+        Posthog.send_daily()
+    except:
+        logger.exception("Failed to send daily telemetry")
 
 
 @app.exception_handler(Exception)

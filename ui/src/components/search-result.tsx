@@ -6,7 +6,11 @@ import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 import BlueFolder from '../assets/images/blue-folder.svg';
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
-import GoogleDrive from '../assets/images/google-drive.svg';
+
+import GoogleDoc from '../assets/images/google-doc.svg';
+import GoogleDocx from '../assets/images/google-docx.svg';
+import GooglePptx from '../assets/images/google-pptx.svg';
+
 
 export interface TextPart{
     content: string
@@ -19,6 +23,13 @@ export enum ResultType {
     Comment = "comment",
     Person = "person"
 }
+
+export enum FileType {
+    Docx = "docx",
+    Pptx = "pptx",
+    GoogleDoc = "doc",
+}
+
   
 export enum Platform {
     Confluence = "confluence",
@@ -42,7 +53,8 @@ export interface SearchResultProps {
     score: number
     location: string
     platform: string 
-    type: ResultType
+    document_type: ResultType
+    file_type: FileType
     url: string
 }
 
@@ -51,18 +63,18 @@ export const SearchResult = (props: SearchResultProps) => {
         <div className="mb-4 pt-2">
             <a className="relative text-sm float-right text-white right-2 top-2">{props.score.toFixed(2)}%</a>
             <div className="flex flex-row items-start">
-            {getBigIconByPlatform(props.platform as Platform)}
+            {getBigIconByPlatform(props.platform as Platform, props.file_type as FileType)}
             <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
                 <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} target='_blank'>
                     {props.title}
                 </a>
                 <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                 {
-                    props.type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
+                    props.document_type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
                 }
                 <span className="ml-0 text-[#D5D5D5]">
                     {
-                        props.type == ResultType.Message && <span>#</span>
+                        props.document_type == ResultType.Message && <span>#</span>
                     }
                     {props.location} ·&thinsp;
                 </span>
@@ -79,7 +91,7 @@ export const SearchResult = (props: SearchResultProps) => {
                 </span>
                 </span>
                 
-                {props.type == ResultType.Docment && 
+                {props.document_type == ResultType.Docment && 
                     <span>
                     {props.content.map((text_part, index) => {
                     return (
@@ -90,7 +102,7 @@ export const SearchResult = (props: SearchResultProps) => {
                     )})} 
                     </span>
                 }
-                {props.type == ResultType.Message && 
+                {props.document_type == ResultType.Message && 
                     <p className="bg-[#352C45] p-2 px-4 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                     {props.content.map((text_part, index) => {
                     return (
@@ -125,16 +137,29 @@ function getSmallIconByPlatform(platform: Platform) {
     }
 }
 
-function getBigIconByPlatform (platform: Platform) {
-    let classes = "mt-2 mr-2 h-[40px] w-[40px]";
+function getBigIconByPlatform (platform: Platform, fileType: FileType) {
+    let classes = "mt-2 mr-2 h-[40px] w-[40px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]";
+    let image = "";
     switch (platform) {
       case Platform.Confluence:
-        return <img className={classes} src={Confluence}></img>
+        image = Confluence;
+        break;
       case Platform.Slack:
-        return <img className={classes} src={Slack}></img>
+        image = Slack;
+        break;
       case Platform.Drive:
-        return <img className={classes} src={GoogleDrive}></img>
+        if (fileType == FileType.GoogleDoc) {
+            image = GoogleDoc;
+        }
+        else if (fileType== FileType.Docx) {
+            image = GoogleDocx;
+        } else if (fileType == FileType.Pptx) {
+            image = GooglePptx;
+        }   
+        break;     
     }
+
+    return <img className={classes} src={image}></img>
 }
 
 export function getPlatformDisplayName(platform: Platform) {

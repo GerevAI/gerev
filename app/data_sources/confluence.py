@@ -45,7 +45,7 @@ class ConfluenceDataSource(BaseDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         confluence_config = ConfluenceConfig(**self._config)
-        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token)
+        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token, verify_ssl=False)
 
     def _list_spaces(self) -> List[Dict]:
         return ConfluenceDataSource.list_spaces(confluence=self._confluence)
