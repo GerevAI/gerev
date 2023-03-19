@@ -28,9 +28,9 @@ Gerev enables you to search your entire company from a single place.
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ## Installation
-- 1. Install *Nvidia for docker* 
-- 2. Run docker
-- 
+1. Install *Nvidia for docker* 
+2. Run docker
+ 
 ### Nvidia hardware
 Install nvidia container toolkit on the host machine.
 
