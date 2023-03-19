@@ -1,20 +1,20 @@
 # Gerev - Workplace search for Devs
 Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
 
-![gerev](./images/Everything.png)
+![first image](./images/Everything.png)
 
 ## Listening?
 You should try Gerev out! Gerev allows you to search your entire company from a single place.
 
 ## Made for devs
 ### Find docs
-![gerev](./images/product-example.png)
+![second image](./images/product-example.png)
 
 ### Find Code
-![gerev](./images/CodeCard.png)
+![third image](./images/CodeCard.png)
 
 ### Troubleshoot Issues
-![gerev](./images/sql-card.png)
+![fourth image](./images/sql-card.png)
 
 ## Integrations
  - [x] Slack
