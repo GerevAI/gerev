@@ -135,7 +135,9 @@ export default class App extends React.Component <{}, AppState>{
     api.get<ServerStatus>('/status').then((res) => {
       if (this.state.isServerDown) {
         toast.dismiss();
-        toast.success("Server online.", {autoClose: 2000});
+        if (!document.hidden) {
+          toast.success("Server online.", {autoClose: 2000});
+        }
         this.listConnectedDataSources();
       }
 
@@ -156,7 +158,7 @@ export default class App extends React.Component <{}, AppState>{
     }).catch((err) => {
       this.setState({isServerDown: true});
 
-      if (Date.now() - this.state.lastServerDownTimestamp > 6000) {  // if it's 6 seconds since last server down, show a toast
+      if (Date.now() - this.state.lastServerDownTimestamp > 6000 && !document.hidden) {  // if it's 6 seconds since last server down, show a toast
         toast.dismiss();
         toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: (timeBetweenFailToast-1) * 1000});
         this.setState({lastServerDownTimestamp: Date.now()});
