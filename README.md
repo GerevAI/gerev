@@ -14,7 +14,7 @@ You should try Gerev out! Gerev allows you to search your entire company from a 
 ![gerev](./images/CodeCard.png)
 
 ### Troubleshoot Issues
-![gerev](./images/sql-example.png)
+![gerev](./images/sql-card.png)
 
 ## Integrations
  - [x] Slack
