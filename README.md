@@ -1,18 +1,35 @@
-# Open Workplace Search
-self hosted workplace search engine, search your entire company from a single place.
+# Gerev - Workplace search for Devs
+Tired of searching for that one docuement you know exists somewhere, but not sure exactly where?
 
+![gerev](./images/everything.png)
+
+## Listening?
+You should try Gerev out! Gerev allows you to search your entire company from a single place.
+
+## Made for devs
+### Find docs
 ![gerev](./images/product-example.png)
 
+### Find Code
+![gerev](./images/CodeCard.png)
+
+### Troubleshoot Issues
+![gerev](./images/sql-example.png)
 
 ## Integrations
  - [x] Slack
  - [x] Confluence
- - [x] Google Docs
+ - [x] Google Drive
+ - [ ] Gitlab Issues (In PR)
  - [ ] Notion (In Progress...)
- - [ ] Google Sheets (Coming Soon...)
- - [ ] Google Slides (Coming Soon...)
- - [ ] Google Calendar (Coming Soon...)
-
+ - [ ] Microsoft Teams
+ - [ ] Sharepoint
+ - [ ] OneDrive
+ - [ ] Gmail
+ - [ ] Wiki Crawler
+ 
+### Natural Langauge
+allows searching using natural language. such as "How to do X", "how to connect to Y", "Do we support Z"
 
 ## Installation
 
