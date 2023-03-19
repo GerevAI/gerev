@@ -150,8 +150,9 @@ export default class App extends React.Component <{}, AppState>{
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
                      docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
-                     
-      setTimeout(() => this.fetchStatsusForever(), successSleepSeconds * 1000);
+
+      let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
+      setTimeout(() => this.fetchStatsusForever(), timeToSleep);
     }).catch((err) => {
       this.setState({isServerDown: true});
 
@@ -169,22 +170,21 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   getIndexingStatusText() {
-    // multiply left-to-index by 50 and add ~ because currently we push 50~ docs to the queue at a time
-    // if (this.state.isPreparingIndexing) {
-    //   return "Fetching docs to index...";
-    // }
+    if (this.state.isPreparingIndexing) {
+      return "Indexing process in progress...";
+    }
 
     if (this.state.docsInIndexing > 0) {
       let text = "Indexing " + this.state.docsInIndexing + " documents...";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex * 50  + "~ left)";
+        text += " (" + this.state.docsLeftToIndex * 10  + "~ left)";
       }
 
       return text;
     }
 
     if (this.state.docsLeftToIndex > 0) {
-      return "Preparing to index " + this.state.docsLeftToIndex * 50 + "~ documents...";
+      return "Preparing to index...";
     }
   }
   
@@ -241,6 +241,17 @@ export default class App extends React.Component <{}, AppState>{
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
+  }
+
+  dataSourcesAdded = (dataSourceType: string) => {
+    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, dataSourceType]});
+    // if had no data from server, show toast after 30 seconds
+    setTimeout(() => {
+      if (this.state.isPreparingIndexing) {
+        this.setState({isPreparingIndexing: false})
+        toast.success("Indexing finished.", {autoClose: 2000});
+      }
+    }, 30000);
   }
 
   render() {
@@ -318,8 +329,7 @@ export default class App extends React.Component <{}, AppState>{
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
-                        connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
+                        onAdded={this.dataSourcesAdded}/>
         </Modal>
 
         {/* front search page*/}
