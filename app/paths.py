@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import os
 
-IS_IN_DOCKER = False if (sys.platform == "win32" or not hasattr(os, "geteuid")) else os.geteuid()
+IS_IN_DOCKER = False if (sys.platform == "win32" or not hasattr(os, "geteuid")) else os.geteuid() == 0
 if os.name == 'nt':
     STORAGE_PATH = Path(".gerev\\storage")
 else:

@@ -20,6 +20,57 @@ class GitlabConfig(BaseModel):
 
 
 class GitlabDataSource(BaseDataSource):
+
+    def _parse_issues(self, documents: [], project_id: str, project_url: str):
+        issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues"
+
+        issues_response = self._session.get(issues_url)
+        issues_response.raise_for_status()
+        issues_json = issues_response.json()
+
+        for issue in issues_json:
+            last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            if last_modified < self._last_index_time:
+                continue
+
+            documents.append(BasicDocument(
+                id=issue["id"],
+                data_source_id=self._data_source_id,
+                type=DocumentType.GIT_ISSUE,
+                title=issue['title'],
+                content=issue["description"] if not None else "",
+                author=issue['author']['name'],
+                author_image_url=issue['author']['avatar_url'],
+                location=project_url,
+                url=issue['web_url'],
+                timestamp=last_modified
+            ))
+
+    def _parse_pull_requests(self, documents: [], project_id: str, project_url: str):
+        pull_requests_url = f"{GITLAB_BASE_URL}/projects/{project_id}/merge_requests"
+
+        pull_requests_response = self._session.get(pull_requests_url)
+        pull_requests_response.raise_for_status()
+        pull_requests_json = pull_requests_response.json()
+
+        for pull_request in pull_requests_json:
+            last_modified = datetime.strptime(pull_request["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            if last_modified < self._last_index_time:
+                continue
+
+            documents.append(BasicDocument(
+                id=pull_request["id"],
+                data_source_id=self._data_source_id,
+                type=DocumentType.GIT_PR,
+                title=pull_request['title'],
+                content=pull_request["description"] if not None else "",
+                author=pull_request['author']['name'],
+                author_image_url=pull_request['author']['avatar_url'],
+                location=project_url,
+                url=pull_request['web_url'],
+                timestamp=last_modified
+            ))
+
     @staticmethod
     def validate_config(config: Dict) -> None:
         try:
@@ -27,8 +78,7 @@ class GitlabDataSource(BaseDataSource):
             session = requests.Session()
             session.headers.update({"PRIVATE-TOKEN": parsed_config.access_token})
             projects_response = session.get(PROJECTS_URL)
-            if projects_response.status_code != 200:
-                raise ValueError("Invalid api key")
+            projects_response.raise_for_status()
         except (KeyError, ValueError) as e:
             raise InvalidDataSourceConfig from e
 
@@ -36,11 +86,12 @@ class GitlabDataSource(BaseDataSource):
         super().__init__(*args, **kwargs)
         # Create a access token with sufficient permissions in https://gitlab.com/-/profile/personal_access_tokens
         self.gitlab_config = GitlabConfig(**self._config)
-        self.session = requests.Session()
-        self.session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.access_token})
+        self._session = requests.Session()
+        self._session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.access_token})
 
     def _feed_new_documents(self) -> None:
-        projects_response = self.session.get(PROJECTS_URL)
+        projects_response = self._session.get(PROJECTS_URL)
+        projects_response.raise_for_status()
         projects = projects_response.json()
 
         self._parse_projects_in_parallel(projects)
@@ -51,49 +102,9 @@ class GitlabDataSource(BaseDataSource):
 
         for project in projects:
             project_id = project["id"]
-            issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues"
-            issues_response = self.session.get(issues_url)
-            issues_json = issues_response.json()
-
-            for issue in issues_json:
-                last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                if last_modified < self._last_index_time:
-                    continue
-
-                documents.append(BasicDocument(
-                    id=issue["id"],
-                    data_source_id=self._data_source_id,
-                    type=DocumentType.DOCUMENT,
-                    title=issue['title'],
-                    content=issue["description"] if not None else "",
-                    author=issue['author']['name'],
-                    author_image_url=issue['author']['avatar_url'],
-                    location=project["web_url"],
-                    url=issue['web_url'],
-                    timestamp=last_modified
-                ))
-
-            pull_requests_url = f"{GITLAB_BASE_URL}/projects/{project_id}/merge_requests"
-            pull_requests_response = self.session.get(pull_requests_url)
-            pull_requests_json = pull_requests_response.json()
-
-            for pull_request in pull_requests_json:
-                last_modified = datetime.strptime(pull_request["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-                if last_modified < self._last_index_time:
-                    continue
-
-                documents.append(BasicDocument(
-                    id=pull_request["id"],
-                    data_source_id=self._data_source_id,
-                    type=DocumentType.DOCUMENT,
-                    title=pull_request['title'],
-                    content=pull_request["description"] if not None else "",
-                    author=pull_request['author']['name'],
-                    author_image_url=pull_request['author']['avatar_url'],
-                    location=project["web_url"],
-                    url=pull_request['web_url'],
-                    timestamp=last_modified
-                ))
+            project_url = project["web_url"]
+            self._parse_issues(documents, project_id, project_url)
+            self._parse_pull_requests(documents, project_id, project_url)
 
         IndexingQueue.get().feed(documents)
 

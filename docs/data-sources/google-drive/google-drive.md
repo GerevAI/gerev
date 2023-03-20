@@ -4,9 +4,9 @@
 
 The process involves creating a service account with an email address, then sharing drive folders with that service account.
 
-1. Go to [Create a project](https://console.cloud.google.com/projectcreate?previousPage=%2Fprojectselector2%2Fiam-admin%2Fserviceaccounts%2Fcreate) on google cloud console. Choose a name and organization (you can also leave organization empty)
+1. Go to [Create a project](https://console.cloud.google.com/projectcreate?previousPage=%2Fprojectselector2%2Fiam-admin%2Fserviceaccounts%2Fcreate) on google cloud console. It's important to choose your **organization** if you have one.
 
-![Create a project](./create-new-project.png)
+![Create a project](./create-project.png)
 
 2. Enable [Google Drive API](https://console.cloud.google.com/apis/library/drive.googleapis.com) for the project
 
