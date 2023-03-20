@@ -30,9 +30,8 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install npm dependencies and build UI
-        with:
-          working-directory: ./ui
         run: |
+          cd ui
           npm install
           npm run build
         
