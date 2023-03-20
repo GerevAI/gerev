@@ -28,8 +28,10 @@ Gerev enables you to search your entire company from a single place.
  - [x] Confluence
  - [x] Google Drive
  - [ ] Gitlab Issues (In PR)
+ - [ ] BookStack (In PR)
  - [ ] Notion (In Progress...)
  - [ ] Microsoft Teams
+ - [ ] Sharepoint
  
 ### Natural Langauge
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
