@@ -61,7 +61,7 @@ class BookStack(Session):
             data += self.get_books(count, offset+records)
         return data
 
-    def get_all_books(self) -> list[dict]:
+    def get_all_books(self) -> List[Dict]:
         offset = 0
         count = 500
         return self.get_books(count, offset)
@@ -80,7 +80,7 @@ class BookStack(Session):
             data += self.get_pages(count, offset + records)
         return data
 
-    def get_all_pages_from_book(self, book) -> list[dict]:
+    def get_all_pages_from_book(self, book) -> List[Dict]:
         offset = 0
         count = 500
         return self.get_pages(book, count, offset)
