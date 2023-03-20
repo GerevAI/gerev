@@ -6,12 +6,20 @@ uses.
 
 import React from 'react';
 
-import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
+import { FaConfluence, FaSlack, FaGoogleDrive, FaUser } from "react-icons/fa";
 
 // This imports the full-color icons
 import Slack from '../assets/images/slack.svg';
 import Confluence from '../assets/images/confluence.svg';
 import GoogleDrive from '../assets/images/google-drive.svg'
+import BlueFolder from '../assets/images/'
+import ProfileDefault from "../assets/images/profile-picture-default.svg"
+
+const paths = {
+   "slack": Slack,
+   "confluence": Confluence,
+   "google drive": GoogleDrive
+}
 
 export interface TextPart {
    content: string
@@ -52,7 +60,7 @@ export const SearchResult = (props: SearchResultProps) => {
          <a className="relative text-sm float-right text-white right-2 top-2" href={props.url}>{props.score}%</a>
          <div className="flex flex-row items-start">
             <div className="relative w-[60px] h-[60px]">
-               {ProfilePic(props.author_image_url, props.platform as Platform, props.type)}
+               {ResultImage(props.platform as Platform, props.type, props.author_image_url)}
             </div>
             <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
                <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} target='_blank'>
@@ -110,7 +118,7 @@ export const SearchResult = (props: SearchResultProps) => {
    );
 }
 
-export function getPlatformDisplayName(platform: Platfom) {
+export function getPlatformDisplayName(platform: Platform) {
    // This converts the platform name to title case for display purposes.
    // example input : "google drive"
    // example output: "Google Drive"
@@ -142,33 +150,27 @@ function getSmallIconByPlatform(platform: Platform) {
 }
 
 
-function ProfilePic(profilePicture, platform, ResultType) {
+function ResultImage(platform: Platform, resultType: ResultType, profilePicture = ProfileDefault) {
    /*
    This function displays an image: either a profile picture or a logo.
-   The first parameter is the path/url to the profile picture.
-   The second parameter is the platform name.
+   The first parameter is the platform name.
+   The second parameter is 
    */
-   platform = platform.toLowerCase();
-   let profileStyle = "rounded-full w-full h-full object-cover";
-   let lilLogoStyle = "company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white"
-   if (platform === "slack" && ResultType === "comment") {
+   const profileStyle = "rounded-full w-full h-full object-cover";
+   const lilLogoStyle = "company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white";
+   const full = "w-full h-full"
+   if (resultType === "message") {
       return (
-         <div className="w-full h-full">
+         <div className={full}>
             <img className={profileStyle} alt="Profile" src={profilePicture} />
             <img src={Slack} alt={platform} className={lilLogoStyle} />
          </div>
       );
    }
    else {
-      let classes = "w-full h-full"
-      if (platform === "confluence") {
-         return (
-            <img className={classes} alt="Profile" src={Confluence} />
-         );
-      }
-      if (platform === "google drive") {
-         return <img className={classes} alt="Profile" src={GoogleDrive} />
-      }
+      return (
+         <img src={paths[platform]} className={full} alt={platform} />
+      );
    }
 }
 
