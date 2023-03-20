@@ -4,9 +4,6 @@ import React from 'react';
 import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
 
 import BlueFolder from '../assets/images/blue-folder.svg';
-import Slack from '../assets/images/slack.svg';
-import Confluence from '../assets/images/confluence.svg';
-
 import GoogleDoc from '../assets/images/google-doc.svg';
 import GoogleDocx from '../assets/images/google-docx.svg';
 import GooglePptx from '../assets/images/google-pptx.svg';

@@ -1,6 +1,3 @@
-import logging
-from telemetry import Posthog
-
 import json
 import logging
 import os
@@ -12,8 +9,8 @@ import torch
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from starlette.responses import JSONResponse
 from fastapi_restful.tasks import repeat_every
+from starlette.responses import JSONResponse
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
@@ -28,6 +25,7 @@ from schemas import DataSource
 from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
+from telemetry import Posthog
 
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s')
@@ -71,7 +69,6 @@ def send_startup_telemetry():
         logging.exception("Failed to send startup telemetry")
 
 
-
 @app.on_event("startup")
 @repeat_every(wait_first=60 * 60 * 24, seconds=60 * 60 * 24)
 def send_daily_telemetry():
@@ -89,7 +86,7 @@ def handle_exception_middleware(request: Request, exc: Exception):
     )
 
 
-def load_supported_data_sources_to_db():
+def load_data_source_types():
     supported_data_source_type = []
     for file in os.listdir("data_sources"):
         if file.endswith(".py") and file != "__init__.py":
@@ -100,7 +97,12 @@ def load_supported_data_sources_to_db():
             if session.query(DataSourceType).filter_by(name=data_source_type).first():
                 continue
 
-            new_data_source = DataSourceType(name=data_source_type)
+            data_source_class = get_class_by_data_source_name(data_source_type)
+            config_fields = data_source_class.get_config_fields()
+            config_fields_str = json.dumps([config_field.dict() for config_field in config_fields])
+            new_data_source = DataSourceType(name=data_source_type,
+                                             display_name=data_source_class.get_display_name(),
+                                             config_fields=config_fields_str)
             session.add(new_data_source)
             session.commit()
 
@@ -111,7 +113,7 @@ async def startup_event():
         logger.warning("CUDA is not available, using CPU. This will make indexing and search very slow!!!")
     FaissIndex.create()
     Bm25Index.create()
-    load_supported_data_sources_to_db()
+    load_data_source_types()
     BackgroundIndexer.start()
 
 

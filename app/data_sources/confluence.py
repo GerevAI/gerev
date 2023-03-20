@@ -1,14 +1,12 @@
 import concurrent.futures
 import logging
-import re
 from datetime import datetime
 from typing import List, Dict
 
 from atlassian import Confluence
-from bs4 import BeautifulSoup
 
 from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
@@ -21,6 +19,14 @@ class ConfluenceConfig(BaseModel):
 
 
 class ConfluenceDataSource(BaseDataSource):
+
+    @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="Confluence URL", name="url", placeholder="https://example.confluence.com"),
+            ConfigField(label="Personal Access Token", name="token", input_type=HTMLInputType.PASSWORD)
+        ]
+
     @staticmethod
     def list_spaces(confluence: Confluence) -> List[Dict]:
         # Usually the confluence connection fails, so we retry a few times

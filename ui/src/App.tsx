@@ -22,12 +22,14 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
+import { DataSourceType } from "./data-source";
 
 export interface AppState {
   uuid: string
   query: string
   results: SearchResultProps[]
   searchDuration: number
+  dataSourceTypes: DataSourceType[]
   connectedDataSources: string[]
   isLoading: boolean
   isNoResults: boolean
@@ -72,6 +74,7 @@ const customStyles = {
     stroke: 'white'
   }
 };
+
 export default class App extends React.Component <{}, AppState>{
 
   constructor() {
@@ -80,6 +83,7 @@ export default class App extends React.Component <{}, AppState>{
       uuid: "",
       query: "",
       results: [],
+      dataSourceTypes: [],
       connectedDataSources: [],
       isLoading: false,
       isNoResults: false,
@@ -95,9 +99,8 @@ export default class App extends React.Component <{}, AppState>{
       lastServerDownTimestamp: 0,
     }
 
-    this.openModal = this.openModal.bind(this); // bind the method here
-    this.closeModal = this.closeModal.bind(this); // bind the method here
-
+    this.openModal = this.openModal.bind(this);
+    this.closeModal = this.closeModal.bind(this); 
   }
 
   
@@ -116,6 +119,15 @@ export default class App extends React.Component <{}, AppState>{
       this.fetchStatsusForever();
       this.setState({isStartedFetching: true});
       this.listConnectedDataSources();
+      this.listDataSourceTypes();
+    }
+  }
+
+  async listDataSourceTypes() {
+    try {
+      const response = await api.get<DataSourceType[]>('/data-source/list-types');
+      this.setState({ dataSourceTypes: response.data })
+    } catch (error) {
     }
   }
 
@@ -331,7 +343,7 @@ export default class App extends React.Component <{}, AppState>{
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={this.dataSourcesAdded}/>
+                        onAdded={this.dataSourcesAdded} dataSourceTypes={this.state.dataSourceTypes}></DataSourcePanel>
         </Modal>
 
         {/* front search page*/}

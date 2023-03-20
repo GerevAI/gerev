@@ -1,5 +1,6 @@
 import importlib
 
+
 def _snake_case_to_pascal_case(snake_case_string: str):
     """Converts a snake case string to a PascalCase string"""
     components = snake_case_string.split('_')

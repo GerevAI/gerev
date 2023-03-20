@@ -2,12 +2,8 @@ import * as React from "react";
 import Select, { components } from 'react-select';
 import { Platform, getPlatformDisplayName } from "./search-result";
 
-import Confluence from '../assets/images/confluence.svg';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
-import Slack from '../assets/images/slack.svg';
-import GoogleDrive from '../assets/images/google-drive.svg'
-
 
 import { AiFillCheckCircle } from "react-icons/ai";
 import { BiLinkExternal } from 'react-icons/bi';
@@ -17,11 +13,14 @@ import { RxCopy } from 'react-icons/rx';
 import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
+import { ConfigField, DataSourceType } from "../data-source";
 
 
 export interface SelectOption {
    value: string;
    label: string;
+   imageBase64: string
+   configFields: ConfigField[]
 }
 
 export interface ConfluenceConfig {
@@ -34,36 +33,24 @@ export interface SlackConfig {
 }
 
 export interface DataSourcePanelState {
-   dataSourceTypes: SelectOption[]
+   selectOptions: SelectOption[]
+   dataSourceToImage: { [key: string]: string }
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
-   newUrl: string
-   newToken: string
-   newBigText: string
 }
 
 export interface DataSourcePanelProps {
+   dataSourceTypes: DataSourceType[]
    connectedDataSources: string[]
    onAdded: (dataSourceType: string) => void
    onClose: () => void
 }
 
-function getBigIconByPlatform(platform: Platform) {
-   switch (platform) {
-      case Platform.Confluence:
-         return Confluence
-      case Platform.Slack:
-         return Slack;
-      case Platform.Drive:
-         return GoogleDrive;
-   }
-}
-
 const Option = props => (
    <components.Option {...props}>
       <div className="flex flex-row w-full">
-         <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(props.value)}></img>
+         <img className={"mr-2 h-[20px]"} src={props.image_base64}></img>
          {props.label}
       </div>
    </components.Option>
@@ -96,45 +83,52 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    constructor(props) {
       super(props);
       this.state = {
+         selectOptions: [],
+         dataSourceToImage: {},
          isAdding: false,
          isAddingLoading: false,
-         selectedDataSource: { value: 'unknown', label: 'unknown' },
-         dataSourceTypes: [
-         ],
-         newUrl: '',
-         newToken: '',
-         newBigText: ''
+         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: []}
       }
    }
 
    async componentDidMount() {
-      this.listAvailableDataSourceTypes();
-   }
-
-   async listAvailableDataSourceTypes() {
-      try {
-         const response = await api.get('/data-source/list-types');
-         let types = this.dataSourceNamesToSelectOptions(response.data);
-         this.setState({
-            dataSourceTypes: types,
-            selectedDataSource: types[1]
-         })
-      } catch (error) {
-      }
-   }
-
-   dataSourceNamesToSelectOptions(dataSourceNames: string[]) {
-      return dataSourceNames.map((data_source) => {
+      let options = this.props.dataSourceTypes.map((data_source) => {
          return {
-            value: data_source,
-            label: getPlatformDisplayName(data_source as Platform)
+            value: data_source.name,
+            label: data_source.display_name,
+            imageBase64: data_source.image_base64,
+            configFields: data_source.config_fields
          }
+      })
+
+      let dataSourceToImage = this.props.dataSourceTypes.reduce((acc, data_source) => {
+         acc[data_source.name] = data_source.image_base64
+         return acc
+      }, {});
+
+      this.setState({
+         selectOptions: options,
+         selectedDataSource: options[0],
+         dataSourceToImage: dataSourceToImage
       })
    }
 
    capitilize(str: string) {
       return str.charAt(0).toUpperCase() + str.slice(1);
    }
+
+   dataSourceToAddSelected(dataSource: DataSourceType) {
+      let selectedDataSource = this.state.selectOptions.find((option) => {
+         return option.value === dataSource.name
+      })
+
+      if (!selectedDataSource) { // shoudln't happen, typescript...
+         return;
+      }
+
+      this.setState({ isAdding: true, selectedDataSource: selectedDataSource })
+   }
+
 
    render() {
       return (
@@ -153,7 +147,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((data_source) => {
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                                 <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source as Platform)}></img>
+                                 <img className={"mr-2 h-[20px]"} src={this.state.dataSourceToImage[data_source]}></img>
                                  <h1 className="text-white">{getPlatformDisplayName(data_source as Platform)}</h1>
                                  <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
                               </div>
@@ -161,13 +155,13 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         })
                         }
                         {
-                        this.state.dataSourceTypes.map((data_source) => {
-                           if (!this.props.connectedDataSources.includes(data_source.value)) {
+                        this.props.dataSourceTypes.map((data_source) => {
+                           if (!this.props.connectedDataSources.includes(data_source.name)) {
                               return (
-                                 <div onClick={() => { this.setState({ isAdding: true, selectedDataSource: data_source }) }} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                                    <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source.value as Platform)}></img>
+                                 <div onClick={() => this.dataSourceToAddSelected(data_source)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                    <img className={"mr-2 h-[20px]"} src={data_source.image_base64}></img>
                                     {/* <h1 className="text-white">Add</h1> */}
-                                    <h1 className="text-gray-500">{getPlatformDisplayName(data_source.value as Platform)}</h1>
+                                    <h1 className="text-gray-500">{data_source.display_name}</h1>
                                     <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                                  </div>
                               )
@@ -181,9 +175,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                this.state.isAdding && (
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
-                        <img className={"mr-2 h-[32px]"} src={getBigIconByPlatform(this.state.selectedDataSource.value as Platform)}></img>
+                        <img className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
                         <Select className="w-40 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
-                           options={this.state.dataSourceTypes} isDisabled={false} isSearchable={false} components={{ Option }}
+                           options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
                               control: (baseStyles, state) => ({
                                  ...baseStyles,
@@ -278,31 +272,27 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
+                              {/* for each field */}
                               {
-                                 this.hasUrl() &&
-                                 <div className="flex flex-col mr-10">
-                                    <h1 className="text-lg block text-white mb-4">{this.state.selectedDataSource.label} URL</h1>
-                                    <input value={this.state.newUrl} onChange={(event) => this.setState({ newUrl: event.target.value })}
-                                       className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="https://example.com"></input>
-                                 </div>
-                              }
-                              {
-                                 this.hasToken() &&
-                                 <div className="flex flex-col">
-                                    <h1 className="text-lg block text-white mb-4">
-                                       {this.state.selectedDataSource.value == "slack" ? "Bot User OAuth Token" : "Personal Access Token"}
-                                    </h1>
-                                    <input value={this.state.newToken} onChange={(event) => this.setState({ newToken: event.target.value })}
-                                       className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="paste-your-token-here"></input>
-                                 </div>
-                              }
-                              {
-                                 this.hasBigText() &&
-                                 <div className="flex flex-col w-full">
-                                    <h1 className="text-lg block text-white mb-4">JSON file content:</h1>
-                                    <textarea value={this.state.newBigText} onChange={(event) => this.setState({ newBigText: event.target.value })}
-                                       className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder="Paste JSON here"></textarea>
-                                 </div>
+                              this.state.selectedDataSource.configFields.map((field, index) => {
+                                 if(field.input_type === 'text' || field.input_type === 'password') {
+                                    return (
+                                       <div className="flex flex-col mr-10">
+                                          <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                          <input value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                          className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                           placeholder={field.placeholder}></input>
+                                       </div>
+                                    )
+                                 } else if (field.input_type === 'textarea') {
+                                    return (
+                                       <div className="flex flex-col w-full">
+                                        <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                          <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                            className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                     </div>
+                                    )}
+                              })
                               }
                               <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
                                   hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
@@ -330,34 +320,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       navigator.clipboard.writeText(JSON.stringify(slackManifest));
    }
 
-   hasUrl = () => {
-      return this.state.selectedDataSource?.value === "confluence";
-   }
-
-   hasToken = () => {
-      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack";
-   }
-
-   hasBigText = () => {
-      return this.state.selectedDataSource?.value === "google_drive";
-   }
 
    submit = () => {
       if (!this.state.selectedDataSource) return;
 
       let config = {};
-      switch (this.state.selectedDataSource.value) {
-         case "confluence":
-            config = { url: this.state.newUrl, token: this.state.newToken } as ConfluenceConfig;
-            break;
-         case "slack":
-            config = { token: this.state.newToken } as SlackConfig;
-            break;
-         case "google_drive":
-            config = JSON.parse(this.state.newBigText)
-            break;
-      }
-
+      this.state.selectedDataSource.configFields.forEach(field => {
+         config[field.name] = field.value;
+      });
+      
       let payload = {
          name: this.state.selectedDataSource.value,
          config: config
@@ -366,7 +337,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully, indexing...");
          this.props.onAdded(this.state.selectedDataSource.value);
-         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "", newBigText: ""  });
+         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0]});
       }).catch(error => {
          toast.error("Error adding data source");
          this.setState({ isAddingLoading: false });

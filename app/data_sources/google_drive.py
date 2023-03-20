@@ -1,3 +1,4 @@
+import json
 import os
 import io
 import logging
@@ -6,17 +7,22 @@ from typing import Dict, List
 from functools import lru_cache
 
 from apiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload, HttpError
+from googleapiclient.http import MediaIoBaseDownload
 from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
+from pydantic import BaseModel
 
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import BasicDocument, DocumentType, FileType
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
 from parsers.docx import docx_to_html
+
+
+class GoogleDriveConfig(BaseModel):
+    json_str: str
 
 
 class GoogleDriveDataSource(BaseDataSource):
@@ -27,22 +33,27 @@ class GoogleDriveDataSource(BaseDataSource):
     }
 
     @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="JSON file content", name="json_str", input_type=HTMLInputType.TEXTAREA)
+        ]
+
+    @staticmethod
     def validate_config(config: Dict) -> None:
         try:
             scopes = ['https://www.googleapis.com/auth/drive.readonly']
-            ServiceAccountCredentials.from_json_keyfile_dict(config, scopes=scopes)
+            parsed_config = GoogleDriveConfig(**config)
+            json_dict = json.loads(parsed_config.json_str)
+            ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
         except (KeyError, ValueError) as e:
             raise InvalidDataSourceConfig from e
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Create a google cloud project in https://console.cloud.google.com/projectcreate
-        # select the project you created and add service account in https://console.cloud.google.com/iam-admin/serviceaccounts
-        # create an api key for the service account and download it
-        # share the google drive folder with the service account email address.
-        # put the contents of the downloaded file in the config
         scopes = ['https://www.googleapis.com/auth/drive.readonly']
-        self._credentials = ServiceAccountCredentials.from_json_keyfile_dict(self._config, scopes=scopes)
+        parsed_config = GoogleDriveConfig(**self._config)
+        json_dict = json.loads(parsed_config.json_str)
+        self._credentials = ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
         self._http_auth = self._credentials.authorize(Http())
         self._drive = build('drive', 'v3', http=self._http_auth)
         

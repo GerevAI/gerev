@@ -5,7 +5,7 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from slack_sdk import WebClient
 
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import DocumentType, BasicDocument
 from indexing_queue import IndexingQueue
 
@@ -27,6 +27,12 @@ class SlackConfig(BaseModel):
 
 
 class SlackDataSource(BaseDataSource):
+
+    @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="Bot User OAuth Token", name="token", type=HTMLInputType.PASSWORD)
+        ]
 
     @staticmethod
     def validate_config(config: Dict) -> None:
