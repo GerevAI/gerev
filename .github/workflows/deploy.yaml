@@ -21,8 +21,8 @@ jobs:
       # Use Caching for npm
       - name: Cache node modules
         uses: actions/cache@v2
-        working-directory: ./ui
         with:
+          working-directory: ./ui
           path: |
             node_modules
           key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
@@ -30,8 +30,8 @@ jobs:
             ${{ runner.os }}-npm-
 
       - name: Install npm dependencies and build UI
-        working-directory: ./ui
         run: |
+          working-directory: ./ui
           npm install
           npm run build
         
