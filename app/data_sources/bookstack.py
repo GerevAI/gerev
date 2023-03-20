@@ -12,6 +12,7 @@ from pydantic import BaseModel
 from requests import Session
 from requests.auth import AuthBase
 from urllib.parse import urljoin
+from time import sleep
 
 
 class BookStackAuth(AuthBase):
@@ -30,10 +31,26 @@ class BookStack(Session):
         super().__init__(*args, **kwargs)
         self.base_url = url
         self.auth = BookStackAuth(token_id, token_secret)
+        self.rate_limit_reach = False
 
     def request(self, method, url_path, *args, **kwargs):
+        while self.rate_limit_reach:
+            sleep(1)
+
         url = urljoin(self.base_url, url_path)
-        return super().request(method, url, *args, **kwargs)
+        r = super().request(method, url, *args, **kwargs)
+
+        if r.status_code != 200:
+            if r.status_code == 429:
+                if not self.rate_limit_reach:
+                    logging.info("API rate limit reach, waiting...")
+                    self.rate_limit_reach = True
+                    sleep(60)
+                    self.rate_limit_reach = False
+                    logging.info("Done waiting for the API rate limit")
+                return self.request(method, url, *args, **kwargs)
+            raise Exception("API Error")
+        return r
 
     def get_books(self, count: int = 500, offset: int = 0):
         r = self.get("/api/books", params={"count": count, "offset": offset, "sort": "+updated_at"},
