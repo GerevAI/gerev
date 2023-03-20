@@ -52,38 +52,36 @@ class BookStack(Session):
             raise Exception("API Error")
         return r
 
-    def get_books(self, count: int = 500, offset: int = 0):
-        r = self.get("/api/books", params={"count": count, "offset": offset, "sort": "+updated_at"},
-                     headers={"Content-Type": "application/json"})
-        data = r.json().get("data")
-        records = len(data)
-        if records >= count:
-            data += self.get_books(count, offset+records)
+    def get_list(self, url: str, count: int = 500, sort: str = None, filters: Dict = None):
+        # Add filter[...] to keys, avoiding the insertion of unwanted parameters
+        if filters is not None:
+            filters = {f"filter[{k}]": v for k, v in filters.items()}
+        else:
+            filters = {}
+
+        data = []
+        records = 0
+        total = 1  # Set 1 to enter the loop
+        while records < total:
+            r = self.get(url, params={"count": count, "offset": records, "sort": sort, **filters},
+                         headers={"Content-Type": "application/json"})
+            json = r.json()
+            data += json.get("data")
+            records = len(data)
+            total = json.get("total")
         return data
 
     def get_all_books(self) -> List[Dict]:
-        offset = 0
-        count = 500
-        return self.get_books(count, offset)
-
-    def get_pages(self, book, count: int = 500, offset: int = 0):
-        r = self.get("/api/pages", params={"count": count, "offset": offset, "sort": "+updated_at",
-                                           "filter[book_id]": book["id"]},
-                     headers={"Content-Type": "application/json"})
-        data = r.json().get("data")
-
-        for page in data:
-            page.update({"book": book})
-
-        records = len(data)
-        if records >= count:
-            data += self.get_pages(count, offset + records)
-        return data
+        return self.get_list("/api/books", sort="+updated_at")
 
     def get_all_pages_from_book(self, book) -> List[Dict]:
-        offset = 0
-        count = 500
-        return self.get_pages(book, count, offset)
+        pages = self.get_list("/api/pages", sort="+updated_at", filters={"book_id": book["id"]})
+
+        # Add parent book object to each page
+        for page in pages:
+            page.update({"book": book})
+
+        return pages
 
     def get_page(self, page_id: int):
         r = self.get(f"/api/pages/{page_id}", headers={"Content-Type": "application/json"})
