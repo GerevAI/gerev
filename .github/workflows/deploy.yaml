@@ -9,7 +9,7 @@ on:
         required: true
 
 env:
-  VERSION: 0.0.1
+  VERSION: ${{ github.event.inputs.version }}
 
 jobs:
   build-and-push:
