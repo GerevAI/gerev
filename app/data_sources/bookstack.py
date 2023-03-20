@@ -72,6 +72,12 @@ class BookStack(Session):
         r = self.get(f"/api/pages/{page_id}", headers={"Content-Type": "application/json"})
         return r.json()
 
+    def get_user(self, user_id: int):
+        r = self.get(f"/api/users/{user_id}", headers={"Content-Type": "application/json"})
+        if r.status_code != 200:
+            return None
+        return r.json()
+
 
 class BookStackConfig(BaseModel):
     url: str
@@ -131,15 +137,20 @@ class BookstackDataSource(BaseDataSource):
 
             page_id = raw_page["id"]
             page_content = self._book_stack.get_page(page_id)
-            author = page_content["created_by"]["name"]
-            author_image_url = ''
+            author_name = page_content["created_by"]["name"]
+
+            author_image_url = ""
+            author = self._book_stack.get_user(raw_page["created_by"])
+            if author:
+                author_image_url = author["avatar_url"]
+
             plain_text = html_to_text(page_content["html"])
 
             url = f"{self._config.get('url')}/books/{raw_page['book_slug']}/page/{raw_page['slug']}"
 
             parsed_docs.append(BasicDocument(title=raw_page["name"],
                                              content=plain_text,
-                                             author=author,
+                                             author=author_name,
                                              author_image_url=author_image_url,
                                              timestamp=last_modified,
                                              id=page_id,
