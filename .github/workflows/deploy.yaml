@@ -33,7 +33,6 @@ jobs:
         with:
           working-directory: ./ui
         run: |
-          
           npm install
           npm run build
         
