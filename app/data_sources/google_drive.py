@@ -72,6 +72,7 @@ class GoogleDriveDataSource(BaseDataSource):
 
     def _should_index_file(self, file):
         if file['mimeType'] not in self._supported_mime_types:
+            logging.info(f"Skipping file {file['name']} because it's mime type is {file['mimeType']} which is not supported.")
             return False
 
         last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
