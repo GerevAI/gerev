@@ -6,6 +6,8 @@ from datetime import datetime
 from typing import Dict, List
 from functools import lru_cache
 
+import googleapiclient
+from googleapiclient.errors import HttpError
 from apiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from httplib2 import Http
@@ -14,7 +16,7 @@ from pydantic import BaseModel
 
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import BasicDocument, DocumentType, FileType
-from data_source_api.exception import InvalidDataSourceConfig
+from data_source_api.exception import InvalidDataSourceConfig, KnownException
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
@@ -44,9 +46,14 @@ class GoogleDriveDataSource(BaseDataSource):
             scopes = ['https://www.googleapis.com/auth/drive.readonly']
             parsed_config = GoogleDriveConfig(**config)
             json_dict = json.loads(parsed_config.json_str)
-            ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
+            credentials = ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
+            credentials.authorize(Http())
+        except HttpError as e:
+            raise KnownException(message="Drive token takes up to 10 minutes to get activated. "
+                                         "Make sure you've followed *EVERY* step from the instructions "
+                                         "& try again soon...")
         except (KeyError, ValueError) as e:
-            raise InvalidDataSourceConfig from e
+            raise KnownException(message="Invalid JSON file content")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
