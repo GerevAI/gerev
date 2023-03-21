@@ -73,12 +73,12 @@ class BaseDataSource(ABC):
         """
         raise NotImplementedError
 
-    def __init__(self, config: Dict, data_source_id: int, last_index_time: datetime = datetime(1970, 1, 1)) -> None:
+    def __init__(self, config: Dict, data_source_id: int, last_index_time: datetime = None) -> None:
         self._config = config
         self._data_source_id = data_source_id
 
         if last_index_time is None:
-            last_index_time = datetime(1970, 1, 1)
+            last_index_time = datetime(2012, 1, 1)
         self._last_index_time = last_index_time
 
     def _set_last_index_time(self) -> None:

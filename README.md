@@ -1,42 +1,42 @@
+
+![first image](./images/everything.png)
+Find any conversation, doc, or internal page in seconds  ⏲️⚡️  
+**Join 1000+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
+
 ## Join Discord for early access code!
 
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-[Join here!](https://discord.gg/zZZrUBZd)
-# Gerev - Workplace search for Devs
+   [Join here!](https://discord.gg/zZZrUBZd)
+# Search focused on devs
+Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
 
-
-Tired of searching for that one document you know exists somewhere, but not sure exactly where?
-
-![first image](./images/Everything.png)
-
-## Listening?
-Gerev enables you to search your entire company from a single place.
-
-## Made for devs
-### Find docs
+## Made for devs 👨‍💻
+-  **For finding internal pages _fast_ ⚡️**
 ![second image](./images/product-example.png)
 
-### Find Code
-![third image](./images/CodeCard.png)
-
-### Troubleshoot Issues
+- **Troubleshoot Issues 🐛**
 ![fourth image](./images/sql-card.png)
+- **For finding code snippets and code examples 🧑‍💻**  
+Coming Soon...
+![third image](./images/CodeCard.png)
 
 ## Integrations
  - [x] Slack
  - [x] Confluence
  - [x] Google Drive
+ - [x] Bookstack
+ - [ ] RocketChat (in PR)
  - [ ] Gitlab Issues (In PR)
- - [ ] BookStack (In PR)
  - [ ] Notion (In Progress...)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
  
-### Natural Langauge
+
+## Natural Langauge
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
-## Installation
+# Getting Started
 1. Install *Nvidia for docker* 
 2. Run docker
  
@@ -69,7 +69,7 @@ docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
-## Run for development 
+## Run from source 
 Run the backend:
 ```bash
 cd app
