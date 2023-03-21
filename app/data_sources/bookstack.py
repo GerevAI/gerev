@@ -109,6 +109,10 @@ class BookstackDataSource(BaseDataSource):
             ConfigField(label="Token Secret", name="token_secret", input_type=HTMLInputType.PASSWORD)
         ]
 
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "BookStack"
+
     @staticmethod
     def list_books(book_stack: BookStack) -> List[Dict]:
         # Usually the book_stack connection fails, so we retry a few times
