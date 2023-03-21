@@ -68,3 +68,17 @@ docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
+
+## Run for development 
+Run the backend:
+```bash
+cd app
+pip install -r requirements.txt
+uvicorn main:app
+```
+
+Run the UI:
+```bash
+npm install
+npm start
+```
