@@ -8,7 +8,7 @@
 
 Tired of searching for that one document you know exists somewhere, but not sure exactly where?
 
-![first image](./images/Everything.png)
+![first image](./images/everything.png)
 
 ## Listening?
 Gerev enables you to search your entire company from a single place.
