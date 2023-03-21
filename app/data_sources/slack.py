@@ -51,7 +51,7 @@ class SlackDataSource(BaseDataSource):
         self._authors_cache: Dict[str, SlackAuthor] = {}
 
     def _list_conversations(self) -> List[SlackConversation]:
-        conversations = self._slack.conversations_list(exclude_archived=1)
+        conversations = self._slack.conversations_list(exclude_archived=True)
         return [SlackConversation(id=conv['id'], name=conv['name'])
                 for conv in conversations['channels']]
 
