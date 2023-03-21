@@ -125,11 +125,13 @@ class GoogleDriveDataSource(BaseDataSource):
             if next_page_token is None:
                 break
 
+        logging.getLogger().info(f'got {len(files)} documents from drive {drive["name"]}.')
+
         files = [file for file in files if self._should_index_file(file)]
 
         documents = []
 
-        logging.getLogger().info(f'got {len(files)} documents from drive {drive["name"]}.')
+        logging.getLogger().info(f'Indexing {len(files)} documents from drive {drive["name"]}.')
 
         for file in files:
             logging.getLogger().info(f'processing file {file["name"]}')
