@@ -9,7 +9,7 @@ from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
-from requests import Session
+from requests import Session, HTTPError
 from requests.auth import AuthBase
 from urllib.parse import urljoin
 from time import sleep
@@ -49,7 +49,7 @@ class BookStack(Session):
                     self.rate_limit_reach = False
                     logging.info("Done waiting for the API rate limit")
                 return self.request(method, url, *args, **kwargs)
-            raise Exception("API Error")
+            r.raise_for_status()
         return r
 
     def get_list(self, url: str, count: int = 500, sort: str = None, filters: Dict = None):
@@ -88,10 +88,11 @@ class BookStack(Session):
         return r.json()
 
     def get_user(self, user_id: int):
-        r = self.get(f"/api/users/{user_id}", headers={"Content-Type": "application/json"})
-        if r.status_code != 200:
+        try:
+            return self.get(f"/api/users/{user_id}", headers={"Content-Type": "application/json"}).json()
+        # If the user lack the privileges to make this call, return None
+        except HTTPError:
             return None
-        return r.json()
 
 
 class BookStackConfig(BaseModel):
