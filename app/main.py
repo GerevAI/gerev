@@ -39,10 +39,10 @@ async def catch_exceptions_middleware(request: Request, call_next):
     try:
         return await call_next(request)
     except KnownException as e:
-        logger.info("Known exception")
+        logger.exception("Known exception")
         return Response(e.message, status_code=501)
     except Exception:
-        logger.info("Server error")
+        logger.exception("Server error")
         return Response("Oops. Server error...", status_code=500)
 
 app.middleware('http')(catch_exceptions_middleware)
