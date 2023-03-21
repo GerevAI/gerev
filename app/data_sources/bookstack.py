@@ -209,6 +209,10 @@ class BookstackDataSource(BaseDataSource):
             for i in range(workers):
                 futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
             concurrent.futures.wait(futures)
+            for w in futures:
+                e = w.exception()
+                if e:
+                    logging.exception("Worker failed", exc_info=e)
 
 
 if __name__ == "__main__":
