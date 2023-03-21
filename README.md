@@ -82,5 +82,5 @@ npm install
 npm start
 ```
 ---
-# gerev is also popular with big names. 😉
+- **gerev is also popular with big names. 😉**
 ![first image](./images/bill.png)
