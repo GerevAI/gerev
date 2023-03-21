@@ -69,7 +69,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                       return (
                         <div onClick={() => this.onSuggestionClick(suggestion)} key={index} 
                             className={'text-[#C9C9C9] font-poppins font-medium text-lg mt-2 hover:bg-[#37383a] p-1 py-2'
-                                      + (this.state.activeSuggestion == index ? ' bg-[#37383a] border-l-[#8E59D1] rounded-l-sm border-l-[3px]' :
+                                      + (this.state.activeSuggestion === index ? ' bg-[#37383a] border-l-[#8E59D1] rounded-l-sm border-l-[3px]' :
                                        '')}>
                           <span className="ml-4 text-white">{this.props.query}</span>
                           <span className="text-gray-400">{suggestion}</span>

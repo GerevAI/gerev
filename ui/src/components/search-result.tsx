@@ -58,25 +58,25 @@ export interface SearchResultProps {
 export const SearchResult = (props: SearchResultProps) => {
     return (
         <div className="mb-4 pt-2">
-            <a className="relative text-sm float-right text-white right-2 top-2">{props.score.toFixed(2)}%</a>
+            <span className="relative text-sm float-right text-white right-2 top-2">{props.score.toFixed(2)}%</span>
             <div className="flex flex-row items-start">
             {getBigIconByPlatform(props.platform as Platform, props.file_type as FileType)}
             <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} target='_blank'>
+                <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} rel="noreferrer" target='_blank'>
                     {props.title}
                 </a>
                 <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                 {
-                    props.document_type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
+                    props.document_type === ResultType.Docment && <img alt="blue-folder" className="inline-block mr-2" src={BlueFolder}></img>
                 }
                 <span className="ml-0 text-[#D5D5D5]">
                     {
-                        props.document_type == ResultType.Message && <span>#</span>
+                        props.document_type === ResultType.Message && <span>#</span>
                     }
                     {props.location} ·&thinsp;
                 </span>
                 <span className="flex flex-row items-center">
-                    <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_data ? props.author_image_data : props.author_image_url}></img>
+                    <img alt="author" className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_data ? props.author_image_data : props.author_image_url}></img>
                     <span className='capitalize'>{props.author} ·</span> 
                 </span>
                 <span>
@@ -88,7 +88,7 @@ export const SearchResult = (props: SearchResultProps) => {
                 </span>
                 </span>
                 
-                {props.document_type == ResultType.Docment && 
+                {props.document_type === ResultType.Docment && 
                     <span>
                     {props.content.map((text_part, index) => {
                     return (
@@ -99,7 +99,7 @@ export const SearchResult = (props: SearchResultProps) => {
                     )})} 
                     </span>
                 }
-                {props.document_type == ResultType.Message && 
+                {props.document_type === ResultType.Message && 
                     <p className="bg-[#352C45] p-2 px-4 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                     {props.content.map((text_part, index) => {
                     return (
@@ -145,18 +145,18 @@ function getBigIconByPlatform (platform: Platform, fileType: FileType) {
         image = Slack;
         break;
       case Platform.Drive:
-        if (fileType == FileType.GoogleDoc) {
+        if (fileType === FileType.GoogleDoc) {
             image = GoogleDoc;
         }
-        else if (fileType== FileType.Docx) {
+        else if (fileType === FileType.Docx) {
             image = GoogleDocx;
-        } else if (fileType == FileType.Pptx) {
+        } else if (fileType === FileType.Pptx) {
             image = GooglePptx;
         }   
         break;     
     }
 
-    return <img className={classes} src={image}></img>
+    return <img alt="file-type" className={classes} src={image}></img>
 }
 
 export function getPlatformDisplayName(platform: Platform) {
