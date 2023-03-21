@@ -119,6 +119,30 @@ function getFormattedTime(time: string) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function ResultImage(platform: Platform, resultType: ResultType, profilePicture = ProfileDefault) {
+    /*
+    This function displays an image: either a profile picture or a logo.
+    The first parameter is the platform name.
+    The second parameter is 
+    */
+    const profileStyle = "rounded-full w-full h-full object-cover";
+    const lilLogoStyle = "company-logo rounded-full w-1/2 h-1/2 absolute object-cover -right-1.5 -bottom-1.5 bg-white";
+    const full = "w-full h-full"
+    if (resultType === "message") {
+       return (
+          <div className={full}>
+             <img className={profileStyle} alt="Profile" src={profilePicture} />
+             <img src={Slack} alt={platform} className={lilLogoStyle} />
+          </div>
+       );
+    }
+    else {
+       return (
+          <img src={paths[platform]} className={full} alt={platform} />
+       );
+    }
+ }
+
 
 function getBigIcon(props: SearchResultProps) {
     let classes = "mt-2 mr-2 h-[40px] w-[40px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]";
