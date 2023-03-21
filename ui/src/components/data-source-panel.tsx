@@ -341,7 +341,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          this.props.onAdded(this.state.selectedDataSource.value);
          this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0]});
       }).catch(error => {
-         toast.error("Error adding data source");
+         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
          this.setState({ isAddingLoading: false });
       });
    }

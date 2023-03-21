@@ -17,6 +17,8 @@ COPY ./app /app
 
 COPY ./ui/build /ui
 
+COPY ./run.sh /app/run.sh
+
 WORKDIR /app
 
 VOLUME [ "/opt/storage" ]
