@@ -6,7 +6,7 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from rocketchat_API.rocketchat import RocketChat
 
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import DocumentType, BasicDocument
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
@@ -40,6 +40,14 @@ class RocketchatConfig(BaseModel):
 
 
 class RocketchatDataSource(BaseDataSource):
+    @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="Rockat.Chat instance URL", name="url"),
+            ConfigField(label="User Token ID", name="token_id", type=HTMLInputType.PASSWORD),
+            ConfigField(label="User Token Secret", name="token_secret", type=HTMLInputType.PASSWORD)
+        ]
+
     @staticmethod
     def validate_config(config: Dict) -> None:
         rocket_chat_config = RocketchatConfig(**config)
@@ -148,7 +156,8 @@ class RocketchatDataSource(BaseDataSource):
             for thread in threads:
                 messages += self._list_thread_messages(thread, self._last_index_time)
 
-            logging.info(f"Getting {len(messages)} messages from room {channel.name} ({channel.id}) with {len(threads)} threads")
+            logging.info(f"Getting {len(messages)} messages from room {channel.name} ({channel.id})"
+                         f" with {len(threads)} threads")
 
             for message in messages:
                 if "msg" not in message:
@@ -177,12 +186,12 @@ class RocketchatDataSource(BaseDataSource):
             if last_msg is not None:
                 documents.append(last_msg)
 
+        logging.info(f"Total messages : {len(documents)}")
         IndexingQueue.get().feed(docs=documents)
-        print(f"Total messages : {len(documents)}")
 
 
 if __name__ == "__main__":
     import os
-    config = {"url": os.environ["ROCKETCHAT_URL"], "token_id": os.environ["ROCKETCHAT_TOKEN_ID"], "token_secret": os.environ["ROCKETCHAT_TOKEN_SECRET"]}
-    rocket_chat = RocketchatDataSource(config=config, data_source_id=0)
-    rocket_chat._feed_new_documents()
+    conf = {"url": os.environ["ROCKETCHAT_URL"], "token_id": os.environ["ROCKETCHAT_TOKEN_ID"], "token_secret": os.environ["ROCKETCHAT_TOKEN_SECRET"]}
+    rc = RocketchatDataSource(config=conf, data_source_id=0)
+    rc._feed_new_documents()
