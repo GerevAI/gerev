@@ -62,8 +62,8 @@ class BaseDataSource(ABC):
         """
         Returns the display name of the data source, change GoogleDriveDataSource to Google Drive.
         """
-        pascal_case_platform = cls.__name__.replace("DataSource", "")
-        words = re.findall('[A-Z][^A-Z]*', pascal_case_platform)
+        pascal_case_source = cls.__name__.replace("DataSource", "")
+        words = re.findall('[A-Z][^A-Z]*', pascal_case_source)
         return " ".join(words)
 
     @abstractmethod

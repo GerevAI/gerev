@@ -1,6 +1,5 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
-import { Platform, getPlatformDisplayName } from "./search-result";
 import copy from 'copy-to-clipboard';
 
 import CopyThis from '../assets/images/copy-this.png';
@@ -35,14 +34,13 @@ export interface SlackConfig {
 
 export interface DataSourcePanelState {
    selectOptions: SelectOption[]
-   dataSourceToImage: { [key: string]: string }
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
 }
 
 export interface DataSourcePanelProps {
-   dataSourceTypes: DataSourceType[]
+   dataSourceTypesDict: { [key: string]: DataSourceType }
    connectedDataSources: string[]
    onAdded: (dataSourceType: string) => void
    onClose: () => void
@@ -85,7 +83,6 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       super(props);
       this.state = {
          selectOptions: [],
-         dataSourceToImage: {},
          isAdding: false,
          isAddingLoading: false,
          selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: []}
@@ -93,24 +90,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    async componentDidMount() {
-      let options = this.props.dataSourceTypes.map((data_source) => {
+      let options = Object.keys(this.props.dataSourceTypesDict).map((key) => {
+         let data_source = this.props.dataSourceTypesDict[key];
          return {
             value: data_source.name,
             label: data_source.display_name,
             imageBase64: data_source.image_base64,
             configFields: data_source.config_fields
-         }
-      })
-
-      let dataSourceToImage = this.props.dataSourceTypes.reduce((acc, data_source) => {
-         acc[data_source.name] = data_source.image_base64
-         return acc
-      }, {});
-
+         }}
+      );
+      
       this.setState({
          selectOptions: options,
          selectedDataSource: options[0],
-         dataSourceToImage: dataSourceToImage
       })
    }
 
@@ -148,21 +140,22 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((data_source) => {
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.state.dataSourceToImage[data_source]}></img>
-                                 <h1 className="text-white">{getPlatformDisplayName(data_source as Platform)}</h1>
+                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
+                                 <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
                                  <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
                               </div>
                            )
                         })
                         }
                         {
-                        this.props.dataSourceTypes.map((data_source) => {
-                           if (!this.props.connectedDataSources.includes(data_source.name)) {
+                        Object.keys(this.props.dataSourceTypesDict).map((key) => {
+                           let dataSource = this.props.dataSourceTypesDict[key];
+                           if (!this.props.connectedDataSources.includes(dataSource.name)) {
                               return (
-                                 <div onClick={() => this.dataSourceToAddSelected(data_source)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                                    <img alt="" className={"mr-2 h-[20px]"} src={data_source.image_base64}></img>
+                                 <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                    <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
                                     {/* <h1 className="text-white">Add</h1> */}
-                                    <h1 className="text-gray-500">{data_source.display_name}</h1>
+                                    <h1 className="text-gray-500">{dataSource.display_name}</h1>
                                     <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                                  </div>
                               )

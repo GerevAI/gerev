@@ -36,15 +36,15 @@ class TextPart:
 
 @dataclass
 class SearchResult:
+    type: DocumentType
     score: float
     content: List[TextPart]
     author: str
     title: str
     url: str
     location: str
-    platform: str
+    data_source: str
     time: datetime
-    document_type: DocumentType
     file_type: FileType
     author_image_url: Optional[str]
     author_image_data: Optional[str]
@@ -103,8 +103,8 @@ class Candidate:
                             url=self._text_anchor(self.document.url, answer.content),
                             time=self.document.timestamp,
                             location=self.document.location,
-                            platform=self.document.data_source.type.name,
-                            document_type=self.document.type,
+                            data_source=self.document.data_source.type.name,
+                            type=self.document.type,
                             file_type=self.document.file_type)
 
 

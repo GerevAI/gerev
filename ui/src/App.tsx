@@ -12,7 +12,7 @@ import { GiSocks } from "react-icons/gi";
 
 import './assets/css/App.css';
 import SearchBar from "./components/search-bar";
-import { SearchResult, SearchResultProps } from "./components/search-result";
+import { SearchResult, SearchResultDetails } from "./components/search-result";
 import { addToSearchHistory } from "./autocomplete";
 import DataSourcePanel from "./components/data-source-panel";
 import Modal from 'react-modal';
@@ -27,9 +27,10 @@ import { DataSourceType } from "./data-source";
 export interface AppState {
   uuid: string
   query: string
-  results: SearchResultProps[]
+  results: SearchResultDetails[]
   searchDuration: number
   dataSourceTypes: DataSourceType[]
+  dataSourceTypesDict: { [key: string]: DataSourceType }
   connectedDataSources: string[]
   isLoading: boolean
   isNoResults: boolean
@@ -84,6 +85,7 @@ export default class App extends React.Component <{}, AppState>{
       query: "",
       results: [],
       dataSourceTypes: [],
+      dataSourceTypesDict: {},
       connectedDataSources: [],
       isLoading: false,
       isNoResults: false,
@@ -126,7 +128,11 @@ export default class App extends React.Component <{}, AppState>{
   async listDataSourceTypes() {
     try {
       const response = await api.get<DataSourceType[]>('/data-source/list-types');
-      this.setState({ dataSourceTypes: response.data })
+      let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
+      response.data.forEach((dataSourceType) => { 
+        dataSourceTypesDict[dataSourceType.name] = dataSourceType;
+      });
+      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict });
     } catch (error) {
     }
   }
@@ -202,7 +208,6 @@ export default class App extends React.Component <{}, AppState>{
     }
   }
   
-
   openModal() {
     if (this.state.didPassDiscord) {
       this.setState({isModalOpen: true});
@@ -344,7 +349,7 @@ export default class App extends React.Component <{}, AppState>{
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={this.dataSourcesAdded} dataSourceTypes={this.state.dataSourceTypes}></DataSourcePanel>
+            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict}/>
         </Modal>
 
         {/* front search page*/}
@@ -389,7 +394,7 @@ export default class App extends React.Component <{}, AppState>{
               <div className='w-6/12 sm:w-8/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
-                      <SearchResult key={index} {...result} />
+                      <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
                       )
                     }
                   )}
@@ -425,7 +430,7 @@ export default class App extends React.Component <{}, AppState>{
     posthog.capture('search');
 
     try {
-        api.get<SearchResultProps[]>("/search", {
+        api.get<SearchResultDetails[]>("/search", {
           params: {
             query: this.state.query
           }}
