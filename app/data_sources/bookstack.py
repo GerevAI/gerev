@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict
 
 from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
@@ -101,6 +101,14 @@ class BookStackConfig(BaseModel):
 
 
 class BookstackDataSource(BaseDataSource):
+    @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="BookStack instance URL", name="url"),
+            ConfigField(label="Token ID", name="token_id", input_type=HTMLInputType.PASSWORD),
+            ConfigField(label="Token Secret", name="token_secret", input_type=HTMLInputType.PASSWORD)
+        ]
+
     @staticmethod
     def list_books(book_stack: BookStack) -> List[Dict]:
         # Usually the book_stack connection fails, so we retry a few times
