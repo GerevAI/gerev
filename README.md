@@ -1,6 +1,4 @@
 ![first image](./images/api.gif)
-**gerev is popular with big names.**
-![first image](./images/bill.png)
 Find any conversation, doc, or internal page in seconds  ⏲️⚡️  
 **Join 1000+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
@@ -83,3 +81,6 @@ Run the UI:
 npm install
 npm start
 ```
+
+**gerev is also popular with big names. 😉**
+![first image](./images/bill.png)
