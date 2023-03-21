@@ -23,7 +23,7 @@ Coming Soon...
 ## Integrations
  - [x] Slack
  - [x] Confluence
- - [x] Google Drive
+ - [x] Google Drive (Docs, .docx, .pptx)
  - [x] Bookstack
  - [ ] RocketChat (in PR)
  - [ ] Gitlab Issues (In PR)
