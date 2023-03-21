@@ -48,6 +48,10 @@ class RocketchatDataSource(BaseDataSource):
             ConfigField(label="User Token Secret", name="token_secret", type=HTMLInputType.PASSWORD)
         ]
 
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "Rocket.Chat"
+
     @staticmethod
     def validate_config(config: Dict) -> None:
         rocket_chat_config = RocketchatConfig(**config)
