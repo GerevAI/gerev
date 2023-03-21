@@ -35,6 +35,8 @@ Coming Soon...
 ## Natural Langauge
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
+---  
+
 # Getting Started
 1. Install *Nvidia for docker* 
 2. Run docker
