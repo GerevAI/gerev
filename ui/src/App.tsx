@@ -270,7 +270,7 @@ export default class App extends React.Component <{}, AppState>{
         this.setState({isPreparingIndexing: false})
         toast.success("Indexing finished.", {autoClose: 2000});
       }
-    }, 30000);
+    }, 1000 * 120);
   }
 
   render() {

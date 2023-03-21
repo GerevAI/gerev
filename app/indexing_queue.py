@@ -1,3 +1,4 @@
+import logging
 import queue
 import threading
 from queue import Queue
@@ -29,6 +30,7 @@ class IndexingQueue:
 
     def feed(self, docs: List[BasicDocument]):
         with self.condition:
+            logging.getLogger(__name__).info(f'Feeding {len(docs)} documents to the queue')
             self.queue.put(docs)
             self.condition.notify_all()
 

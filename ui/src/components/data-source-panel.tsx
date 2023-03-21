@@ -205,13 +205,13 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
-                                 this.state.selectedDataSource.value === 'confluence' && (
+                              this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Confluene -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
-                                 )
+                              )
                               }
                               {this.state.selectedDataSource.value === 'slack' && (
                                  <span className=" flex flex-col leading-9 text-lg text-white">
@@ -265,6 +265,16 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
+
+                              {
+                                 this.state.selectedDataSource.value === 'bookstack' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Bookstack -> top-right profile picture -> Edit profile'}</span>
+                                       <span>2. {'Scroll down to API tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Set 'Expiry Date' 01/01/2100, create, copy token id + token secret"}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
@@ -273,7 +283,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               this.state.selectedDataSource.configFields.map((field, index) => {
                                  if(field.input_type === 'text' || field.input_type === 'password') {
                                     return (
-                                       <div className="flex flex-col mr-10">
+                                       <div className="flex flex-col mr-10 mt-4">
                                           <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                           <input value={field.value} onChange={(event) => {field.value = event.target.value }}
                                           className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
@@ -282,7 +292,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     )
                                  } else if (field.input_type === 'textarea') {
                                     return (
-                                       <div className="flex flex-col w-full">
+                                       <div className="flex flex-col w-full mt-4">
                                         <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                           <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
                                             className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
