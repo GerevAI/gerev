@@ -1,5 +1,5 @@
 
-![first image](./images/Everything.png)
+![first image](./images/bill.png)
 Find any conversation, doc, or internal page in seconds  ⏲️⚡️  
 **Join 1000+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
