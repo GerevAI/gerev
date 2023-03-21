@@ -25,4 +25,4 @@ VOLUME [ "/opt/storage" ]
 
 EXPOSE 80
 
-CMD run.sh
+CMD ./run.sh
