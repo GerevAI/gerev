@@ -1,9 +1,5 @@
+import logging
 from telemetry import Posthog
-
-try:
-    Posthog.send_startup_telemetry()
-except:
-    print("Failed to send startup telemetry")
 
 import json
 import logging
@@ -65,6 +61,15 @@ def check_for_new_documents():
             data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
                                                    last_index_time=data_source.last_indexed_at)
             data_source_instance.index()
+
+
+@app.on_event("startup")
+def send_startup_telemetry():
+    try:
+        Posthog.send_startup_telemetry()
+    except:
+        logging.exception("Failed to send startup telemetry")
+
 
 
 @app.on_event("startup")

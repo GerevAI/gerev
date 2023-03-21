@@ -1,22 +1,46 @@
-# Open Workplace Search
-self hosted workplace search engine, search your entire company from a single place.
+## Join Discord for early access code!
 
-![gerev](./images/product-example.png)
+![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
+[Join here!](https://discord.gg/zZZrUBZd)
+# Gerev - Workplace search for Devs
+
+
+Tired of searching for that one document you know exists somewhere, but not sure exactly where?
+
+![first image](./images/Everything.png)
+
+## Listening?
+Gerev enables you to search your entire company from a single place.
+
+## Made for devs
+### Find docs
+![second image](./images/product-example.png)
+
+### Find Code
+![third image](./images/CodeCard.png)
+
+### Troubleshoot Issues
+![fourth image](./images/sql-card.png)
 
 ## Integrations
  - [x] Slack
  - [x] Confluence
- - [x] Google Docs
+ - [x] Google Drive
+ - [ ] Gitlab Issues (In PR)
+ - [ ] BookStack (In PR)
  - [ ] Notion (In Progress...)
- - [ ] Google Sheets (Coming Soon...)
- - [ ] Google Slides (Coming Soon...)
- - [ ] Google Calendar (Coming Soon...)
-
+ - [ ] Microsoft Teams
+ - [ ] Sharepoint
+ 
+### Natural Langauge
+Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ## Installation
-
-### Nvidia hardware
+1. Install *Nvidia for docker* 
+2. Run docker
+ 
+## Nvidia for docker
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -32,14 +56,29 @@ sudo systemctl restart docker
 ```
 
 
+## Run docker
 Then run the docker container like so:
 
 ### Nvidia hardware
 ```bash
-sudo docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ### CPU only (no GPU)
 ```
 sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+```
+
+## Run for development 
+Run the backend:
+```bash
+cd app
+pip install -r requirements.txt
+uvicorn main:app
+```
+
+Run the UI:
+```bash
+npm install
+npm start
 ```

@@ -135,7 +135,9 @@ export default class App extends React.Component <{}, AppState>{
     api.get<ServerStatus>('/status').then((res) => {
       if (this.state.isServerDown) {
         toast.dismiss();
-        toast.success("Server online.", {autoClose: 2000});
+        if (!document.hidden) {
+          toast.success("Server online.", {autoClose: 2000});
+        }
         this.listConnectedDataSources();
       }
 
@@ -150,12 +152,13 @@ export default class App extends React.Component <{}, AppState>{
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
                      docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
-                     
-      setTimeout(() => this.fetchStatsusForever(), successSleepSeconds * 1000);
+
+      let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
+      setTimeout(() => this.fetchStatsusForever(), timeToSleep);
     }).catch((err) => {
       this.setState({isServerDown: true});
 
-      if (Date.now() - this.state.lastServerDownTimestamp > 6000) {  // if it's 6 seconds since last server down, show a toast
+      if (Date.now() - this.state.lastServerDownTimestamp > 6000 && !document.hidden) {  // if it's 6 seconds since last server down, show a toast
         toast.dismiss();
         toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: (timeBetweenFailToast-1) * 1000});
         this.setState({lastServerDownTimestamp: Date.now()});
@@ -169,22 +172,21 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   getIndexingStatusText() {
-    // multiply left-to-index by 50 and add ~ because currently we push 50~ docs to the queue at a time
-    // if (this.state.isPreparingIndexing) {
-    //   return "Fetching docs to index...";
-    // }
+    if (this.state.isPreparingIndexing) {
+      return "Indexing process in progress...";
+    }
 
     if (this.state.docsInIndexing > 0) {
       let text = "Indexing " + this.state.docsInIndexing + " documents...";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex * 50  + "~ left)";
+        text += " (" + this.state.docsLeftToIndex * 10  + "~ left)";
       }
 
       return text;
     }
 
     if (this.state.docsLeftToIndex > 0) {
-      return "Preparing to index " + this.state.docsLeftToIndex * 50 + "~ documents...";
+      return "Preparing to index...";
     }
   }
   
@@ -222,7 +224,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   verifyDiscordCode = () => {
-    if (this.state.discordCodeInput == discordCode) {
+    if (this.state.discordCodeInput.trim() == discordCode) {
       this.saveDiscordPassed();
     } else {
       toast.error("Invalid code. Join Discord!", {autoClose: 2000});
@@ -241,6 +243,17 @@ export default class App extends React.Component <{}, AppState>{
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
+  }
+
+  dataSourcesAdded = (dataSourceType: string) => {
+    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, dataSourceType]});
+    // if had no data from server, show toast after 30 seconds
+    setTimeout(() => {
+      if (this.state.isPreparingIndexing) {
+        this.setState({isPreparingIndexing: false})
+        toast.success("Indexing finished.", {autoClose: 2000});
+      }
+    }, 30000);
   }
 
   render() {
@@ -290,7 +303,7 @@ export default class App extends React.Component <{}, AppState>{
                     <div className="flex flex-row w-[97%] bg-[#faa61a1a] p-3 ml-1 border-[2px] border-[#FAA61A] rounded-[5px]">
                       <img className="ml-2 h-10" src={WarningImage}></img>
                       <a className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
-                        <span className="inline">gerev.ai is currently only available to Discord community members.</span>
+                        <span className="inline">gerev.ai is currently only available to our Discord community members.</span>
                         <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
                           <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
                         </a>
@@ -318,8 +331,7 @@ export default class App extends React.Component <{}, AppState>{
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={(dataSourceType: string) => {this.setState({isPreparingIndexing: true,
-                        connectedDataSources: [...this.state.connectedDataSources, dataSourceType]})}}/>
+                        onAdded={this.dataSourcesAdded}/>
         </Modal>
 
         {/* front search page*/}

@@ -1,0 +1,47 @@
+name: Build and Push Docker image
+
+on:
+# Build from input box
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+
+env:
+  VERSION: ${{ github.event.inputs.version }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Use Caching for npm
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          working-directory: ./ui
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
+
+      - name: Install npm dependencies and build UI
+        run: |
+          cd ui
+          npm install
+          npm run build
+        
+      - name: Create and use Docker buildx builder
+        run: |
+          sudo docker buildx create --use
+      - name: Build and push Docker image
+        run: |
+          sudo docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t gerev/gerev:$VERSION \
+            -t gerev/gerev:latest \
+            --push .

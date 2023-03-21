@@ -1,6 +1,7 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
 import { Platform, getPlatformDisplayName } from "./search-result";
+import copy from 'copy-to-clipboard';
 
 import Confluence from '../assets/images/confluence.svg';
 import CopyThis from '../assets/images/copy-this.png';
@@ -327,7 +328,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    copyManifest = () => {
-      navigator.clipboard.writeText(JSON.stringify(slackManifest));
+      let manifestText = JSON.stringify(slackManifest);
+      if(!copy(manifestText)) {
+         toast.error("Error copying manifest");
+      } else {
+         toast.success("Manifest copied to clipboard", { autoClose: 2000 });
+      }
    }
 
    hasUrl = () => {
