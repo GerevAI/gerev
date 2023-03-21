@@ -1,6 +1,7 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
 import { Platform, getPlatformDisplayName } from "./search-result";
+import copy from 'copy-to-clipboard';
 
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
@@ -50,7 +51,7 @@ export interface DataSourcePanelProps {
 const Option = props => (
    <components.Option {...props}>
       <div className="flex flex-row w-full">
-         <img className={"mr-2 h-[20px]"} src={props.image_base64}></img>
+         <img alt="logo" className={"mr-2 h-[20px]"} src={props.image_base64}></img>
          {props.label}
       </div>
    </components.Option>
@@ -147,7 +148,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((data_source) => {
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                                 <img className={"mr-2 h-[20px]"} src={this.state.dataSourceToImage[data_source]}></img>
+                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.state.dataSourceToImage[data_source]}></img>
                                  <h1 className="text-white">{getPlatformDisplayName(data_source as Platform)}</h1>
                                  <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
                               </div>
@@ -159,13 +160,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            if (!this.props.connectedDataSources.includes(data_source.name)) {
                               return (
                                  <div onClick={() => this.dataSourceToAddSelected(data_source)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                                    <img className={"mr-2 h-[20px]"} src={data_source.image_base64}></img>
+                                    <img alt="" className={"mr-2 h-[20px]"} src={data_source.image_base64}></img>
                                     {/* <h1 className="text-white">Add</h1> */}
                                     <h1 className="text-gray-500">{data_source.display_name}</h1>
                                     <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                                  </div>
                               )
                            }
+                           return null;
+
                         })
                         }
                      </div>
@@ -175,7 +178,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                this.state.isAdding && (
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
-                        <img className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
+                        <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
                         <Select className="w-40 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
                            options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
@@ -211,8 +214,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Confluene -\> top-right profile picture -\> Settings'}</span>
-                                       <span>2. {'Personal Access Tokens -\> Create token -\> Name it'}</span>
+                                       <span>1. {'Go to your Confluene -> top-right profile picture -> Settings'}</span>
+                                       <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
                                  )
@@ -228,7 +231,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                     <span className="flex flex-row items-center"> 2. Create new app
                                        from manifest in &nbsp;
-                                       <a className="text-[#d6acff] hover:underline" href={'https://api.slack.com/apps'} target='_blank'>
+                                       <a className="text-[#d6acff] hover:underline" rel="noreferrer" href={'https://api.slack.com/apps'} target='_blank'>
                                           Slack Apps
                                        </a>
                                        &nbsp; <BiLinkExternal color="#d6acff"></BiLinkExternal>
@@ -254,11 +257,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                     <span>4. Click left panel OAuth & Permissions.</span>
                                     <span className="ml-8 mt-2">
-                                       <img className="h-[120px] rounded-xl p-1" src={LeftPane} />
+                                       <img alt="" className="h-[120px] rounded-xl p-1" src={LeftPane} />
                                     </span>
                                     <span>5. Copy the Bot User OAuth Token.</span>
                                     <span className="ml-8 mt-2">
-                                       <img className="h-[120px] rounded-xl p-1" src={CopyThis} />
+                                       <img alt="" className="h-[120px] rounded-xl p-1" src={CopyThis} />
                                     </span>
                                  </span>
                               )
@@ -266,7 +269,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  <span className="leading-9 text-lg text-white">
-                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' className="inline underline" target="_blank">these instructions</a>
+                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
                            </div>
@@ -292,6 +295,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                             className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
                                      </div>
                                     )}
+                                    return null;
                               })
                               }
                               <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
@@ -317,7 +321,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    copyManifest = () => {
-      navigator.clipboard.writeText(JSON.stringify(slackManifest));
+      let manifestText = JSON.stringify(slackManifest);
+      if(!copy(manifestText)) {
+         toast.error("Error copying manifest");
+      } else {
+         toast.success("Manifest copied to clipboard", { autoClose: 2000 });
+      }
    }
 
 
