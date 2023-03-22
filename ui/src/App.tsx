@@ -197,7 +197,7 @@ export default class App extends React.Component <{}, AppState>{
     if (this.state.docsInIndexing > 0) {
       let text = "Indexing " + this.state.docsInIndexing + " documents... it might take a while.";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex * 10  + "~ left in queue)";
+        text += " (" + this.state.docsLeftToIndex + "~ left in queue)";
       }
 
       return text;

@@ -1,12 +1,12 @@
 ![first image](./images/api.gif)
-Find any conversation, doc, or internal page in seconds  ⏲️⚡️  
+**Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
 ## Join Discord for early access code!
 
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-   [Join here!](https://discord.gg/zZZrUBZd)
+   [Join here!](https://discord.gg/aMRRcmhAdW)
 # Search focused on devs
 Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
 
@@ -24,12 +24,15 @@ Coming Soon...
  - [x] Slack
  - [x] Confluence
  - [x] Google Drive (Docs, .docx, .pptx)
- - [x] Bookstack
+ - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
+ - [ ] Bookstack
  - [ ] RocketChat (in PR)
  - [ ] Gitlab Issues (In PR)
  - [ ] Notion (In Progress...)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
+ 
+:pray:  - by the community 
  
 
 ## Natural Langauge
@@ -80,6 +83,7 @@ uvicorn main:app
 
 Run the UI:
 ```bash
+cd ui
 npm install
 npm start
 ```

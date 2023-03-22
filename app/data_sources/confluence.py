@@ -8,6 +8,7 @@ from atlassian import Confluence
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
+from data_source_api.utils import parse_with_workers
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
@@ -62,7 +63,7 @@ class ConfluenceDataSource(BaseDataSource):
         for space in spaces:
             raw_docs.extend(self._list_space_docs(space))
 
-        self._parse_documents_in_parallel(raw_docs)
+        parse_with_workers(self._parse_documents_worker, raw_docs)
 
     def _parse_documents_worker(self, raw_docs: List[Dict]):
         logging.info(f'Worker parsing {len(raw_docs)} documents')
@@ -124,16 +125,6 @@ class ConfluenceDataSource(BaseDataSource):
             start += limit
 
         return space_docs
-
-    def _parse_documents_in_parallel(self, raw_docs: List[Dict]):
-        workers = 10
-        logging.info(f'Parsing {len(raw_docs)} documents (with {workers} workers)...')
-
-        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = []
-            for i in range(workers):
-                futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
-            concurrent.futures.wait(futures)
 
 
 # if __name__ == '__main__':
