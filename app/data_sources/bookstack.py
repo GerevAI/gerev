@@ -174,7 +174,7 @@ class BookstackDataSource(BaseDataSource):
 
             plain_text = html_to_text(page_content["html"])
 
-            url = f"{self._config.get('url')}/books/{raw_page['book_slug']}/page/{raw_page['slug']}"
+            url = urljoin(self._config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")
 
             parsed_docs.append(BasicDocument(title=raw_page["name"],
                                              content=plain_text,
