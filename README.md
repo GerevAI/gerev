@@ -83,6 +83,7 @@ uvicorn main:app
 
 Run the UI:
 ```bash
+cd ui
 npm install
 npm start
 ```
