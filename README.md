@@ -67,7 +67,7 @@ docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 
 ### CPU only (no GPU)
 ```
-sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ## Run from source 
