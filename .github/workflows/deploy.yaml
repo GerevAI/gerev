@@ -52,5 +52,3 @@ jobs:
           tags: |
             gerev/gerev:$VERSION
             gerev/gerev:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
