@@ -25,7 +25,7 @@ Coming Soon...
  - [x] Confluence
  - [x] Google Drive (Docs, .docx, .pptx)
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
- - [ ] Bookstack
+ - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [ ] RocketChat (in PR)
  - [ ] Gitlab Issues (In PR)
  - [ ] Notion (In Progress...)
