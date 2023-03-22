@@ -21,7 +21,7 @@ class IndexingQueue:
         if IndexingQueue.__instance is not None:
             raise RuntimeError("DocsQueue is a singleton, use DocsQueue.get() to get the instance")
 
-        self.queue: Queue[List[BasicDocument]] = queue.Queue()
+        self.queue: Queue[BasicDocument] = queue.Queue()
         self.condition = threading.Condition()
 
     def feed_single(self, doc: BasicDocument):
@@ -29,16 +29,21 @@ class IndexingQueue:
 
     def feed(self, docs: List[BasicDocument]):
         with self.condition:
-            self.queue.put(docs)
+            for doc in docs:
+                self.queue.put(doc)
+
             self.condition.notify_all()
 
-    def consume_all(self, timeout=1) -> List[BasicDocument]:
+    def consume_all(self, max_docs=5000, timeout=1) -> List[BasicDocument]:
         with self.condition:
             self.condition.wait(timeout=timeout)
 
             docs = []
-            while not self.queue.empty():
-                docs.extend(self.queue.get())
+            count = 0
+            while not self.queue.empty() and count < max_docs:
+                docs.append(self.queue.get())
+                count += 1
+
             return docs
 
     def get_how_many_left(self) -> int:
