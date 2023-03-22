@@ -7,9 +7,15 @@ on:
       version:
         description: 'Version'
         required: true
+      push:
+        description: 'Push'
+        required: true
+        type: boolean
+        default: true
 
 env:
   VERSION: ${{ github.event.inputs.version }}
+  PUSH: ${{ github.event.inputs.push }}
 
 jobs:
   build-and-push:
@@ -55,7 +61,7 @@ jobs:
           context: .
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
-          push: true
+          push: ${{ env.PUSH == 'true' }}
           tags: |
             gerev/gerev:${{ env.VERSION }}
             gerev/gerev:latest
