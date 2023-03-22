@@ -1,5 +1,5 @@
 ![first image](./images/api.gif)
-Find any conversation, doc, or internal page in seconds  ⏲️⚡️  
+Find any **conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
 ## Join Discord for early access code!
