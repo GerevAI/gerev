@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from starlette.requests import Request
 
 from search_logic import search_documents
 from telemetry import Posthog
@@ -9,6 +10,7 @@ router = APIRouter(
 
 
 @router.get("")
-async def search(query: str, top_k: int = 5):
-    Posthog.increase_search_count()
+async def search(request: Request, query: str, top_k: int = 5):
+    uuid_header = request.headers.get('uuid')
+    Posthog.increase_search_count(uuid=uuid_header)
     return search_documents(query, top_k)

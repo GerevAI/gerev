@@ -157,6 +157,3 @@ except Exception as e:
     logger.warning(f"Failed to mount UI (you probably need to build it): {e}")
 
 
-# if __name__ == '__main__':
-#     import uvicorn
-#     uvicorn.run(app, host="localhost", port=8000)
