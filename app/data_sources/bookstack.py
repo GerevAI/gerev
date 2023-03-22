@@ -1,4 +1,3 @@
-import concurrent.futures
 import logging
 from datetime import datetime
 from typing import List, Dict
@@ -6,6 +5,7 @@ from typing import List, Dict
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
+from data_source_api.utils import parse_with_workers
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
@@ -151,7 +151,7 @@ class BookstackDataSource(BaseDataSource):
         for book in books:
             raw_docs.extend(self._list_book_pages(book))
 
-        self._parse_documents_in_parallel(raw_docs)
+        parse_with_workers(self._parse_documents_worker, raw_docs)
 
     def _parse_documents_worker(self, raw_docs: List[Dict]):
         logging.info(f"Worker parsing {len(raw_docs)} documents")
@@ -200,23 +200,10 @@ class BookstackDataSource(BaseDataSource):
         logging.info(f"Getting documents from book {book['name']} ({book['id']})")
         return self._book_stack.get_all_pages_from_book(book)
 
-    def _parse_documents_in_parallel(self, raw_docs: List[Dict]):
-        workers = 10
-        logging.info(f"Parsing {len(raw_docs)} documents (with {workers} workers)...")
 
-        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-            futures = []
-            for i in range(workers):
-                futures.append(executor.submit(self._parse_documents_worker, raw_docs[i::workers]))
-            concurrent.futures.wait(futures)
-            for w in futures:
-                e = w.exception()
-                if e:
-                    logging.exception("Worker failed", exc_info=e)
-
-
-if __name__ == "__main__":
-    import os
-    config = {"url": os.environ["BOOKSTACK_URL"], "token_id": os.environ["BOOKSTACK_TOKEN_ID"], "token_secret": os.environ["BOOKSTACK_TOKEN_SECRET"]}
-    book_stack = BookstackDataSource(config=config, data_source_id=0)
-    book_stack._feed_new_documents()
+# if __name__ == "__main__":
+#     import os
+#     config = {"url": os.environ["BOOKSTACK_URL"], "token_id": os.environ["BOOKSTACK_TOKEN_ID"],
+#               "token_secret": os.environ["BOOKSTACK_TOKEN_SECRET"]}
+#     book_stack = BookstackDataSource(config=config, data_source_id=0)
+#     book_stack._feed_new_documents()
