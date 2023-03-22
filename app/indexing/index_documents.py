@@ -3,6 +3,7 @@ import re
 from typing import List
 
 from data_source_api.basic_document import BasicDocument
+from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
 from models import bi_encoder
 from indexing.faiss_index import FaissIndex
@@ -25,6 +26,7 @@ class Indexer:
                 db_document = Document(
                     data_source_id=document.data_source_id,
                     type=document.type.value,
+                    file_type=document.file_type.value if document.file_type is not None else None,
                     title=document.title,
                     author=document.author,
                     author_image_url=document.author_image_url,
@@ -51,7 +53,8 @@ class Indexer:
         Bm25Index.get().update()
 
         # Encode the paragraphs
-        embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=False)
+        show_progress_bar = not IS_IN_DOCKER
+        embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=show_progress_bar)
 
         # Add the embeddings to the index
         FaissIndex.get().update(paragraph_ids, embeddings)

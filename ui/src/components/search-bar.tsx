@@ -12,6 +12,7 @@ export interface SearchBarState {
 
 export interface SearchBarProps {
     query: string
+    widthPercentage: number
     isLoading: boolean
     isDisabled: boolean
     showReset: boolean
@@ -41,7 +42,7 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
 
     render() {
         return ( 
-            <div className={("h-[49.5px] w-[38%] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r " + this.getBorderGradient())}>
+            <div style={{width: `${this.props.widthPercentage}%`}} className={`h-[49.5px] rounded-b-[10px] rounded-t-[14px] bg-gradient-to-r ${this.getBorderGradient()}`}>
               <div className='flex h-12 w-full items-center container text-3xl rounded-[10px] bg-[#2A2A2A] text-[#C9C9C9]'>  
                 <button onClick={this.search} className='mx-2 text-white p-2 rounded
                   hover:text-[#493294] transition duration-500 ease-in-out flex items-center'>
@@ -63,12 +64,12 @@ export default class SearchBar extends React.Component <SearchBarProps, SearchBa
                 </div>
                 {
                   !this.state.hideSuggestions && this.props.showSuggestions && this.props.query.length > 2 &&
-                  <div className="relative bg-[#2A2A2A] w-full mt-[-14px] rounded-xl">
+                  <div className="relative bg-[#2A2A2A] w-full mt-[-14px] rounded-xl z-20">
                     {this.state.suggestions.map((suggestion, index) => {
                       return (
                         <div onClick={() => this.onSuggestionClick(suggestion)} key={index} 
                             className={'text-[#C9C9C9] font-poppins font-medium text-lg mt-2 hover:bg-[#37383a] p-1 py-2'
-                                      + (this.state.activeSuggestion == index ? ' bg-[#37383a] border-l-[#8E59D1] rounded-l-sm border-l-[3px]' :
+                                      + (this.state.activeSuggestion === index ? ' bg-[#37383a] border-l-[#8E59D1] rounded-l-sm border-l-[3px]' :
                                        '')}>
                           <span className="ml-4 text-white">{this.props.query}</span>
                           <span className="text-gray-400">{suggestion}</span>

@@ -6,6 +6,8 @@ COPY ./app/requirements.txt /tmp/requirements.txt
 
 RUN pip install -r /tmp/requirements.txt
 
+ENV CAPTURE_TELEMETRY=1
+
 COPY ./app/models.py /tmp/models.py
 
 # cache the models
@@ -15,10 +17,12 @@ COPY ./app /app
 
 COPY ./ui/build /ui
 
+COPY ./run.sh /app/run.sh
+
 WORKDIR /app
 
-COPY ./app/.env .env
+VOLUME [ "/opt/storage" ]
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80", "--env-file", ".env"]
+CMD ./run.sh

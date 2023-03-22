@@ -1,5 +1,3 @@
-import os
-
 from schemas import DataSourceType
 from schemas import DataSource
 from schemas import Document

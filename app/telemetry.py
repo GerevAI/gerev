@@ -1,48 +1,82 @@
+import logging
 import os
-import uuid
+from typing import Optional
+from uuid import uuid4
+
 import posthog
 
+from paths import UUID_PATH
 
-def send_startup_telemetry():
-    # Check if TEST environment variable is set
-    if os.environ.get('TEST') == "1":
-        # Write "test" to UUID file
-        uuid_path = os.path.join(os.environ['HOME'], '.gerev.uuid')
-        with open(uuid_path, 'w') as f:
-            f.write("test")
-        existing_uuid = "test"
-        print("Using test UUID")
-        return
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s')
+logger = logging.getLogger(__name__)
 
-    else:
-        # Check if UUID file exists
-        uuid_path = os.path.join(os.environ['HOME'], '.gerev.uuid')
-        if os.path.exists(uuid_path):
-            # Read existing UUID from file
-            with open(uuid_path, 'r') as f:
+
+class Posthog:
+    API_KEY = "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391Pm"
+    HOST = 'https://eu.posthog.com'
+
+    RUN_EVENT = "run"
+    BACKEND_SEARCH_EVENT = "backend_search"
+    _should_capture = False
+    _identified_uuid: Optional[str] = None
+
+    @classmethod
+    def _read_uuid_file(cls) -> Optional[str]:
+        if os.path.exists(UUID_PATH):
+            with open(UUID_PATH, 'r') as f:
                 existing_uuid = f.read().strip()
-            print(f"Using existing UUID: {existing_uuid}")
-            # Check if UUID file contains "test"
-            if "test" in existing_uuid:
-                print("Skipping telemetry capture due to 'test' UUID")
-                return
-        else:
-            # Generate a new UUID
-            new_uuid = uuid.uuid4()
-            print(f"Generated new UUID: {new_uuid}")
-            # Write new UUID to file
-            with open(uuid_path, 'w') as f:
-                f.write(str(new_uuid))
+                return existing_uuid
 
-            # Use the new UUID as the existing one
-            existing_uuid = new_uuid
+        return None
 
-    # Capture an event with PostHog
-    posthog.api_key = "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391"
-    posthog.host = 'https://eu.posthog.com'
+    @classmethod
+    def _create_uuid_file(cls, user_uuid: str):
+        with open(UUID_PATH, 'w') as f:
+            f.write(user_uuid)
 
-    # Identify a user with the UUID
-    posthog.identify(str(existing_uuid))
+    @classmethod
+    def _identify(cls):
+        if not os.environ.get('CAPTURE_TELEMETRY'):
+            return
 
-    # Capture an event
-    posthog.capture(str(existing_uuid), "run")
+        cls._should_capture = True
+
+        user_uuid = cls._read_uuid_file()
+        if user_uuid is None:
+            new_uuid = str(uuid4())
+            cls._create_uuid_file(new_uuid)
+            user_uuid = new_uuid
+
+        try:
+            posthog.api_key = cls.API_KEY
+            posthog.host = cls.HOST
+            posthog.identify(user_uuid)
+            cls._identified_uuid = user_uuid
+        except Exception as e:
+            pass
+
+    @classmethod
+    def _capture(cls, event: str, uuid=None):
+        if cls._identified_uuid is None:
+            cls._identify()
+
+        if not cls._should_capture:
+            return
+
+        try:
+            posthog.capture(uuid or cls._identified_uuid, event)
+        except Exception as e:
+            pass
+
+    @classmethod
+    def send_daily(cls):
+        cls._capture(cls.RUN_EVENT)
+
+    @classmethod
+    def send_startup_telemetry(cls):
+        cls._capture(cls.RUN_EVENT)
+
+    @classmethod
+    def increase_search_count(cls, uuid: str):
+        cls._capture(cls.BACKEND_SEARCH_EVENT, uuid=uuid)
