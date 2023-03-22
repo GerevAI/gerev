@@ -8,7 +8,7 @@ on:
         description: 'Version'
         required: true
       push:
-        description: 'Push'
+        description: 'Push to Docker Hub'
         required: true
         type: boolean
         default: true
