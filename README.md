@@ -6,7 +6,7 @@
 
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-   [Join here!](https://discord.gg/zZZrUBZd)
+   [Join here!](https://discord.gg/aMRRcmhAdW)
 # Search focused on devs
 Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
 
