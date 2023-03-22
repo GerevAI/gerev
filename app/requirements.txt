@@ -20,3 +20,4 @@ oauth2client
 mammoth
 python-pptx
 alembic
+PyPDF2

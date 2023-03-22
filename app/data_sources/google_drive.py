@@ -21,6 +21,7 @@ from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
 from parsers.docx import docx_to_html
+from parsers.pdf import pdf_to_text
 
 
 class GoogleDriveConfig(BaseModel):
@@ -32,6 +33,7 @@ class GoogleDriveDataSource(BaseDataSource):
         'application/vnd.google-apps.document': html_to_text,
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': lambda content: html_to_text(docx_to_html(content)),
         'application/vnd.openxmlformats-officedocument.presentationml.presentation': pptx_to_text,
+        'application/pdf': pdf_to_text,
     }
 
     @staticmethod
@@ -67,7 +69,8 @@ class GoogleDriveDataSource(BaseDataSource):
         self._supported_mime_types = [
             'application/vnd.google-apps.document',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/pdf'
         ]
 
     def _should_index_file(self, file):
@@ -159,6 +162,8 @@ class GoogleDriveDataSource(BaseDataSource):
                     elif file['mimeType'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                         content = docx_to_html(file_to_download)
                         content = html_to_text(content)
+                    elif file['mimeType'] == 'application/pdf':
+                        content=pdf_to_text(file_to_download)
                     else:
                         continue
 
