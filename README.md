@@ -74,21 +74,11 @@ docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ## Run from source 
-Run the backend:
-```bash
-cd app
-pip install -r requirements.txt
-uvicorn main:app
-```
-
-Run the UI:
-```bash
-cd ui
-npm install
-npm start
-```
----
+See CONTRIBUTING.md
+  
+  
 - **gerev is also popular with some big names. 😉**  
 
+---  
 
 ![first image](./images/bill.png)
