@@ -24,12 +24,15 @@ Coming Soon...
  - [x] Slack
  - [x] Confluence
  - [x] Google Drive (Docs, .docx, .pptx)
- - [x] Bookstack
+ - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
+ - [ ] Bookstack
  - [ ] RocketChat (in PR)
  - [ ] Gitlab Issues (In PR)
  - [ ] Notion (In Progress...)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
+ 
+:pray:  - by the community 
  
 
 ## Natural Langauge
