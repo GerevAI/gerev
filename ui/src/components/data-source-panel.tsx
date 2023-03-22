@@ -23,21 +23,6 @@ export interface SelectOption {
    configFields: ConfigField[]
 }
 
-export interface ConfluenceConfig {
-   url: string;
-   token: string;
-}
-
-export interface ConfluenceCloudConfig {
-   url: string;
-   token: string;
-   username: string;
-}
-
-export interface SlackConfig {
-   token: string;
-}
-
 export interface DataSourcePanelState {
    selectOptions: SelectOption[]
    isAdding: boolean
@@ -178,7 +163,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
                         <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
-                        <Select className="w-40 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
+                        <Select className="w-60 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
                            options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
                               control: (baseStyles, state) => ({
@@ -222,9 +207,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.state.selectedDataSource.value === 'confluence_cloud' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
-                                       <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
-                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Manage account'}</span>
+                                       <span>2. {'go security tab (at top) -> Create and manage API tokens -> Create API token'}</span>
+                                       <span>3. {"Name it, create and copy the token"}</span>
                                     </span>
                                  )
                               }
@@ -288,7 +273,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  this.state.selectedDataSource.configFields.map((field, index) => {
                                     if(field.input_type === 'text' || field.input_type === 'password') {
                                        return (
-                                          <div className="flex flex-col mr-10">
+                                          <div className="flex flex-col mr-10 mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                              <input value={field.value} onChange={(event) => {field.value = event.target.value }}
                                                 className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
@@ -297,7 +282,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                        )
                                     } else if (field.input_type === 'textarea') {
                                        return (
-                                          <div className="flex flex-col w-full">
+                                          <div className="flex flex-col w-full mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                              <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
                                                 className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
