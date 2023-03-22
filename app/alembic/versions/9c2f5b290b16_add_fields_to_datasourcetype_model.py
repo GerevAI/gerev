@@ -22,19 +22,22 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('data_source_type', sa.Column('display_name', sa.String(length=32), nullable=True))
-    op.add_column('data_source_type', sa.Column('config_fields', sa.String(length=1024), nullable=True))
-    with Session() as session:
-        # update existing data sources
-        data_source_types = session.query(DataSourceType).all()
-        for data_source_type in data_source_types:
-            data_source_class = get_class_by_data_source_name(data_source_type.name)
-            config_fields = data_source_class.get_config_fields()
+    try:
+        op.add_column('data_source_type', sa.Column('display_name', sa.String(length=32), nullable=True))
+        op.add_column('data_source_type', sa.Column('config_fields', sa.String(length=1024), nullable=True))
+        with Session() as session:
+            # update existing data sources
+            data_source_types = session.query(DataSourceType).all()
+            for data_source_type in data_source_types:
+                data_source_class = get_class_by_data_source_name(data_source_type.name)
+                config_fields = data_source_class.get_config_fields()
 
-            data_source_type.config_fields = json.dumps([config_field.dict() for config_field in config_fields])
-            data_source_type.display_name = data_source_class.get_display_name()
+                data_source_type.config_fields = json.dumps([config_field.dict() for config_field in config_fields])
+                data_source_type.display_name = data_source_class.get_display_name()
 
-        session.commit()
+            session.commit()
+    except:
+        pass
 
 
 def downgrade() -> None:

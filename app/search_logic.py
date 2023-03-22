@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import logging
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -177,12 +178,15 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
 
         # calculate small cross-encoder scores to leave just a few candidates
+        logger = logging.getLogger('search')
+        logger.info(f'Found {len(candidates)} candidates, filtering...')
         candidates = _cross_encode(cross_encoder_small, query, candidates, BI_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_titles=True)
         candidates = _find_answers_in_candidates(candidates, query)
-
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True, use_titles=True)
+
+        logger.info(f'Parsing {len(candidates)} candidates to search results...')
 
         with ThreadPoolExecutor(max_workers=10) as executor:
             result = list(executor.map(lambda c: c.to_search_result(), candidates))
