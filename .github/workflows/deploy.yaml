@@ -44,6 +44,8 @@ jobs:
       
       - name: Build and push
         uses: docker/build-push-action@v2
+        env:
+          VERSION: ${{ env.VERSION }}
         with:
           context: .
           file: ./Dockerfile
