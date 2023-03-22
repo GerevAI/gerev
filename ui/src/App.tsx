@@ -12,7 +12,7 @@ import { GiSocks } from "react-icons/gi";
 
 import './assets/css/App.css';
 import SearchBar from "./components/search-bar";
-import { SearchResult, SearchResultProps } from "./components/search-result";
+import { SearchResult, SearchResultDetails } from "./components/search-result";
 import { addToSearchHistory } from "./autocomplete";
 import DataSourcePanel from "./components/data-source-panel";
 import Modal from 'react-modal';
@@ -22,12 +22,15 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
+import { DataSourceType } from "./data-source";
 
 export interface AppState {
   uuid: string
   query: string
-  results: SearchResultProps[]
+  results: SearchResultDetails[]
   searchDuration: number
+  dataSourceTypes: DataSourceType[]
+  dataSourceTypesDict: { [key: string]: DataSourceType }
   connectedDataSources: string[]
   isLoading: boolean
   isNoResults: boolean
@@ -72,6 +75,7 @@ const customStyles = {
     stroke: 'white'
   }
 };
+
 export default class App extends React.Component <{}, AppState>{
 
   constructor() {
@@ -80,6 +84,8 @@ export default class App extends React.Component <{}, AppState>{
       uuid: "",
       query: "",
       results: [],
+      dataSourceTypes: [],
+      dataSourceTypesDict: {},
       connectedDataSources: [],
       isLoading: false,
       isNoResults: false,
@@ -95,14 +101,13 @@ export default class App extends React.Component <{}, AppState>{
       lastServerDownTimestamp: 0,
     }
 
-    this.openModal = this.openModal.bind(this); // bind the method here
-    this.closeModal = this.closeModal.bind(this); // bind the method here
-
+    this.openModal = this.openModal.bind(this);
+    this.closeModal = this.closeModal.bind(this); 
   }
 
   
   componentDidMount() {
-    if (localStorage.getItem('uuid') == null) {
+    if (localStorage.getItem('uuid') === null) {
       let uuid = uuidv4();
       localStorage.setItem('uuid', uuid);
     }
@@ -116,6 +121,19 @@ export default class App extends React.Component <{}, AppState>{
       this.fetchStatsusForever();
       this.setState({isStartedFetching: true});
       this.listConnectedDataSources();
+      this.listDataSourceTypes();
+    }
+  }
+
+  async listDataSourceTypes() {
+    try {
+      const response = await api.get<DataSourceType[]>('/data-source/list-types');
+      let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
+      response.data.forEach((dataSourceType) => { 
+        dataSourceTypesDict[dataSourceType.name] = dataSourceType;
+      });
+      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict });
+    } catch (error) {
     }
   }
 
@@ -146,7 +164,7 @@ export default class App extends React.Component <{}, AppState>{
         isPreparingIndexing = false;
       }
 
-      if(this.state.docsInIndexing > 0 && (res.data.docs_in_indexing == 0 && res.data.docs_left_to_index == 0)) {
+      if(this.state.docsInIndexing > 0 && (res.data.docs_in_indexing === 0 && res.data.docs_left_to_index === 0)) {
         toast.success("Indexing finished.", {autoClose: 2000});
       }
 
@@ -177,9 +195,9 @@ export default class App extends React.Component <{}, AppState>{
     }
 
     if (this.state.docsInIndexing > 0) {
-      let text = "Indexing " + this.state.docsInIndexing + " documents...";
+      let text = "Indexing " + this.state.docsInIndexing + " documents... it might take a while.";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex * 10  + "~ left)";
+        text += " (" + this.state.docsLeftToIndex + "~ left in queue)";
       }
 
       return text;
@@ -190,7 +208,6 @@ export default class App extends React.Component <{}, AppState>{
     }
   }
   
-
   openModal() {
     if (this.state.didPassDiscord) {
       this.setState({isModalOpen: true});
@@ -224,7 +241,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   verifyDiscordCode = () => {
-    if (this.state.discordCodeInput.trim() == discordCode) {
+    if (this.state.discordCodeInput.trim() === discordCode) {
       this.saveDiscordPassed();
     } else {
       toast.error("Invalid code. Join Discord!", {autoClose: 2000});
@@ -232,7 +249,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   onDiscordCodeChange = (event) => {
-    if (event.target.value == discordCode) {
+    if (event.target.value === discordCode) {
       this.saveDiscordPassed();
     } else {
       this.setState({discordCodeInput: event.target.value});
@@ -275,17 +292,17 @@ export default class App extends React.Component <{}, AppState>{
           </div>
         }
         {
-          this.state.connectedDataSources.length == 0 && this.state.didPassDiscord &&
+          this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
                 <AiFillWarning color="red" size={20}/>
                 <span className="ml-2">No sources added. </span>
-                <a className="font-medium ml-1 text-[red] animate-pulse hover:cursor-pointer inline-flex items-center transition duration-150 ease-in-out group"
+                <button className="font-medium ml-1 text-[red] animate-pulse hover:cursor-pointer inline-flex items-center transition duration-150 ease-in-out group"
                     onClick={this.openModal}>
                     Go add some{' '}
-                    <a className="tracking-normal group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
-                </a>
+                    <span className="tracking-normal group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+                </button>
               </div>
             </div>
           </div>
@@ -298,16 +315,17 @@ export default class App extends React.Component <{}, AppState>{
                 <div className="flex flex-col justify-center items-start  p-3">
                   <span className="flex flex-row text-white text-3xl font-bold m-5 mt-5 mb-6 font-sans items-center">
                     <span>Are you on Discord?</span>
-                    <img src={DiscordImage} className="relative inline h-10 ml-4 opacity-80 animate-pulse"></img>
+                    <img src={DiscordImage} alt="discord" className="relative inline h-10 ml-4 opacity-80 animate-pulse"></img>
                   </span>
                     <div className="flex flex-row w-[97%] bg-[#faa61a1a] p-3 ml-1 border-[2px] border-[#FAA61A] rounded-[5px]">
-                      <img className="ml-2 h-10" src={WarningImage}></img>
-                      <a className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
-                        <span className="inline">gerev.ai is currently only available to our Discord community members.</span>
-                        <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
-                          <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
-                        </a>
-                      </a>
+                      <img className="ml-2 h-10" src={WarningImage} alt="warning"></img>
+                      <button className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
+                        <span className="block text-left">gerev.ai is currently only available to our Discord community members.
+                          <a href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                            <span className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
+                          </a>
+                        </span>
+                      </button>
                     </div>
                     <div className="flex flex-col items-start justify-center ml-2 mt-9 w-[100%]">
                       <span className="text-[#B9BBBE] font-source-sans-pro font-black text-[22px]">ENTER DISCORD AUTH CODE</span>
@@ -315,8 +333,8 @@ export default class App extends React.Component <{}, AppState>{
                     </div>
                 </div>      
                 <div className="flex flex-row justify-between p-4 w-[100%]  mt-7 rounded-b-xl h-[100px] bg-[#2F3136]">
-                  <a href="https://discord.gg/aMRRcmhAdW" target="_blank" className="flex hover:bg-[#404ab3] justify-center items-center font-inter bg-[#5865F2] rounded h-12 p-2 text-white w-40 inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
-                    <a className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</a>
+                  <a href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" className="flex hover:bg-[#404ab3] justify-center items-center font-inter bg-[#5865F2] rounded h-12 p-2 text-white w-40 inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                    <span className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
                   </a>
                   <button onClick={this.verifyDiscordCode} className="font-inter bg-[#5865F2] hover:bg-[#404ab3] rounded h-12 p-2 text-white w-40">Verify</button>
                 </div>
@@ -324,14 +342,14 @@ export default class App extends React.Component <{}, AppState>{
 
             </div>
         }
-      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length == 0  ? ' filter blur-sm' : '')}>
+      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length === 0  ? ' filter blur-sm' : '')}>
         <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-                        onAdded={this.dataSourcesAdded}/>
+            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict}/>
         </Modal>
 
         {/* front search page*/}
@@ -350,7 +368,7 @@ export default class App extends React.Component <{}, AppState>{
                 <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
                   transition duration-150 ease-in-out hover:shadow-[#6c6c6c] bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
-                  <img className="ml-2" src={EnterImage}></img>
+                  <img alt="enter" className="ml-2" src={EnterImage}></img>
                 </button>
                 { this.state.isNoResults && 
                   <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
@@ -376,7 +394,7 @@ export default class App extends React.Component <{}, AppState>{
               <div className='w-6/12 sm:w-8/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
-                      <SearchResult key={index} {...result} />
+                      <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
                       )
                     }
                   )}
@@ -402,7 +420,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   search = () => {
-    if (this.state.query == "") {
+    if (this.state.query === "") {
       return;
     }
 
@@ -412,16 +430,16 @@ export default class App extends React.Component <{}, AppState>{
     posthog.capture('search');
 
     try {
-        const response = api.get<SearchResultProps[]>("/search", {
+        api.get<SearchResultDetails[]>("/search", {
           params: {
             query: this.state.query
-          }
-        }).then(
+          }}
+        ).then(
           response => {
             let end = new Date().getTime();
             let duartionSeconds =  (end - start) / 1000;
             this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds,
-              isNoResults: response.data.length == 0
+              isNoResults: response.data.length === 0
             });
             addToSearchHistory(this.state.query);
           }

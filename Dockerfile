@@ -17,10 +17,12 @@ COPY ./app /app
 
 COPY ./ui/build /ui
 
+COPY ./run.sh /app/run.sh
+
 WORKDIR /app
 
 VOLUME [ "/opt/storage" ]
 
 EXPOSE 80
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+CMD ./run.sh

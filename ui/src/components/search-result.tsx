@@ -1,17 +1,11 @@
 
 import React from 'react';
 
-import { FaConfluence, FaSlack, FaGoogleDrive } from "react-icons/fa";
-
 import BlueFolder from '../assets/images/blue-folder.svg';
-import Slack from '../assets/images/slack.svg';
-import Confluence from '../assets/images/confluence.svg';
-import GoogleDrive from '../assets/images/google-drive.svg';
-import Gitlab from '../assets/images/gitlab.svg';
-
 import GoogleDoc from '../assets/images/google-doc.svg';
-import GoogleDocx from '../assets/images/google-docx.svg';
-import GooglePptx from '../assets/images/google-pptx.svg';
+import Docx from '../assets/images/docx.svg';
+import Pptx from '../assets/images/pptx.svg';
+import { DataSourceType } from '../data-source';
 
 
 export interface TextPart {
@@ -32,22 +26,10 @@ export enum FileType {
     GoogleDoc = "doc",
 }
 
+export interface SearchResultDetails {
+    type: ResultType
+    data_source: string
 
-export enum Platform {
-    Confluence = "confluence",
-    Slack = "slack",
-    Drive = "google_drive",
-    Gitlab = "gitlab"
-}
-
-export enum PlatformDisplayName {
-    Confluence = "Confluence",
-    Slack = "Slack",
-    Drive = "Google Drive",
-    Gitlab = "Gitlab"
-}
-
-export interface SearchResultProps {
     title: string
     author: string
     author_image_url: string
@@ -62,42 +44,49 @@ export interface SearchResultProps {
     url: string
 }
 
+
+export interface SearchResultProps {
+    resultDetails: SearchResultDetails
+    dataSourceType: DataSourceType
+}
+
 export const SearchResult = (props: SearchResultProps) => {
     return (
         <div className="mb-4 pt-2">
-            <a className="relative text-sm float-right text-white right-2 top-2">{props.score.toFixed(2)}%</a>
+            <span className="relative text-sm float-right text-white right-2 top-2">{props.resultDetails.score.toFixed(2)}%</span>
             <div className="flex flex-row items-start">
-                {getBigIconByPlatform(props.platform as Platform, props.file_type as FileType)}
-                <p className='p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
-                    <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.url} target='_blank'>
-                        {props.title}
+                {getBigIcon(props)}
+                <p className='w-10/12 p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
+                    <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer" href={props.resultDetails.url} rel="noreferrer" target='_blank'>
+                        {props.resultDetails.title}
                     </a>
                     <span className="flex flex-row text-[15px] font-medium mb-4 mt-1">
                         {
-                            props.document_type == ResultType.Docment && <img className="inline-block mr-2" src={BlueFolder}></img>
+                            props.resultDetails.type === ResultType.Docment && <img alt="blue-folder" className="inline-block mr-2" src={BlueFolder}></img>
                         }
                         <span className="ml-0 text-[#D5D5D5]">
                             {
-                                props.document_type == ResultType.Message && <span>#</span>
+                                props.resultDetails.type === ResultType.Message && <span>#</span>
                             }
-                            {props.location} ·&thinsp;
+                            {props.resultDetails.location} ·&thinsp;
                         </span>
                         <span className="flex flex-row items-center">
-                            <img className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.author_image_data ? props.author_image_data : props.author_image_url}></img>
-                            <span className='capitalize'>{props.author} ·</span>
+                            <img alt="author" className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.resultDetails.author_image_data ? props.resultDetails.author_image_data : props.resultDetails.author_image_url}></img>
+                            <span className='capitalize'>{props.resultDetails.author} ·</span>
                         </span>
                         <span>
-                            &thinsp;Updated {getFormattedTime(props.time)}&thinsp; |&thinsp;
+                            &thinsp;Updated {getFormattedTime(props.resultDetails.time)}&thinsp; |&thinsp;
                         </span>
                         <span className="flex flex-row items-center">
-                            {getSmallIconByPlatform(props.platform as Platform)}
-                            <span className="text-[#A3A3A3]">{getPlatformDisplayName(props.platform as Platform)}</span>
+                            <img alt="file-type" className="inline mx-1 fill-[#A3A3A3] h-[12px] w-[12px] grayscale"
+                                src={props.dataSourceType.image_base64}></img>
+                            <span className="text-[#A3A3A3]">{props.dataSourceType.display_name}</span>
                         </span>
                     </span>
 
-                    {props.document_type == ResultType.Docment &&
+                    {props.resultDetails.type === ResultType.Docment &&
                         <span>
-                            {props.content.map((text_part, index) => {
+                            {props.resultDetails.content.map((text_part, index) => {
                                 return (
                                     <span key={index} style={{ wordBreak: 'break-word' }} className={(text_part.bold ? 'font-bold text-white' : '') +
                                         " text-md font-poppins font-medium"}>
@@ -107,9 +96,10 @@ export const SearchResult = (props: SearchResultProps) => {
                             })}
                         </span>
                     }
-                    {props.document_type == ResultType.Message &&
+                    {props.resultDetails.type === ResultType.Message &&
                         <p className="bg-[#352C45] p-2 px-4 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                            {props.content.map((text_part, index) => {
+                            {props.resultDetails.content.map((text_part, index) => {
+
                                 return (
                                     <span key={index} className={(text_part.bold ? 'font-bold text-white' : '') +
                                         " fony-[14px] font-regular"}>
@@ -119,9 +109,9 @@ export const SearchResult = (props: SearchResultProps) => {
                             })}
                         </p>
                     }
-                </p>
-            </div>
-        </div>
+                </p >
+            </div >
+        </div >
     );
 }
 
@@ -131,54 +121,44 @@ function getFormattedTime(time: string) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getSmallIconByPlatform(platform: Platform) {
-    let classes = "inline mx-1 fill-[#A3A3A3]";
-    switch (platform) {
-        case Platform.Confluence:
-            return <FaConfluence className={classes}></FaConfluence>
-        case Platform.Slack:
-            return <FaSlack className={classes}></FaSlack>
-        case Platform.Drive:
-            return <FaGoogleDrive className={classes}></FaGoogleDrive>
-    }
-}
 
-function getBigIconByPlatform(platform: Platform, fileType: FileType) {
-    let classes = "mt-2 mr-2 h-[40px] w-[40px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]";
-    let image = "";
-    switch (platform) {
-        case Platform.Confluence:
-            image = Confluence;
-            break;
-        case Platform.Slack:
-            image = Slack;
-            break;
-        case Platform.Drive:
-            if (fileType == FileType.GoogleDoc) {
-                image = GoogleDoc;
-            }
-            else if (fileType == FileType.Docx) {
-                image = GoogleDocx;
-            } else if (fileType == FileType.Pptx) {
-                image = GooglePptx;
+function getBigIcon(props: SearchResultProps) {
+    let containingClasses = "";
+    let containingImage = "";
+    let onTopImage = "";
+    switch (props.resultDetails.type) {
+        case ResultType.Docment:
+            if (props.resultDetails.file_type === null) {
+                containingImage = props.dataSourceType.image_base64;
+            } else {
+                onTopImage = props.dataSourceType.image_base64;
+                switch (props.resultDetails.file_type) {
+                    case FileType.Docx:
+                        containingImage = Docx;
+                        break;
+                    case FileType.Pptx:
+                        containingImage = Pptx;
+                        break;
+                    case FileType.GoogleDoc:
+                        containingImage = GoogleDoc;
+                        break;
+                }
             }
             break;
-        case Platform.Gitlab:
-            return <img className={classes} src={Gitlab}></img>
+        case ResultType.Message:
+            containingClasses = "rounded-full"
+            containingImage = props.resultDetails.author_image_data ? props.resultDetails.author_image_data : props.resultDetails.author_image_url;
+            onTopImage = props.dataSourceType.image_base64;
+            break;
     }
-
-    return <img className={classes} src={image}></img>
-}
-
-export function getPlatformDisplayName(platform: Platform) {
-    switch (platform) {
-        case Platform.Confluence:
-            return PlatformDisplayName.Confluence
-        case Platform.Slack:
-            return PlatformDisplayName.Slack
-        case Platform.Drive:
-            return PlatformDisplayName.Drive
-        case Platform.Gitlab:
-            return PlatformDisplayName.Gitlab
+    if (onTopImage !== "") {
+        return (
+            <div className="mt-2 mr-[10px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]">
+                <img height={"45px"} width={"45px"} className={containingClasses} alt="file-type" src={containingImage}></img>
+                <img alt="file-type" className="company-logo rounded-full p-[3px] h-[24px] w-[24px] absolute -right-[5px] -bottom-[5px] bg-white" src={onTopImage}></img>
+            </div>
+        )
+    } else {
+        return <img alt="file-type" className="mt-2 mr-2 h-[40px] w-[40px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]" src={containingImage}></img>
     }
 }

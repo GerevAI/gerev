@@ -8,4 +8,6 @@ class DataSourceType(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(32))
+    display_name: Mapped[str] = mapped_column(String(32))
+    config_fields: Mapped[str] = mapped_column(String(1024))
     data_sources = relationship("DataSource", back_populates="type", foreign_keys="DataSource.type_id")

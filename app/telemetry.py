@@ -18,6 +18,7 @@ class Posthog:
 
     RUN_EVENT = "run"
     DAILY_EVENT = "daily"
+    BACKEND_SEARCH_EVENT = "backend_search"
     _should_capture = False
     _identified_uuid: Optional[str] = None
 
@@ -81,3 +82,7 @@ class Posthog:
     @classmethod
     def send_startup_telemetry(cls):
         cls._capture(cls.RUN_EVENT)
+
+    @classmethod
+    def increase_search_count(cls):
+        cls._capture(cls.BACKEND_SEARCH_EVENT)

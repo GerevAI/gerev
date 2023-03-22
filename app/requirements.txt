@@ -19,3 +19,4 @@ google-auth-oauthlib
 oauth2client
 mammoth
 python-pptx
+alembic

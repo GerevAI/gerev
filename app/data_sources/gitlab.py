@@ -3,11 +3,11 @@ from datetime import datetime
 import requests
 import concurrent.futures
 
-from typing import Dict
+from typing import Dict, List
 
 from indexing_queue import IndexingQueue
 from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
 from pydantic import BaseModel
 
@@ -70,6 +70,12 @@ class GitlabDataSource(BaseDataSource):
                 url=pull_request['web_url'],
                 timestamp=last_modified
             ))
+
+    @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="API Access Token", name="access_token", input_type=HTMLInputType.PASSWORD),
+        ]
 
     @staticmethod
     def validate_config(config: Dict) -> None:

@@ -1,14 +1,9 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
-import { Platform, getPlatformDisplayName } from "./search-result";
+import copy from 'copy-to-clipboard';
 
-import Confluence from '../assets/images/confluence.svg';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
-import Slack from '../assets/images/slack.svg';
-import Gitlab from "../assets/images/gitlab.svg"
-import GoogleDrive from '../assets/images/google-drive.svg'
-
 
 import { AiFillCheckCircle } from "react-icons/ai";
 import { BiLinkExternal } from 'react-icons/bi';
@@ -18,59 +13,38 @@ import { RxCopy } from 'react-icons/rx';
 import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
+import { ConfigField, DataSourceType } from "../data-source";
 
 
 export interface SelectOption {
    value: string;
    label: string;
+   imageBase64: string
+   configFields: ConfigField[]
 }
 
-export interface ConfluenceConfig {
-   url: string;
-   token: string;
-}
-
-export interface SlackConfig {
-   token: string;
-}
-
-export interface GitlabConfig{
-    access_token : string
+export interface GitlabConfig {
+   access_token: string
 }
 
 export interface DataSourcePanelState {
-   dataSourceTypes: SelectOption[]
+   selectOptions: SelectOption[]
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
-   newUrl: string
-   newToken: string
-   newBigText: string
 }
 
 export interface DataSourcePanelProps {
+   dataSourceTypesDict: { [key: string]: DataSourceType }
    connectedDataSources: string[]
    onAdded: (dataSourceType: string) => void
    onClose: () => void
 }
 
-function getBigIconByPlatform(platform: Platform) {
-   switch (platform) {
-      case Platform.Confluence:
-         return Confluence
-      case Platform.Slack:
-         return Slack;
-      case Platform.Drive:
-         return GoogleDrive;
-      case Platform.Gitlab:
-         return Gitlab;
-   }
-}
-
 const Option = props => (
    <components.Option {...props}>
       <div className="flex flex-row w-full">
-         <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(props.value)}></img>
+         <img alt="logo" className={"mr-2 h-[20px]"} src={props.data.imageBase64}></img>
          {props.label}
       </div>
    </components.Option>
@@ -103,45 +77,47 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    constructor(props) {
       super(props);
       this.state = {
+         selectOptions: [],
          isAdding: false,
          isAddingLoading: false,
-         selectedDataSource: { value: 'unknown', label: 'unknown' },
-         dataSourceTypes: [
-         ],
-         newUrl: '',
-         newToken: '',
-         newBigText: ''
+         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] }
       }
    }
 
    async componentDidMount() {
-      this.listAvailableDataSourceTypes();
-   }
-
-   async listAvailableDataSourceTypes() {
-      try {
-         const response = await api.get('/data-source/list-types');
-         let types = this.dataSourceNamesToSelectOptions(response.data);
-         this.setState({
-            dataSourceTypes: types,
-            selectedDataSource: types[1]
-         })
-      } catch (error) {
-      }
-   }
-
-   dataSourceNamesToSelectOptions(dataSourceNames: string[]) {
-      return dataSourceNames.map((data_source) => {
+      let options = Object.keys(this.props.dataSourceTypesDict).map((key) => {
+         let data_source = this.props.dataSourceTypesDict[key];
          return {
-            value: data_source,
-            label: getPlatformDisplayName(data_source as Platform)
+            value: data_source.name,
+            label: data_source.display_name,
+            imageBase64: data_source.image_base64,
+            configFields: data_source.config_fields
          }
+      }
+      );
+
+      this.setState({
+         selectOptions: options,
+         selectedDataSource: options[0],
       })
    }
 
    capitilize(str: string) {
       return str.charAt(0).toUpperCase() + str.slice(1);
    }
+
+   dataSourceToAddSelected(dataSource: DataSourceType) {
+      let selectedDataSource = this.state.selectOptions.find((option) => {
+         return option.value === dataSource.name
+      })
+
+      if (!selectedDataSource) { // shouldn't happen, typescript...
+         return;
+      }
+
+      this.setState({ isAdding: true, selectedDataSource: selectedDataSource })
+   }
+
 
    render() {
       return (
@@ -160,26 +136,29 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((data_source) => {
                            return (
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                                 <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source as Platform)}></img>
-                                 <h1 className="text-white">{getPlatformDisplayName(data_source as Platform)}</h1>
+                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
+                                 <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
                                  <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
                               </div>
                            )
                         })
                         }
                         {
-                        this.state.dataSourceTypes.map((data_source) => {
-                           if (!this.props.connectedDataSources.includes(data_source.value)) {
-                              return (
-                                 <div onClick={() => { this.setState({ isAdding: true, selectedDataSource: data_source }) }} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                                    <img className={"mr-2 h-[20px]"} src={getBigIconByPlatform(data_source.value as Platform)}></img>
-                                    {/* <h1 className="text-white">Add</h1> */}
-                                    <h1 className="text-gray-500">{getPlatformDisplayName(data_source.value as Platform)}</h1>
-                                    <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
-                                 </div>
-                              )
-                           }
-                        })
+                           Object.keys(this.props.dataSourceTypesDict).map((key) => {
+                              let dataSource = this.props.dataSourceTypesDict[key];
+                              if (!this.props.connectedDataSources.includes(dataSource.name)) {
+                                 return (
+                                    <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                       <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
+                                       {/* <h1 className="text-white">Add</h1> */}
+                                       <h1 className="text-gray-500">{dataSource.display_name}</h1>
+                                       <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
+                                    </div>
+                                 )
+                              }
+                              return null;
+
+                           })
                         }
                      </div>
                   </div>)
@@ -188,9 +167,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                this.state.isAdding && (
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
-                        <img className={"mr-2 h-[32px]"} src={getBigIconByPlatform(this.state.selectedDataSource.value as Platform)}></img>
-                        <Select className="w-40 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
-                           options={this.state.dataSourceTypes} isDisabled={false} isSearchable={false} components={{ Option }}
+                        <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
+                        <Select className="w-60 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
+                           options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
                               control: (baseStyles, state) => ({
                                  ...baseStyles,
@@ -224,18 +203,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {
                                  this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Confluene -\> top-right profile picture -\> Settings'}</span>
-                                       <span>2. {'Personal Access Tokens -\> Create token -\> Name it'}</span>
+                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
+                                       <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
                                  )
                               }
                               {
-                                 this.state.selectedDataSource.value === 'gitlab' && (
+
+                                 this.state.selectedDataSource.value === 'confluence_cloud' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Gitlab -\> top-right profile picture -\> Preferences'}</span>
-                                       <span>2. {'Access Tokens -\> Name it'}</span>
-                                       <span>3. {"Remove expiration date, check read_api checkbox create and copy the token"}</span>
+                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Manage account'}</span>
+                                       <span>2. {'go security tab (at top) -> Create and manage API tokens -> Create API token'}</span>
+                                       <span>3. {"Name it, create and copy the token"}</span>
                                     </span>
                                  )
                               }
@@ -250,7 +230,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                     <span className="flex flex-row items-center"> 2. Create new app
                                        from manifest in &nbsp;
-                                       <a className="text-[#d6acff] hover:underline" href={'https://api.slack.com/apps'} target='_blank'>
+                                       <a className="text-[#d6acff] hover:underline" rel="noreferrer" href={'https://api.slack.com/apps'} target='_blank'>
                                           Slack Apps
                                        </a>
                                        &nbsp; <BiLinkExternal color="#d6acff"></BiLinkExternal>
@@ -276,11 +256,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                     <span>4. Click left panel OAuth & Permissions.</span>
                                     <span className="ml-8 mt-2">
-                                       <img className="h-[120px] rounded-xl p-1" src={LeftPane} />
+                                       <img alt="" className="h-[120px] rounded-xl p-1" src={LeftPane} />
                                     </span>
                                     <span>5. Copy the Bot User OAuth Token.</span>
                                     <span className="ml-8 mt-2">
-                                       <img className="h-[120px] rounded-xl p-1" src={CopyThis} />
+                                       <img alt="" className="h-[120px] rounded-xl p-1" src={CopyThis} />
                                     </span>
                                  </span>
                               )
@@ -288,37 +268,44 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  <span className="leading-9 text-lg text-white">
-                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' className="inline underline" target="_blank">these instructions</a>
+                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
+                              {
+                                 this.state.selectedDataSource.value === 'gitlab' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Gitlab -> top-right profile picture -> Preferences'}</span>
+                                       <span>2. {'Access Tokens -> Name it'}</span>
+                                       <span>3. {"Remove expiration date, check read_api checkbox create and copy the token"}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
+                              {/* for each field */}
                               {
-                                 this.hasUrl() &&
-                                 <div className="flex flex-col mr-10">
-                                    <h1 className="text-lg block text-white mb-4">{this.state.selectedDataSource.label} URL</h1>
-                                    <input value={this.state.newUrl} onChange={(event) => this.setState({ newUrl: event.target.value })}
-                                       className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="https://example.com"></input>
-                                 </div>
-                              }
-                              {
-                                 this.hasToken() &&
-                                 <div className="flex flex-col">
-                                    <h1 className="text-lg block text-white mb-4">
-                                       {this.state.selectedDataSource.value == "slack" ? "Bot User OAuth Token" : "Personal Access Token"}
-                                    </h1>
-                                    <input value={this.state.newToken} onChange={(event) => this.setState({ newToken: event.target.value })}
-                                       className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2" placeholder="paste-your-token-here"></input>
-                                 </div>
-                              }
-                              {
-                                 this.hasBigText() &&
-                                 <div className="flex flex-col w-full">
-                                    <h1 className="text-lg block text-white mb-4">JSON file content:</h1>
-                                    <textarea value={this.state.newBigText} onChange={(event) => this.setState({ newBigText: event.target.value })}
-                                       className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder="Paste JSON here"></textarea>
-                                 </div>
+                                 this.state.selectedDataSource.configFields.map((field, index) => {
+                                    if (field.input_type === 'text' || field.input_type === 'password') {
+                                       return (
+                                          <div className="flex flex-col mr-10 mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <input value={field.value} onChange={(event) => { field.value = event.target.value }}
+                                                className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                                placeholder={field.placeholder}></input>
+                                          </div>
+                                       )
+                                    } else if (field.input_type === 'textarea') {
+                                       return (
+                                          <div className="flex flex-col w-full mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <textarea value={field.value} onChange={(event) => { field.value = event.target.value }}
+                                                className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                          </div>
+                                       )
+                                    }
+                                    return null;
+                                 })
                               }
                               <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
                                   hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
@@ -343,38 +330,22 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    copyManifest = () => {
-      navigator.clipboard.writeText(JSON.stringify(slackManifest));
+      let manifestText = JSON.stringify(slackManifest);
+      if (!copy(manifestText)) {
+         toast.error("Error copying manifest");
+      } else {
+         toast.success("Manifest copied to clipboard", { autoClose: 2000 });
+      }
    }
 
-   hasUrl = () => {
-      return this.state.selectedDataSource?.value === "confluence";
-   }
-
-   hasToken = () => {
-      return this.state.selectedDataSource?.value === "confluence" || this.state.selectedDataSource?.value === "slack" || this.state.selectedDataSource?.value === "gitlab" ;
-   }
-
-   hasBigText = () => {
-      return this.state.selectedDataSource?.value === "google_drive";
-   }
 
    submit = () => {
       if (!this.state.selectedDataSource) return;
 
       let config = {};
-      switch (this.state.selectedDataSource.value) {
-         case "confluence":
-            config = { url: this.state.newUrl, token: this.state.newToken } as ConfluenceConfig;
-            break;
-         case "slack":
-            config = { token: this.state.newToken } as SlackConfig;
-            break;
-         case "google_drive":
-            config = JSON.parse(this.state.newBigText)
-            break;
-         case "gitlab" :
-            config = {access_token: this.state.newToken}
-      }
+      this.state.selectedDataSource.configFields.forEach(field => {
+         config[field.name] = field.value;
+      });
 
       let payload = {
          name: this.state.selectedDataSource.value,
@@ -383,10 +354,16 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAddingLoading: true });
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully, indexing...");
+
+         let selectedDataSource = this.state.selectedDataSource;
+         selectedDataSource.configFields.forEach(field => {
+            field.value = '';
+         });
+         this.setState({ selectedDataSource: selectedDataSource });
          this.props.onAdded(this.state.selectedDataSource.value);
-         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.dataSourceTypes[0], newUrl: "", newToken: "", newBigText: ""  });
+         this.setState({ isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0] });
       }).catch(error => {
-         toast.error("Error adding data source");
+         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
          this.setState({ isAddingLoading: false });
       });
    }

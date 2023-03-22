@@ -1,3 +1,4 @@
+import json
 import os
 import io
 import logging
@@ -5,18 +6,25 @@ from datetime import datetime
 from typing import Dict, List
 from functools import lru_cache
 
+import googleapiclient
+from googleapiclient.errors import HttpError
 from apiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload, HttpError
+from googleapiclient.http import MediaIoBaseDownload
 from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
+from pydantic import BaseModel
 
-from data_source_api.base_data_source import BaseDataSource
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import BasicDocument, DocumentType, FileType
-from data_source_api.exception import InvalidDataSourceConfig
+from data_source_api.exception import InvalidDataSourceConfig, KnownException
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
 from parsers.docx import docx_to_html
+
+
+class GoogleDriveConfig(BaseModel):
+    json_str: str
 
 
 class GoogleDriveDataSource(BaseDataSource):
@@ -27,22 +35,32 @@ class GoogleDriveDataSource(BaseDataSource):
     }
 
     @staticmethod
+    def get_config_fields() -> List[ConfigField]:
+        return [
+            ConfigField(label="JSON file content", name="json_str", input_type=HTMLInputType.TEXTAREA)
+        ]
+
+    @staticmethod
     def validate_config(config: Dict) -> None:
         try:
             scopes = ['https://www.googleapis.com/auth/drive.readonly']
-            ServiceAccountCredentials.from_json_keyfile_dict(config, scopes=scopes)
+            parsed_config = GoogleDriveConfig(**config)
+            json_dict = json.loads(parsed_config.json_str)
+            credentials = ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
+            credentials.authorize(Http())
+        except HttpError as e:
+            raise KnownException(message="Drive token takes up to 10 minutes to get activated. "
+                                         "Make sure you've followed *EVERY* step from the instructions "
+                                         "& try again soon...")
         except (KeyError, ValueError) as e:
-            raise InvalidDataSourceConfig from e
+            raise KnownException(message="Invalid JSON file content")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Create a google cloud project in https://console.cloud.google.com/projectcreate
-        # select the project you created and add service account in https://console.cloud.google.com/iam-admin/serviceaccounts
-        # create an api key for the service account and download it
-        # share the google drive folder with the service account email address.
-        # put the contents of the downloaded file in the config
         scopes = ['https://www.googleapis.com/auth/drive.readonly']
-        self._credentials = ServiceAccountCredentials.from_json_keyfile_dict(self._config, scopes=scopes)
+        parsed_config = GoogleDriveConfig(**self._config)
+        json_dict = json.loads(parsed_config.json_str)
+        self._credentials = ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
         self._http_auth = self._credentials.authorize(Http())
         self._drive = build('drive', 'v3', http=self._http_auth)
         
@@ -54,6 +72,7 @@ class GoogleDriveDataSource(BaseDataSource):
 
     def _should_index_file(self, file):
         if file['mimeType'] not in self._supported_mime_types:
+            logging.info(f"Skipping file {file['name']} because it's mime type is {file['mimeType']} which is not supported.")
             return False
 
         last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -106,11 +125,13 @@ class GoogleDriveDataSource(BaseDataSource):
             if next_page_token is None:
                 break
 
+        logging.getLogger().info(f'got {len(files)} documents from drive {drive["name"]}.')
+
         files = [file for file in files if self._should_index_file(file)]
 
         documents = []
 
-        logging.getLogger().info(f'got {len(files)} documents from drive {drive["name"]}.')
+        logging.getLogger().info(f'Indexing {len(files)} documents from drive {drive["name"]}.')
 
         for file in files:
             logging.getLogger().info(f'processing file {file["name"]}')
@@ -144,7 +165,7 @@ class GoogleDriveDataSource(BaseDataSource):
                     # delete file
                     os.remove(file_to_download)
                 except Exception as error:
-                    logging.exception(f'Error occured parsing file "{file["name"]}" from google drive')
+                    logging.exception(f'Error occurred parsing file "{file["name"]}" from google drive')
             
             parent_name = self._get_parents_string(file)
 
