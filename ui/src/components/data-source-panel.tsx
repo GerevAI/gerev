@@ -40,7 +40,7 @@ export interface DataSourcePanelProps {
 const Option = props => (
    <components.Option {...props}>
       <div className="flex flex-row w-full">
-         <img alt="logo" className={"mr-2 h-[20px]"} src={props.image_base64}></img>
+         <img alt="logo" className={"mr-2 h-[20px]"} src={props.data.imageBase64}></img>
          {props.label}
       </div>
    </components.Option>
@@ -106,7 +106,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          return option.value === dataSource.name
       })
 
-      if (!selectedDataSource) { // shoudln't happen, typescript...
+      if (!selectedDataSource) { // shouldn't happen, typescript...
          return;
       }
 
