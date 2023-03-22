@@ -165,7 +165,7 @@ class GoogleDriveDataSource(BaseDataSource):
                     # delete file
                     os.remove(file_to_download)
                 except Exception as error:
-                    logging.exception(f'Error occured parsing file "{file["name"]}" from google drive')
+                    logging.exception(f'Error occurred parsing file "{file["name"]}" from google drive')
             
             parent_name = self._get_parents_string(file)
 
