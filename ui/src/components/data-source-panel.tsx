@@ -338,6 +338,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAddingLoading: true });
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully, indexing...");
+
+         let selectedDataSource = this.state.selectedDataSource;
+         selectedDataSource.configFields.forEach(field => {
+            field.value = '';
+         });
+         this.setState({ selectedDataSource: selectedDataSource });
          this.props.onAdded(this.state.selectedDataSource.value);
          this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0]});
       }).catch(error => {
