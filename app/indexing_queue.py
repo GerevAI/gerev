@@ -32,7 +32,7 @@ class IndexingQueue:
         with self.condition:
             for doc in docs:
                 self.queue.put(doc)
-                
+
             self.condition.notify_all()
 
     def consume_all(self, max_docs=5000, timeout=1) -> List[BasicDocument]:
