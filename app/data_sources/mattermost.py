@@ -70,13 +70,17 @@ class MattermostDataSource(BaseDataSource):
     
     
     def _list_channels(self) -> List[MattermostChannel]:
-        channels = self._mattermost.channels.client.get("/channels")
+        channels = self._mattermost.channels.client.get(f"/users/me/channels")
         return [MattermostChannel(id=channel["id"], name=channel["name"], team_id=channel["team_id"])
                 for channel in channels]
 
 
     def _is_valid_message(self, message: Dict) -> bool:
-        return message["type"] == ""
+        return message["type"] == "" 
+    
+    
+    def _is_valid_channel(self, channel: MattermostChannel) -> bool:
+        return channel.team_id != ""
     
     
     def _list_posts_in_channel(self, channel_id: str, page: int) -> Dict:
@@ -120,6 +124,8 @@ class MattermostDataSource(BaseDataSource):
     
         
     def _feed_channel(self, channel: MattermostChannel):
+        if not self._is_valid_channel(channel):
+            return 
         logger.info(f'Feeding channel {channel.name}')
         
         page = 0
