@@ -78,7 +78,7 @@ class MattermostDataSource(BaseDataSource):
         return message["type"] == ""
     
     
-    def _list_posts_in_channel(self, channel_id: str, page: int) -> Dict: #-> List[MattermostPost]:
+    def _list_posts_in_channel(self, channel_id: str, page: int) -> Dict:
         endpoint = f"/channels/{channel_id}/posts"
         params = {
             "since": int(self._last_index_time.timestamp()),
