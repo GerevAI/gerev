@@ -28,8 +28,9 @@ Coming Soon...
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [ ] RocketChat (in PR :pray:)
  - [ ] Gitlab Issues (In PR :pray:)
+ - [ ] Mattermost (In PR: :pray:)
+ - [ ] Zendesk (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
- - [ ] Zendesk (In Progress :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
  - [ ] Jira
