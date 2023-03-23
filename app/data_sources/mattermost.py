@@ -3,6 +3,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from dataclasses import dataclass, asdict
 from typing import Dict, List, Optional
+from functools import lru_cache
 
 from mattermostdriver import Driver
 
@@ -109,9 +110,15 @@ class MattermostDataSource(BaseDataSource):
 
     def _get_team_url(self, channel: MattermostChannel):
         url = self._get_mattermost_url()
-        return f"{url}/{channel.team_id}"
+        team = self._mattermost.teams.get_team(channel.team_id)
+        return f"{url}/{team['name']}"
+    
+    
+    @lru_cache(maxsize=512)
+    def _get_mattermost_user(self, user_id: str):
+        return self._mattermost.users.get_user(user_id)["username"]
+    
         
-
     def _feed_channel(self, channel: MattermostChannel):
         logger.info(f'Feeding channel {channel.name}')
         
@@ -121,43 +128,62 @@ class MattermostDataSource(BaseDataSource):
         parsed_posts = []
         
         team_url = self._get_team_url(channel)
+        
         while True:
             posts = self._list_posts_in_channel(channel.id, page)
 
-            for id, post in posts["posts"].items():
+            last_message: Optional[BasicDocument] = None
+            
+            posts["order"].reverse()
+            for id in posts["order"]:
+                post = posts["posts"][id]
+                
                 if not self._is_valid_message(post):
+                    if last_message is not None:
+                        parsed_posts.append(last_message)
+                        last_message = None
                     continue
                 
-                author = self._mattermost.users.get_user(post["user_id"])["username"]
-                author_image_url = f"{self._get_mattermost_url()}/api/v4/users/{post['user_id']}/image?_=0"
+                author = self._get_mattermost_user(post["user_id"])
                 content = post["message"]
+                
+                if last_message is not None:
+                    if last_message.author == author:
+                        last_message.content += f"\n{content}"
+                        continue
+                    else:
+                        parsed_posts.append(last_message)
+                        if len(parsed_posts) >= MattermostDataSource.FEED_BATCH_SIZE:
+                            total_fed += len(parsed_posts)
+                            IndexingQueue.get().feed(docs=parsed_posts)
+                            parsed_posts = []
+                    
+                author_image_url = f"{self._get_mattermost_url()}/api/v4/users/{post['user_id']}/image?_=0"
                 timestamp = datetime.fromtimestamp(post["update_at"] / 1000)
-                parsed_posts.append(
-                    BasicDocument(
-                        id=id,
-                        data_source_id=self._data_source_id,
-                        title=channel.name,
-                        content=content,
-                        timestamp=timestamp,
-                        author=author,
-                        author_image_url=author_image_url,
-                        location=channel.name,
-                        url=f"{team_url}/pl/{id}",
-                        type=DocumentType.MESSAGE
-                    )
+                last_message = BasicDocument(
+                    id=id,
+                    data_source_id=self._data_source_id,
+                    title=channel.name,
+                    content=content,
+                    timestamp=timestamp,
+                    author=author,
+                    author_image_url=author_image_url,
+                    location=channel.name,
+                    url=f"{team_url}/pl/{id}",
+                    type=DocumentType.MESSAGE
                 )
                 
-                if len(parsed_posts) >= self.FEED_BATCH_SIZE:
-                    total_fed += len(parsed_posts)
-                    IndexingQueue.get().feed(docs=parsed_posts)
-                    parsed_posts = []
-                
+            if last_message is not None:
+                parsed_posts.append(last_message)
+
             if posts["prev_post_id"] == "":
                 break
             page += 1
         
+
         IndexingQueue.get().feed(docs=parsed_posts)
         total_fed += len(parsed_posts)
+
         if len(parsed_posts) > 0:
             logger.info(f"Worker fed {total_fed} documents")
             
