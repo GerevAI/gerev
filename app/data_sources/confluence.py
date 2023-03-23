@@ -29,12 +29,12 @@ class ConfluenceDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def list_spaces(confluence: Confluence) -> List[Dict]:
+    def list_spaces(confluence: Confluence, start=0) -> List[Dict]:
         # Usually the confluence connection fails, so we retry a few times
         retries = 3
         for i in range(retries):
             try:
-                return confluence.get_all_spaces(expand='status')['results']
+                return confluence.get_all_spaces(expand='status', start=start)['results']
             except Exception as e:
                 logging.error(f'Confluence connection failed: {e}')
                 if i == retries - 1:
@@ -55,7 +55,17 @@ class ConfluenceDataSource(BaseDataSource):
         self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token, verify_ssl=False)
 
     def _list_spaces(self) -> List[Dict]:
-        return ConfluenceDataSource.list_spaces(confluence=self._confluence)
+        spaces = []
+        start = 0
+        while True:
+            new_spaces = ConfluenceDataSource.list_spaces(confluence=self._confluence, start=start)
+            if len(new_spaces) == 0:
+                break
+
+            spaces.extend(new_spaces)
+            start += len(new_spaces)
+
+        return spaces
 
     def _feed_new_documents(self) -> None:
         spaces = self._list_spaces()
