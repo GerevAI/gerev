@@ -200,7 +200,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
                                        <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
-                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                       <span>3. {"Copy the Access Token"}</span>
                                     </span>
                               )
                               }
@@ -209,7 +209,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
-                                       <span>3. {"Copy the Access Token"}</span>
+                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
                               )
                               }
