@@ -21,6 +21,7 @@ from indexing.faiss_index import FaissIndex
 from data_source_api.basic_document import DocumentType, FileType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
+from util import threaded_method
 
 BM_25_CANDIDATES = 100 if torch.cuda.is_available() else 20
 BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
@@ -74,6 +75,7 @@ class Candidate:
             url += urllib.parse.quote(text).replace('-', '%2D')
         return url
 
+    @threaded_method
     def to_search_result(self) -> SearchResult:
         answer = TextPart(self.content[self.answer_start: self.answer_end], True)
         content = [answer]

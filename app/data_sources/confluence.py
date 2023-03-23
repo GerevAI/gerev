@@ -1,4 +1,3 @@
-import concurrent.futures
 import logging
 from datetime import datetime
 from typing import List, Dict
@@ -12,6 +11,9 @@ from data_source_api.utils import parse_with_workers
 from indexing_queue import IndexingQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 class ConfluenceConfig(BaseModel):
@@ -55,6 +57,8 @@ class ConfluenceDataSource(BaseDataSource):
         self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token, verify_ssl=False)
 
     def _list_spaces(self) -> List[Dict]:
+        logger.info('Listing spaces')
+
         spaces = []
         start = 0
         while True:
@@ -65,9 +69,12 @@ class ConfluenceDataSource(BaseDataSource):
             spaces.extend(new_spaces)
             start += len(new_spaces)
 
+        logger.info(f'Found {len(spaces)} spaces')
         return spaces
 
     def _feed_new_documents(self) -> None:
+        logger.info('Feeding new documents with Confluence')
+
         spaces = self._list_spaces()
         raw_docs = []
         for space in spaces:

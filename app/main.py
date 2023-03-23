@@ -82,7 +82,7 @@ def send_startup_telemetry():
     try:
         Posthog.send_startup_telemetry()
     except:
-        logging.exception("Failed to send startup telemetry")
+        pass
 
 
 @app.on_event("startup")
@@ -91,7 +91,7 @@ def send_daily_telemetry():
     try:
         Posthog.send_daily()
     except:
-        logger.exception("Failed to send daily telemetry")
+        pass
 
 
 def load_data_source_types():
