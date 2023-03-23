@@ -260,6 +260,17 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               )
                               }
 
+                              {this.state.selectedDataSource.value === 'zendesk' && (
+                                <span>
+                                    <span className="leading-9 text-lg text-white">
+                                        Follow <a href='https://support.zendesk.com/hc/en-us/articles/4408889192858-Generating-a-new-API-token' rel="noreferrer" className="inline underline" target="_blank">these instructions</a> to create a token.
+                                    </span>
+                                    <br />
+                                    <span className="leading-9 text-lg text-white">
+                                        Email should be of a user with access to all relevant articles
+                                    </span>
+                                </span>
+                              )}
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  <span className="leading-9 text-lg text-white">
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
