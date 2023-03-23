@@ -41,7 +41,7 @@ class BookStack(Session):
             sleep(1)
 
         url = urljoin(self.base_url, url_path)
-        r = super().request(method, url, *args, **kwargs)
+        r = super().request(method, url, verify=False, *args, **kwargs)
 
         if r.status_code != 200:
             if r.status_code == 429:
@@ -51,7 +51,7 @@ class BookStack(Session):
                     sleep(60)
                     self.rate_limit_reach = False
                     logger.info("Done waiting for the API rate limit")
-                return self.request(method, url, *args, **kwargs)
+                return self.request(method, url, verify=False, *args, **kwargs)
             r.raise_for_status()
         return r
 
