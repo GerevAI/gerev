@@ -196,11 +196,20 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
+                              this.state.selectedDataSource.value === 'mattermost' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
+                                       <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                    </span>
+                              )
+                              }
+                              {
                               this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
-                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                       <span>3. {"Copy the Access Token"}</span>
                                     </span>
                               )
                               }
