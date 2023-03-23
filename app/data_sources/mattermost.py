@@ -66,7 +66,6 @@ class MattermostDataSource(BaseDataSource):
         super().__init__(*args, **kwargs)
         mattermost_config = MattermostConfig(**self._config)
         self._mattermost = Driver(options = asdict(mattermost_config))
-        # self._author_cahce: Dict[str, MattermostAuthor] = {}
     
     
     def _list_channels(self) -> List[MattermostChannel]:
