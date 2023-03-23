@@ -28,7 +28,7 @@ BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
 SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
-
+logger = logging.getLogger(__name__)
 
 @dataclass
 class TextPart:
@@ -87,6 +87,7 @@ class Candidate:
 
         data_uri = None
         if self.document.data_source.type.name == 'confluence':
+            logger.info(f"Fetching author image for {self.document.author}")
             url = self.document.author_image_url
             if "anonymous.svg" in url:
                 url = url.replace(".svg", ".png")
@@ -180,7 +181,6 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
 
         # calculate small cross-encoder scores to leave just a few candidates
-        logger = logging.getLogger('search')
         logger.info(f'Found {len(candidates)} candidates, filtering...')
         candidates = _cross_encode(cross_encoder_small, query, candidates, BI_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
