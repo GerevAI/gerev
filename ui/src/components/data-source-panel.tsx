@@ -5,6 +5,7 @@ import copy from 'copy-to-clipboard';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
 
+import { BsFillPencilFill } from 'react-icons/bs';
 import { AiFillCheckCircle } from "react-icons/ai";
 import { BiLinkExternal } from 'react-icons/bi';
 import { IoMdClose } from "react-icons/io";
@@ -76,7 +77,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          selectOptions: [],
          isAdding: false,
          isAddingLoading: false,
-         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: []}
+         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] }
       }
    }
 
@@ -88,7 +89,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             label: data_source.display_name,
             imageBase64: data_source.image_base64,
             configFields: data_source.config_fields
-         }}
+         }
+      }
       );
 
       this.setState({
@@ -116,20 +118,27 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    render() {
       return (
-         <div className="relative flex flex-col bg-[#221f2e] items-start px-8 pt-0 pb-4 min-h-[300px]">
+         <div className="relative flex flex-col bg-[#221f2e] items-start px-8 pt-0 pb-4 min-h-[300px]">1
             {
                !this.state.isAdding && <h1 className="mt-4 relative self-center text-white block text-4xl mb-8 font-poppins">Data Source Panel</h1>
             }
-            <IoMdClose onClick={this.props.onClose} className='absolute right-4 top-3 text-2xl text-white hover:text-[#9875d4] hover:cursor-pointer'></IoMdClose>
+
+            {/* X in top right */}
+            <div className="absolute flex flex-col items-center right-4 top-3 text-2xl text-white gap-4">
+               <IoMdClose onClick={this.props.onClose} className='hover:text-[#9875d4] hover:cursor-pointer' />
+               <BsFillPencilFill className='text-base hover:text-[#9875d4] hover:cursor-pointer' />
+            </div>
             {
                !this.state.isAdding && (
                   <div>
                      <h1 className="text-2xl block text-white mb-4">
+                        {/* h1 tag specifies whether there are active data sources */}
                         {this.props.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
                      </h1>
                      <div className="flex flex-row w-[100%] flex-wrap">
                         {this.props.connectedDataSources.map((data_source) => {
                            return (
+                              // connected data source
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
                                  <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
@@ -143,6 +152,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               let dataSource = this.props.dataSourceTypesDict[key];
                               if (!this.props.connectedDataSources.includes(dataSource.name)) {
                                  return (
+                                    // unconnected data source
                                     <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
                                        <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
                                        {/* <h1 className="text-white">Add</h1> */}
@@ -156,10 +166,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            })
                         }
                      </div>
-                  </div>)
+                  </div>
+               )
             }
             {
                this.state.isAdding && (
+                  // walks you through the proccess of adding a data source
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
                         <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
@@ -193,6 +205,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            }} />
                      </div>
                      {
+                        // instructions
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
@@ -214,6 +227,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  )
                               }
                               {this.state.selectedDataSource.value === 'slack' && (
+                                 // slack instructions
                                  <span className=" flex flex-col leading-9 text-lg text-white">
                                     <span className="flex flex-row items-center">1.
                                        <button onClick={this.copyManifest} className="flex py-3 pl-3 pr-2 m-2 w-[110px] h-10 text-lg flex-row items-center justify-center bg-[#584971] active:transform active:translate-y-4 hover:bg-[#9875d4] rounded-lg font-poppins border-[#ffffff] border-b-[.5px] transition duration-300 ease-in-out">
@@ -261,6 +275,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               }
 
                               {this.state.selectedDataSource.value === 'google_drive' && (
+                                 // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
@@ -271,11 +286,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {/* for each field */}
                               {
                                  this.state.selectedDataSource.configFields.map((field, index) => {
-                                    if(field.input_type === 'text' || field.input_type === 'password') {
+                                    if (field.input_type === 'text' || field.input_type === 'password') {
                                        return (
                                           <div className="flex flex-col mr-10 mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                             <input value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                             <input value={field.value} onChange={(event) => { field.value = event.target.value }}
                                                 className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
                                                 placeholder={field.placeholder}></input>
                                           </div>
@@ -284,10 +299,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                        return (
                                           <div className="flex flex-col w-full mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                             <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                             <textarea value={field.value} onChange={(event) => { field.value = event.target.value }}
                                                 className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
                                           </div>
-                                       )}
+                                       )
+                                    }
                                     return null;
                                  })
                               }
@@ -315,7 +331,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    copyManifest = () => {
       let manifestText = JSON.stringify(slackManifest);
-      if(!copy(manifestText)) {
+      if (!copy(manifestText)) {
          toast.error("Error copying manifest");
       } else {
          toast.success("Manifest copied to clipboard", { autoClose: 2000 });
@@ -345,7 +361,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          });
          this.setState({ selectedDataSource: selectedDataSource });
          this.props.onAdded(this.state.selectedDataSource.value);
-         this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0]});
+         this.setState({ isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0] });
       }).catch(error => {
          toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
          this.setState({ isAddingLoading: false });
