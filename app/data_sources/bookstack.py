@@ -15,6 +15,9 @@ from urllib.parse import urljoin
 from time import sleep
 
 
+logger = logging.getLogger(__name__)
+
+
 class BookStackAuth(AuthBase):
     def __init__(self, token_id, token_secret, header_key="Authorization"):
         self.header_key = header_key
@@ -38,17 +41,17 @@ class BookStack(Session):
             sleep(1)
 
         url = urljoin(self.base_url, url_path)
-        r = super().request(method, url, *args, **kwargs)
+        r = super().request(method, url, verify=False, *args, **kwargs)
 
         if r.status_code != 200:
             if r.status_code == 429:
                 if not self.rate_limit_reach:
-                    logging.info("API rate limit reach, waiting...")
+                    logger.info("API rate limit reach, waiting...")
                     self.rate_limit_reach = True
                     sleep(60)
                     self.rate_limit_reach = False
-                    logging.info("Done waiting for the API rate limit")
-                return self.request(method, url, *args, **kwargs)
+                    logger.info("Done waiting for the API rate limit")
+                return self.request(method, url, verify=False, *args, **kwargs)
             r.raise_for_status()
         return r
 
@@ -143,9 +146,12 @@ class BookstackDataSource(BaseDataSource):
                                      token_secret=book_stack_config.token_secret)
 
     def _list_books(self) -> List[Dict]:
+        logger.info("Listing books with BookStack")
         return BookstackDataSource.list_books(book_stack=self._book_stack)
 
     def _feed_new_documents(self) -> None:
+        logger.info("Feeding new documents with BookStack")
+
         books = self._list_books()
         raw_docs = []
         for book in books:
@@ -154,7 +160,7 @@ class BookstackDataSource(BaseDataSource):
         parse_with_workers(self._parse_documents_worker, raw_docs)
 
     def _parse_documents_worker(self, raw_docs: List[Dict]):
-        logging.info(f"Worker parsing {len(raw_docs)} documents")
+        logger.info(f"Worker parsing {len(raw_docs)} documents")
 
         parsed_docs = []
         total_fed = 0
@@ -197,7 +203,7 @@ class BookstackDataSource(BaseDataSource):
             logging.info(f"Worker fed {total_fed} documents")
 
     def _list_book_pages(self, book: Dict) -> List[Dict]:
-        logging.info(f"Getting documents from book {book['name']} ({book['id']})")
+        logger.info(f"Getting documents from book {book['name']} ({book['id']})")
         return self._book_stack.get_all_pages_from_book(book)
 
 

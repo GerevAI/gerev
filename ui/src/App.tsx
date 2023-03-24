@@ -444,10 +444,14 @@ export default class App extends React.Component <{}, AppState>{
               isNoResults: response.data.length === 0
             });
             addToSearchHistory(this.state.query);
+
+            if(response.data.length === 0) {
+              toast.warn("No results found");
+            }
           }
         );
     } catch (error) {
-      console.error(error);
+      toast.error("Error searching: " + error.response.data, { autoClose: 10000 });
     }
   };
   

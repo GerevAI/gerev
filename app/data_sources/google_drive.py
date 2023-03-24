@@ -23,6 +23,9 @@ from parsers.pptx import pptx_to_text
 from parsers.docx import docx_to_html
 
 
+logger = logging.getLogger(__name__)
+
+
 class GoogleDriveConfig(BaseModel):
     json_str: str
 
