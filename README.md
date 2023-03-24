@@ -32,9 +32,9 @@ Coming Soon...
  - [x] Google Drive (Docs, .docx, .pptx)
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
+ - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
  - [ ] RocketChat (in PR :pray:)
  - [ ] Gitlab Issues (In PR :pray:)
- - [ ] Mattermost (In PR: :pray:)
  - [ ] Zendesk (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Microsoft Teams
