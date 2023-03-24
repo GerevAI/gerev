@@ -33,7 +33,7 @@ Coming Soon...
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
- - [ ] RocketChat (in PR :pray:)
+ - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
  - [ ] Gitlab Issues (In PR :pray:)
  - [ ] Zendesk (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
