@@ -59,22 +59,22 @@ app.include_router(search_router)
 app.include_router(data_source_router)
 
 
-@app.on_event("startup")
-@repeat_every(seconds=60)
-def check_for_new_documents():
-    with Session() as session:
-        data_sources: List[DataSource] = session.query(DataSource).all()
-        for data_source in data_sources:
-            # data source should be checked once every hour
-            if (datetime.now() - data_source.last_indexed_at).total_seconds() <= 60 * 60:
-                continue
-
-            logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
-            data_source_cls = get_class_by_data_source_name(data_source.type.name)
-            config = json.loads(data_source.config)
-            data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
-                                                   last_index_time=data_source.last_indexed_at)
-            data_source_instance.index()
+# @app.on_event("startup")
+# @repeat_every(seconds=60)
+# def check_for_new_documents():
+#     with Session() as session:
+#         data_sources: List[DataSource] = session.query(DataSource).all()
+#         for data_source in data_sources:
+#             # data source should be checked once every hour
+#             if (datetime.now() - data_source.last_indexed_at).total_seconds() <= 60 * 60:
+#                 continue
+#
+#             logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
+#             data_source_cls = get_class_by_data_source_name(data_source.type.name)
+#             config = json.loads(data_source.config)
+#             data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
+#                                                    last_index_time=data_source.last_indexed_at)
+#             data_source_instance.index()
 
 
 @app.on_event("startup")
