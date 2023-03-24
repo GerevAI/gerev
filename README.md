@@ -36,9 +36,9 @@ Coming Soon...
  - [ ] Jira
  
 :pray:  - by the community 
- 
 
-## Natural Langauge
+
+## Natural Language
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ---  
