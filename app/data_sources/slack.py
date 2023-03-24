@@ -78,7 +78,9 @@ class SlackDataSource(BaseDataSource):
         author = self._authors_cache.get(author_id, None)
         if author is None:
             author_info = self._slack.users_info(user=author_id)
-            author = SlackAuthor(name=author_info['user']['real_name'],
+            user = author_info['user']
+            name = user.get('real_name') or user.get('name') or user.get('profile', {}).get('display_name') or 'Unknown'
+            author = SlackAuthor(name=name,
                                  image_url=author_info['user']['profile']['image_72'])
             self._authors_cache[author_id] = author
 

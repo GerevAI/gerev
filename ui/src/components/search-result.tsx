@@ -1,12 +1,13 @@
 
 import React from 'react';
+import {Img} from 'react-image'
 
 import BlueFolder from '../assets/images/blue-folder.svg';
 import GoogleDoc from '../assets/images/google-doc.svg';
 import Docx from '../assets/images/docx.svg';
 import Pptx from '../assets/images/pptx.svg';
+import DefaultUserImage from '../assets/images/user.webp';
 import { DataSourceType } from '../data-source';
-
 
 export interface TextPart {
     content: string
@@ -71,7 +72,9 @@ export const SearchResult = (props: SearchResultProps) => {
                             {props.resultDetails.location} ·&thinsp;
                         </span>
                         <span className="flex flex-row items-center">
-                            <img alt="author" className="inline-block ml-2 mr-2 h-4 rounded-xl" src={props.resultDetails.author_image_data ? props.resultDetails.author_image_data : props.resultDetails.author_image_url}></img>
+                            
+                            <Img alt="author" className="inline-block ml-2 mr-2 h-4 rounded-xl" 
+                                src={[props.resultDetails.author_image_url, props.resultDetails.author_image_data, DefaultUserImage]}></Img>
                             <span className='capitalize'>{props.resultDetails.author} ·</span>
                         </span>
                         <span>
@@ -154,7 +157,7 @@ function getBigIcon(props: SearchResultProps) {
     if (onTopImage !== "") {
         return (
             <div className="mt-2 mr-[10px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)]">
-                <img height={"45px"} width={"45px"} className={containingClasses} alt="file-type" src={containingImage}></img>
+                <Img height={"45px"} width={"45px"} className={containingClasses} alt="file-type" src={[containingImage, DefaultUserImage]}/>
                 <img alt="file-type" className="company-logo rounded-full p-[3px] h-[24px] w-[24px] absolute -right-[5px] -bottom-[5px] bg-white" src={onTopImage}></img>
             </div>
         )

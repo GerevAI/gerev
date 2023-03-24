@@ -25,7 +25,6 @@ import {AiFillWarning} from "react-icons/ai";
 import { DataSourceType } from "./data-source";
 
 export interface AppState {
-  uuid: string
   query: string
   results: SearchResultDetails[]
   searchDuration: number
@@ -81,7 +80,6 @@ export default class App extends React.Component <{}, AppState>{
   constructor() {
     super({});
     this.state = {
-      uuid: "",
       query: "",
       results: [],
       dataSourceTypes: [],
@@ -270,7 +268,7 @@ export default class App extends React.Component <{}, AppState>{
         this.setState({isPreparingIndexing: false})
         toast.success("Indexing finished.", {autoClose: 2000});
       }
-    }, 30000);
+    }, 1000 * 120);
   }
 
   render() {
@@ -433,7 +431,11 @@ export default class App extends React.Component <{}, AppState>{
         api.get<SearchResultDetails[]>("/search", {
           params: {
             query: this.state.query
-          }}
+          },
+          headers: {
+            uuid: localStorage.getItem('uuid')
+          }
+        }
         ).then(
           response => {
             let end = new Date().getTime();
@@ -442,10 +444,14 @@ export default class App extends React.Component <{}, AppState>{
               isNoResults: response.data.length === 0
             });
             addToSearchHistory(this.state.query);
+
+            if(response.data.length === 0) {
+              toast.warn("No results found");
+            }
           }
         );
     } catch (error) {
-      console.error(error);
+      toast.error("Error searching: " + error.response.data, { autoClose: 10000 });
     }
   };
   
