@@ -43,9 +43,9 @@ class RocketchatDataSource(BaseDataSource):
     @staticmethod
     def get_config_fields() -> List[ConfigField]:
         return [
-            ConfigField(label="Rockat.Chat instance URL", name="url"),
-            ConfigField(label="User Token ID", name="token_id", type=HTMLInputType.PASSWORD),
-            ConfigField(label="User Token Secret", name="token_secret", type=HTMLInputType.PASSWORD)
+            ConfigField(label="Rockat.Chat instance URL (including https://)", name="url"),
+            ConfigField(label="User ID", name="token_id", type=HTMLInputType.PASSWORD),
+            ConfigField(label="Token", name="token_secret", type=HTMLInputType.PASSWORD)
         ]
 
     @classmethod
