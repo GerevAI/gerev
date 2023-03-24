@@ -5,6 +5,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.basic_document import BasicDocument, DocumentType
+from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from indexing_queue import IndexingQueue
 import re
 import json
@@ -19,30 +20,8 @@ from schemas import DataSource
 #import http.client as http_client
 #http_client.HTTPConnection.debuglevel = 1
 
-class HTMLInputType(Enum):
-    TEXT = "text"
-    TEXTAREA = "textarea"
-    PASSWORD = "password"
 
-
-class ConfigField(BaseModel):
-    name: str
-    input_type: HTMLInputType = HTMLInputType.TEXT
-    label: Optional[str] = None
-    placeholder: Optional[str] = None
-
-    def __init__(self, **data):
-        name = data.get("name")
-        label = data.get("label") or name.title()
-        data["label"] = label
-        data["placeholder"] = data.get("placeholder") or label
-        super().__init__(**data)
-
-    class Config:
-        use_enum_values = True
-
-
-class ZendeskDataSource(ABC):
+class ZendeskDataSource(BaseDataSource):
 
     cached_users={}
     cached_sections={}
@@ -178,15 +157,3 @@ class ZendeskDataSource(ABC):
             last_index_time = datetime(2012, 1, 1)
         self._last_index_time = last_index_time
 
-    def _set_last_index_time(self) -> None:
-        with Session() as session:
-            data_source: DataSource = session.query(DataSource).filter_by(id=self._data_source_id).first()
-            data_source.last_indexed_at = datetime.now()
-            session.commit()
-
-    def index(self) -> None:
-        try:
-            self._set_last_index_time()
-            self._feed_new_documents()
-        except Exception as e:
-            logging.exception("Error while indexing data source")
