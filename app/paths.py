@@ -1,13 +1,9 @@
 from pathlib import Path
 import os
 
-# @@@
-try:
-    IS_IN_DOCKER = os.geteuid() == 0
-    STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
-except:
-    IS_IN_DOCKER = False
-    STORAGE_PATH = Path('D:/git_projects/.gerve/storage')
+IS_IN_DOCKER = os.geteuid() == 0
+
+STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
 
 
 if not STORAGE_PATH.exists():
