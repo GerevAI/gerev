@@ -1,3 +1,7 @@
+# **New!** 🎉 ChatGPT plugin support!
+![ChatGPT Integration](./images/integ.jpeg)
+**Add gerev as a plugin to ChatGPT, Query & ask questions about you're entire organization.**
+
 ![first image](./images/api.gif)
 **Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
