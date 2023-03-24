@@ -155,6 +155,10 @@ def _assign_answer_sentence(candidate: Candidate, answer: str):
 def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List[Candidate]:
     contexts = [candidate.content for candidate in candidates]
     answers = qa_model(question=[query] * len(contexts), context=contexts)
+
+    if type(answers) == dict:
+        answers = [answers]
+
     for candidate, answer in zip(candidates, answers):
         _assign_answer_sentence(candidate, answer['answer'])
 

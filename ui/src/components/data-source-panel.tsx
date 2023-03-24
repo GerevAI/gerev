@@ -202,7 +202,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                        <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
                                        <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Copy the Access Token"}</span>
-                                       <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">For more info</a></span>
+                                       <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">Click for more info</a></span>
                                  </span>
                               )
                               }
