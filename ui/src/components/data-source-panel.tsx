@@ -14,6 +14,7 @@ import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
 import { ConfigField, DataSourceType } from "../data-source";
+import { colors } from "react-select/dist/declarations/src/theme";
 
 
 export interface SelectOption {
@@ -197,11 +198,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
                               this.state.selectedDataSource.value === 'mattermost' && (
-                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                 <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
                                        <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Copy the Access Token"}</span>
-                                    </span>
+                                       <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">For more info</a></span>
+                                 </span>
                               )
                               }
                               {
