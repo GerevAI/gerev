@@ -1,8 +1,6 @@
 import logging
-from abc import abstractmethod, ABC
 from datetime import datetime
-from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List
 from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
@@ -13,9 +11,6 @@ import json
 import base64
 import requests
 from parsers.html import html_to_text
-
-from db_engine import Session
-from schemas import DataSource
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +43,8 @@ class ZendeskDataSource(BaseDataSource):
         headers = {'Authorization': 'Basic {}'.format(auth.decode("utf-8"))}
         response=requests.get('{}/api/v2/help_center/en-us/articles'.format(config['baseurl']), headers=headers)
         if response.status_code != 200:
+            logger.error("Failed to call Zendesk API. Responsecode: {}".format(response.status_code))
+            logger.error(response.content)
             raise InvalidDataSourceConfig
 
     @staticmethod
@@ -104,9 +101,11 @@ class ZendeskDataSource(BaseDataSource):
             response=self.zendesk_get('/api/v2/help_center/en-us/articles?page={}'.format(current_page))
             articles=json.loads(response.content)
 
+            logger.info("Found {} articles.".format(articles['count']))
+
             parsed_docs = []
             for article in articles['articles']:
-                print(article['title'])
+                logger.info("Indexing {}".format(article['title']))
                 last_modified = datetime.strptime(article['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
                 if last_modified < self._last_index_time:
                     continue
@@ -137,7 +136,7 @@ class ZendeskDataSource(BaseDataSource):
             IndexingQueue.get().feed(docs=parsed_docs)
             parsed_docs = []
             
-            print("page: {}, pagecount: {}, current_page: {}".format(articles['page'], articles['page_count'], current_page))
+            logger.debug("page: {}, pagecount: {}, current_page: {}".format(articles['page'], articles['page_count'], current_page))
             if articles['page'] == articles['page_count']:
                 break
 
