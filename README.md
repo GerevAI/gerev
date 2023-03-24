@@ -3,7 +3,7 @@
 
 ![ChatGPT Integration](./images/integ.jpeg)
 
-# Search engine for your organizations!
+# Search engine for your organization!
 ![first image](./images/api.gif)
 **Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
