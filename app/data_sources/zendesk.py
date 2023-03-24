@@ -101,11 +101,11 @@ class ZendeskDataSource(BaseDataSource):
             response=self.zendesk_get('/api/v2/help_center/en-us/articles?page={}'.format(current_page))
             articles=json.loads(response.content)
 
-            logger.info("Found {} articles.".format(articles['count']))
+            if current_page == 1:
+                logger.info("Found {} articles.".format(articles['count']))
 
             parsed_docs = []
             for article in articles['articles']:
-                logger.info("Indexing {}".format(article['title']))
                 last_modified = datetime.strptime(article['updated_at'], "%Y-%m-%dT%H:%M:%SZ")
                 if last_modified < self._last_index_time:
                     continue
@@ -134,12 +134,12 @@ class ZendeskDataSource(BaseDataSource):
                 
             total_fed += len(parsed_docs)
             IndexingQueue.get().feed(docs=parsed_docs)
+            logger.info("Processed page {}/{}. Sent {} for indexing".format(articles['page'],articles['page_count'],len(parsed_docs)))
             parsed_docs = []
             
-            logger.debug("page: {}, pagecount: {}, current_page: {}".format(articles['page'], articles['page_count'], current_page))
             if articles['page'] == articles['page_count']:
                 break
-
+            
             current_page+=1    
 
         
