@@ -7,18 +7,17 @@ from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from indexing_queue import IndexingQueue
+
 import re
 import json
 import base64
 import requests
 from parsers.html import html_to_text
-from pydantic import BaseModel
 
 from db_engine import Session
 from schemas import DataSource
 
-#import http.client as http_client
-#http_client.HTTPConnection.debuglevel = 1
+logger = logging.getLogger(__name__)
 
 
 class ZendeskDataSource(BaseDataSource):
@@ -36,7 +35,7 @@ class ZendeskDataSource(BaseDataSource):
         return [
             ConfigField(label="BaseUrl", name="baseurl", type="text", placeholder="https://example.zendesk.com"),
             ConfigField(label="Email", name="email", type="text", placeholder="example@example.com"),
-            ConfigField(label="Token", name="token", type="password", placeholder="paste-your-token-here")
+            ConfigField(label="Token", name="token", type="password", placeholder="paste-your-token-here",input_type=HTMLInputType.PASSWORD)
         ]
     
 
@@ -45,8 +44,6 @@ class ZendeskDataSource(BaseDataSource):
         """
         Validates the config and raises an exception if it's invalid.
         """
-        print("Validating zendesk config")
-        print(json.dumps(config))
         auth=base64.b64encode(bytes('{}/token:{}'.format(config['email'], config['token']), 'utf-8')) # bytes
         headers = {'Authorization': 'Basic {}'.format(auth.decode("utf-8"))}
         response=requests.get('{}/api/v2/help_center/en-us/articles'.format(config['baseurl']), headers=headers)
@@ -75,7 +72,7 @@ class ZendeskDataSource(BaseDataSource):
     
     def zendesk_get_user(self, userid):
         if not userid in self.cached_users:
-            user=requests.get(self._config['baseurl']+'/api/v2/users/{}'.format(userid), headers=self.auth_headers())
+            user=self.zendesk_get('/api/v2/users/{}'.format(userid))
             parsedUser=json.loads(user.content)
             self.cached_users[userid] = parsedUser['user']
         
@@ -83,8 +80,7 @@ class ZendeskDataSource(BaseDataSource):
     
     def zendesk_get_section(self, sectionid):
         if not sectionid in self.cached_sections:
-            url=self._config['baseurl']+'/api/v2/help_center/sections/{}'.format(sectionid)
-            section=requests.get(url, headers=self.auth_headers())
+            section=self.zendesk_get('/api/v2/help_center/sections/{}'.format(sectionid))
             parsedSection=json.loads(section.content)
             self.cached_sections[sectionid] = parsedSection['section']
         
@@ -92,7 +88,7 @@ class ZendeskDataSource(BaseDataSource):
 
     def zendesk_get_category(self, categoryid):
         if not categoryid in self.cached_categories:
-            category=requests.get(self._config['baseurl']+'/api/v2/help_center/categories/{}'.format(categoryid), headers=self.auth_headers())
+            category=self.zendesk_get('/api/v2/help_center/categories/{}'.format(categoryid))
             parsedCategory=json.loads(category.content)
             self.cached_categories[categoryid] = parsedCategory['category']
         
