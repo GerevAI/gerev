@@ -285,6 +285,18 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                  )
                               }
+
+                              {this.state.selectedDataSource.value === 'rocketchat' && (
+                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                    <span>1. {'In Rocket.Chat, click your profile picture -> My Account.'}</span>
+                                    <span>2. {'Click Personal Access Tokens.'}</span>
+                                    <span>3. {'Check "Ignore Two Factor Authentication".'}</span>
+                                    <span>4. {'Give the token a name and press "Add".'}</span>
+                                    <span>5. {'Type in your password, if needed.'}</span>
+                                    <span>6. {'Copy the token and user id here.'}</span>
+                                    <p>Note that the url must begin with either http:// or https://</p>
+                                 </span>
+                              )}
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
