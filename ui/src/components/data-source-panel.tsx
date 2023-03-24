@@ -8,7 +8,7 @@ import LeftPane from '../assets/images/left-pane-instructions.png';
 import { BsFillPencilFill } from 'react-icons/bs';
 import { AiFillCheckCircle } from "react-icons/ai";
 import { BiLinkExternal } from 'react-icons/bi';
-import { IoMdClose } from "react-icons/io";
+import { IoMdClose, IoMdCloseCircle } from "react-icons/io";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { RxCopy } from 'react-icons/rx';
 import { ClipLoader } from "react-spinners";
@@ -123,10 +123,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                !this.state.isAdding && <h1 className="mt-4 relative self-center text-white block text-4xl mb-8 font-poppins">Data Source Panel</h1>
             }
 
-            {/* X in top right */}
+            {/* X and Edit in top right */}
             <div className="absolute flex flex-col items-center right-4 top-3 text-2xl text-white gap-4">
                <IoMdClose onClick={this.props.onClose} className='hover:text-[#9875d4] hover:cursor-pointer' />
-               <BsFillPencilFill className='text-base hover:text-[#9875d4] hover:cursor-pointer' />
+               {this.state.isAdding === false && <BsFillPencilFill key="pencil" onClick={swithcMode} className='text-base hover:text-[#9875d4] hover:cursor-pointer' />}
             </div>
             {
                !this.state.isAdding && (
@@ -142,7 +142,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
                                  <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
-                                 <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>
+                                 {addOrRemoveIcon}
+                                 
                               </div>
                            )
                         })
@@ -371,4 +372,17 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    onSelectChange = (event) => {
       this.setState({ selectedDataSource: event })
    }
+}
+
+let editMode = false;
+let addOrRemoveIcon = <IoMdClose className="ml-6 text-[#9875d4] text-2xl"> </IoMdClose>;
+function swithcMode() {
+   if (editMode === true) {
+      editMode = false;
+      addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>;
+   } else {
+      editMode = true;
+      addOrRemoveIcon = <IoMdCloseCircle className="ml-6 text-[#df335e] text-2xl" />;
+   }
+   console.log(editMode);
 }
