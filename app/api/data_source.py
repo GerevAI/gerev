@@ -5,8 +5,10 @@ from typing import List
 
 from fastapi import APIRouter, BackgroundTasks
 from pydantic import BaseModel
+from starlette.responses import Response
 
 from data_source_api.base_data_source import ConfigField
+from data_source_api.exception import KnownException
 from data_source_api.utils import get_class_by_data_source_name
 from db_engine import Session
 from schemas import DataSourceType, DataSource
@@ -65,7 +67,10 @@ async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks)
             return {"error": "Data source type does not exist"}
 
         data_source_class = get_class_by_data_source_name(dto.name)
-        data_source_class.validate_config(dto.config)
+        try:
+            data_source_class.validate_config(dto.config)
+        except KnownException as e:
+            return Response(e.message, status_code=501)
 
         config_str = json.dumps(dto.config)
         ds = DataSource(type_id=data_source_type.id, config=config_str, created_at=datetime.now())

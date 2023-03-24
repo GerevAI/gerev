@@ -14,6 +14,7 @@ import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
 import { ConfigField, DataSourceType } from "../data-source";
+import { colors } from "react-select/dist/declarations/src/theme";
 
 
 export interface SelectOption {
@@ -21,15 +22,6 @@ export interface SelectOption {
    label: string;
    imageBase64: string
    configFields: ConfigField[]
-}
-
-export interface ConfluenceConfig {
-   url: string;
-   token: string;
-}
-
-export interface SlackConfig {
-   token: string;
 }
 
 export interface DataSourcePanelState {
@@ -49,7 +41,7 @@ export interface DataSourcePanelProps {
 const Option = props => (
    <components.Option {...props}>
       <div className="flex flex-row w-full">
-         <img alt="logo" className={"mr-2 h-[20px]"} src={props.image_base64}></img>
+         <img alt="logo" className={"mr-2 h-[20px]"} src={props.data.imageBase64}></img>
          {props.label}
       </div>
    </components.Option>
@@ -99,7 +91,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             configFields: data_source.config_fields
          }}
       );
-      
+
       this.setState({
          selectOptions: options,
          selectedDataSource: options[0],
@@ -115,7 +107,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          return option.value === dataSource.name
       })
 
-      if (!selectedDataSource) { // shoudln't happen, typescript...
+      if (!selectedDataSource) { // shouldn't happen, typescript...
          return;
       }
 
@@ -148,21 +140,21 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         })
                         }
                         {
-                        Object.keys(this.props.dataSourceTypesDict).map((key) => {
-                           let dataSource = this.props.dataSourceTypesDict[key];
-                           if (!this.props.connectedDataSources.includes(dataSource.name)) {
-                              return (
-                                 <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                                    <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
-                                    {/* <h1 className="text-white">Add</h1> */}
-                                    <h1 className="text-gray-500">{dataSource.display_name}</h1>
-                                    <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
-                                 </div>
-                              )
-                           }
-                           return null;
+                           Object.keys(this.props.dataSourceTypesDict).map((key) => {
+                              let dataSource = this.props.dataSourceTypesDict[key];
+                              if (!this.props.connectedDataSources.includes(dataSource.name)) {
+                                 return (
+                                    <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                       <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
+                                       {/* <h1 className="text-white">Add</h1> */}
+                                       <h1 className="text-gray-500">{dataSource.display_name}</h1>
+                                       <IoAddCircleOutline className="ml-6 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
+                                    </div>
+                                 )
+                              }
+                              return null;
 
-                        })
+                           })
                         }
                      </div>
                   </div>)
@@ -172,7 +164,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
                         <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
-                        <Select className="w-40 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
+                        <Select className="w-60 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
                            options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
                               control: (baseStyles, state) => ({
@@ -205,11 +197,30 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
-                                 this.state.selectedDataSource.value === 'confluence' && (
+                              this.state.selectedDataSource.value === 'mattermost' && (
+                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
+                                       <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Copy the Access Token"}</span>
+                                       <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">Click for more info</a></span>
+                                 </span>
+                              )
+                              }
+                              {
+                              this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Confluene -> top-right profile picture -> Settings'}</span>
+                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                    </span>
+                              )
+                              }
+                              {
+                                 this.state.selectedDataSource.value === 'confluence_cloud' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Manage account'}</span>
+                                       <span>2. {'go security tab (at top) -> Create and manage API tokens -> Create API token'}</span>
+                                       <span>3. {"Name it, create and copy the token"}</span>
                                     </span>
                                  )
                               }
@@ -265,31 +276,41 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
+
+                              {
+                                 this.state.selectedDataSource.value === 'bookstack' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Bookstack -> top-right profile picture -> Edit profile'}</span>
+                                       <span>2. {'Scroll down to API tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Set 'Expiry Date' 01/01/2100, create, copy token id + token secret"}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
                               {/* for each field */}
                               {
-                              this.state.selectedDataSource.configFields.map((field, index) => {
-                                 if(field.input_type === 'text' || field.input_type === 'password') {
-                                    return (
-                                       <div className="flex flex-col mr-10">
-                                          <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                          <input value={field.value} onChange={(event) => {field.value = event.target.value }}
-                                          className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
-                                           placeholder={field.placeholder}></input>
-                                       </div>
-                                    )
-                                 } else if (field.input_type === 'textarea') {
-                                    return (
-                                       <div className="flex flex-col w-full">
-                                        <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                          <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
-                                            className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
-                                     </div>
-                                    )}
+                                 this.state.selectedDataSource.configFields.map((field, index) => {
+                                    if(field.input_type === 'text' || field.input_type === 'password') {
+                                       return (
+                                          <div className="flex flex-col mr-10 mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <input value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                                className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                                placeholder={field.placeholder}></input>
+                                          </div>
+                                       )
+                                    } else if (field.input_type === 'textarea') {
+                                       return (
+                                          <div className="flex flex-col w-full mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <textarea value={field.value} onChange={(event) => {field.value = event.target.value }}
+                                                className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                          </div>
+                                       )}
                                     return null;
-                              })
+                                 })
                               }
                               <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
                                   hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
@@ -330,7 +351,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.state.selectedDataSource.configFields.forEach(field => {
          config[field.name] = field.value;
       });
-      
+
       let payload = {
          name: this.state.selectedDataSource.value,
          config: config
@@ -338,10 +359,16 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAddingLoading: true });
       api.post(`/data-source/add`, payload).then(response => {
          toast.success("Data source added successfully, indexing...");
+
+         let selectedDataSource = this.state.selectedDataSource;
+         selectedDataSource.configFields.forEach(field => {
+            field.value = '';
+         });
+         this.setState({ selectedDataSource: selectedDataSource });
          this.props.onAdded(this.state.selectedDataSource.value);
          this.setState({isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0]});
       }).catch(error => {
-         toast.error("Error adding data source");
+         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
          this.setState({ isAddingLoading: false });
       });
    }

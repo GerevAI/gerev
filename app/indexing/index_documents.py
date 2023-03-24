@@ -11,11 +11,14 @@ from indexing.bm25_index import Bm25Index
 from db_engine import Session
 
 
+logger = logging.getLogger(__name__)
+
+
 class Indexer:
 
     @staticmethod
     def index_documents(documents: List[BasicDocument]):
-        logging.getLogger().info(f"Indexing {len(documents)} documents")
+        logger.info(f"Indexing {len(documents)} documents")
 
         with Session() as session:
             db_documents = []
@@ -50,16 +53,19 @@ class Indexer:
             paragraph_ids = [paragraph.id for paragraph in paragraphs]
             paragraph_contents = [Indexer._add_metadata_for_indexing(paragraph) for paragraph in paragraphs]
 
+        logger.info(f"Updating BM25 index...")
         Bm25Index.get().update()
 
         # Encode the paragraphs
         show_progress_bar = not IS_IN_DOCKER
+        logger.info(f"Encoding with bi-encoder...")
         embeddings = bi_encoder.encode(paragraph_contents, convert_to_tensor=True, show_progress_bar=show_progress_bar)
 
         # Add the embeddings to the index
+        logger.info(f"Updating Faiss index...")
         FaissIndex.get().update(paragraph_ids, embeddings)
 
-        logging.getLogger().info(f"Indexed {len(paragraphs)} paragraphs")
+        logger.info(f"Finished indexing {len(documents)} documents => {len(paragraphs)} paragraphs")
 
     @staticmethod
     def _split_into_paragraphs(text, minimum_length=256):

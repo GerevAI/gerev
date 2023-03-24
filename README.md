@@ -1,42 +1,55 @@
+# **New!** 🎉 ChatGPT plugin support!
+**Connect Gerev as a plugin to ChatGPT, Query & ask questions about you're entire organization.**
+
+![ChatGPT Integration](./images/integ.jpeg)
+
+# Search engine for your organization!
+![first image](./images/api.gif)
+**Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
+**Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
+
 ## Join Discord for early access code!
 
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-[Join here!](https://discord.gg/zZZrUBZd)
-# Gerev - Workplace search for Devs
+   [Join here!](https://discord.gg/aMRRcmhAdW)
+# Search focused on devs
+Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
 
-
-Tired of searching for that one document you know exists somewhere, but not sure exactly where?
-
-![first image](./images/Everything.png)
-
-## Listening?
-Gerev enables you to search your entire company from a single place.
-
-## Made for devs
-### Find docs
+## Made for devs 👨‍💻
+-  **For finding internal pages _fast_ ⚡️**
 ![second image](./images/product-example.png)
 
-### Find Code
-![third image](./images/CodeCard.png)
-
-### Troubleshoot Issues
+- **Troubleshoot Issues 🐛**
 ![fourth image](./images/sql-card.png)
+- **For finding code snippets and code examples 🧑‍💻**  
+Coming Soon...
+![third image](./images/CodeCard.png)
 
 ## Integrations
  - [x] Slack
  - [x] Confluence
- - [x] Google Drive
- - [ ] Gitlab Issues (In PR)
- - [ ] BookStack (In PR)
- - [ ] Notion (In Progress...)
+ - [x] Google Drive (Docs, .docx, .pptx)
+ - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
+ - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
+ - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
+ - [ ] RocketChat (in PR :pray:)
+ - [ ] Gitlab Issues (In PR :pray:)
+ - [ ] Zendesk (In PR :pray:)
+ - [ ] Notion (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
+ - [ ] Jira
  
-### Natural Langauge
+:pray:  - by the community 
+
+
+## Natural Language
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
-## Installation
+---  
+
+# Getting Started
 1. Install *Nvidia for docker* 
 2. Run docker
  
@@ -66,19 +79,15 @@ docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 
 ### CPU only (no GPU)
 ```
-sudo docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
-## Run for development 
-Run the backend:
-```bash
-cd app
-pip install -r requirements.txt
-uvicorn main:app
-```
+## Run from source 
+See CONTRIBUTING.md
+  
+  
+- **gerev is also popular with some big names. 😉**  
 
-Run the UI:
-```bash
-npm install
-npm start
-```
+---  
+
+![first image](./images/bill.png)

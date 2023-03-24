@@ -1,6 +1,7 @@
 import base64
 import datetime
 import json
+import logging
 
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
@@ -20,13 +21,14 @@ from indexing.faiss_index import FaissIndex
 from data_source_api.basic_document import DocumentType, FileType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
+from util import threaded_method
 
 BM_25_CANDIDATES = 100 if torch.cuda.is_available() else 20
 BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
 SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
-
+logger = logging.getLogger(__name__)
 
 @dataclass
 class TextPart:
@@ -73,6 +75,7 @@ class Candidate:
             url += urllib.parse.quote(text).replace('-', '%2D')
         return url
 
+    @threaded_method
     def to_search_result(self) -> SearchResult:
         answer = TextPart(self.content[self.answer_start: self.answer_end], True)
         content = [answer]
@@ -84,6 +87,7 @@ class Candidate:
 
         data_uri = None
         if self.document.data_source.type.name == 'confluence':
+            logger.info(f"Fetching author image for {self.document.author}")
             url = self.document.author_image_url
             if "anonymous.svg" in url:
                 url = url.replace(".svg", ".png")
@@ -151,6 +155,10 @@ def _assign_answer_sentence(candidate: Candidate, answer: str):
 def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List[Candidate]:
     contexts = [candidate.content for candidate in candidates]
     answers = qa_model(question=[query] * len(contexts), context=contexts)
+
+    if type(answers) == dict:
+        answers = [answers]
+
     for candidate, answer in zip(candidates, answers):
         _assign_answer_sentence(candidate, answer['answer'])
 
@@ -177,12 +185,14 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
 
         # calculate small cross-encoder scores to leave just a few candidates
+        logger.info(f'Found {len(candidates)} candidates, filtering...')
         candidates = _cross_encode(cross_encoder_small, query, candidates, BI_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_titles=True)
         candidates = _find_answers_in_candidates(candidates, query)
-
         candidates = _cross_encode(cross_encoder_large, query, candidates, top_k, use_answer=True, use_titles=True)
+
+        logger.info(f'Parsing {len(candidates)} candidates to search results...')
 
         with ThreadPoolExecutor(max_workers=10) as executor:
             result = list(executor.map(lambda c: c.to_search_result(), candidates))
