@@ -1,5 +1,5 @@
 # **New!** 🎉 ChatGPT plugin support!
-**Connect Gerev as a plugin to ChatGPT, Query & ask questions about you're entire organization.**
+**Connect Gerev as a plugin to ChatGPT, Query & ask questions about your entire organization.**
 
 ![ChatGPT Integration](./images/integ.jpeg)
 
