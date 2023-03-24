@@ -86,7 +86,7 @@ class MattermostDataSource(BaseDataSource):
     def _list_posts_in_channel(self, channel_id: str, page: int) -> Dict:
         endpoint = f"/channels/{channel_id}/posts"
         params = {
-            "since": int(self._last_index_time.timestamp()),
+            "since": int(self._last_index_time.timestamp()) * 1000,
             "page": page
         }
         
