@@ -379,11 +379,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    removeDataSource = () => {
       let connected = this.props.connectedDataSources;
-      console.log(connected);
-      console.log(this.state);
       let index = connected.indexOf(this.state.selectedDataSource.value);
-      let newData = connected.splice(index, 1);
-      // this.setState({connectedDataSources:newData});
+      connected.splice(index, 1);
    }
    
    
