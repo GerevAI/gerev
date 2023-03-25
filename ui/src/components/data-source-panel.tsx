@@ -29,6 +29,7 @@ export interface DataSourcePanelState {
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
+   editMode: boolean
 }
 
 export interface DataSourcePanelProps {
@@ -69,6 +70,9 @@ const slackManifest = {
    }
 }
 
+// let editMode = false;
+let addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
+
 export default class DataSourcePanel extends React.Component<DataSourcePanelProps, DataSourcePanelState> {
 
    constructor(props) {
@@ -77,7 +81,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          selectOptions: [],
          isAdding: false,
          isAddingLoading: false,
-         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] }
+         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] },
+         editMode: false
       }
    }
 
@@ -126,7 +131,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             {/* X and Edit in top right */}
             <div className="absolute flex flex-col items-center right-4 top-3 text-2xl text-white gap-4">
                <IoMdClose onClick={this.props.onClose} className='hover:text-[#9875d4] hover:cursor-pointer' />
-               {this.state.isAdding === false && <BsFillPencilFill key="pencil" onClick={swithcMode} className='text-base hover:text-[#9875d4] hover:cursor-pointer' />}
+               {this.state.isAdding === false && <BsFillPencilFill key="pencil" onClick={this.swithcMode} className='text-base hover:text-[#9875d4] hover:cursor-pointer' />}
             </div>
             {
                !this.state.isAdding && (
@@ -172,7 +177,6 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             }
             {
                this.state.isAdding && (
-                  // walks you through the proccess of adding a data source
                   <div className="flex flex-col w-[100%]">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
                         <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
@@ -372,17 +376,22 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    onSelectChange = (event) => {
       this.setState({ selectedDataSource: event })
    }
+
+   removeDataSource = () => {
+      let connected = this.props.connectedDataSources;
+      console.log(connected);
+   }
+   
+   
+   swithcMode = () => {
+      if (this.state.editMode === true) {
+         this.setState({editMode: false})
+         addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
+      } else {
+         this.setState({editMode: true})
+         addOrRemoveIcon = <IoMdCloseCircle className="ml-6 text-[#df335e] text-2xl" />;
+      }
+      console.log(this.state.editMode);
+   }
 }
 
-let editMode = false;
-let addOrRemoveIcon = <IoMdClose className="ml-6 text-[#9875d4] text-2xl"> </IoMdClose>;
-function swithcMode() {
-   if (editMode === true) {
-      editMode = false;
-      addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl"> </AiFillCheckCircle>;
-   } else {
-      editMode = true;
-      addOrRemoveIcon = <IoMdCloseCircle className="ml-6 text-[#df335e] text-2xl" />;
-   }
-   console.log(editMode);
-}
