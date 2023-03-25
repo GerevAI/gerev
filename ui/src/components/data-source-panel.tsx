@@ -380,6 +380,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    removeDataSource = () => {
       let connected = this.props.connectedDataSources;
       console.log(connected);
+      console.log(this.state);
+      let index = connected.indexOf(this.state.selectedDataSource.value);
+      let newData = connected.splice(index, 1);
+      // this.setState({connectedDataSources:newData});
    }
    
    
@@ -389,7 +393,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
       } else {
          this.setState({editMode: true})
-         addOrRemoveIcon = <IoMdCloseCircle className="ml-6 text-[#df335e] text-2xl" />;
+         addOrRemoveIcon = <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 text-[#df335e] text-2xl" />;
       }
       console.log(this.state.editMode);
    }
