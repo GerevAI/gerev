@@ -1,24 +1,22 @@
-import base64
 import datetime
 import json
 import logging
-
+import re
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from io import BytesIO
 from typing import List
 from typing import Optional
-import re
+
 import nltk
-import requests
 import torch
-import urllib.parse
 from sentence_transformers import CrossEncoder
 
+from data_source_api.basic_document import DocumentType, FileType
+from data_source_api.utils import get_confluence_user_image
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from data_source_api.basic_document import DocumentType, FileType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
 from util import threaded_method
@@ -29,6 +27,7 @@ SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class TextPart:
@@ -87,16 +86,8 @@ class Candidate:
 
         data_uri = None
         if self.document.data_source.type.name == 'confluence':
-            logger.info(f"Fetching author image for {self.document.author}")
-            url = self.document.author_image_url
-            if "anonymous.svg" in url:
-                url = url.replace(".svg", ".png")
-
             config = json.loads(self.document.data_source.config)
-            response = requests.get(url=url, headers={'Accept': 'application/json',
-                                                      "Authorization": f"Bearer {config['token']}"})
-            image_bytes = BytesIO(response.content)
-            data_uri = f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
+            data_uri = get_confluence_user_image(self.document.author_image_url, config['token'])
 
         return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
@@ -123,7 +114,7 @@ def _cross_encode(
         contents = [candidate.content[candidate.answer_start:candidate.answer_end] for candidate in candidates]
     else:
         contents = [candidate.content for candidate in candidates]
-    
+
     if use_titles:
         contents = [
             content + ' [SEP] ' + candidate.document.title
