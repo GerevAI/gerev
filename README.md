@@ -1,20 +1,18 @@
-# **New!** 🎉 ChatGPT plugin support!
-**Connect Gerev as a plugin to ChatGPT, Query & ask questions about your entire organization.**
+## Join Discord for early access code!
 
+![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
+
+   [Join here!](https://discord.gg/NKhTX7JZAF)
+  
+# **New!** 🎉 ChatGPT plugin support!
+**Connect Gerev as a plugin to ChatGPT -> ask questions about your entire organization.**  
+See more awesome plugins [awesome-chatgpt-plugins](https://github.com/GerevAI/awesome-chatgpt-plugins)
 ![ChatGPT Integration](./images/integ.jpeg)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
 **Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
-
-## Join Discord for early access code!
-
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
-
-   [Join here!](https://discord.gg/NKhTX7JZAF)
-# Search focused on devs
-Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
 
 ## Made for devs 👨‍💻
 -  **For finding internal pages _fast_ ⚡️**
