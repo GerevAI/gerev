@@ -20,7 +20,7 @@ from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 from paths import UI_PATH
 from schemas import DataSource
 from schemas.data_source_type import DataSourceType
@@ -138,7 +138,7 @@ async def status():
         docs_left_to_index: int
 
     return Status(docs_in_indexing=BackgroundIndexer.get_currently_indexing(),
-                  docs_left_to_index=IndexingQueue.get().get_how_many_left())
+                  docs_left_to_index=IndexQueue.get_instance().qsize())
 
 
 @app.post("/clear-index")

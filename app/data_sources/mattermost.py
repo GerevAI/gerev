@@ -11,7 +11,7 @@ from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLIn
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +150,7 @@ class MattermostDataSource(BaseDataSource):
                         parsed_posts.append(last_message)
                         if len(parsed_posts) >= MattermostDataSource.FEED_BATCH_SIZE:
                             total_fed += len(parsed_posts)
-                            IndexingQueue.get().feed(docs=parsed_posts)
+                            IndexQueue.get_instance().put(docs=parsed_posts)
                             parsed_posts = []
 
                 author_image_url = f"{self._get_mattermost_url()}/api/v4/users/{post['user_id']}/image?_=0"
@@ -175,7 +175,7 @@ class MattermostDataSource(BaseDataSource):
                 break
             page += 1
 
-        IndexingQueue.get().feed(docs=parsed_posts)
+        IndexQueue.get_instance().put(docs=parsed_posts)
         total_fed += len(parsed_posts)
 
         if len(parsed_posts) > 0:

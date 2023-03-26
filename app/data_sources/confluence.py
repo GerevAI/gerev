@@ -8,7 +8,7 @@ from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
 
@@ -115,10 +115,10 @@ class ConfluenceDataSource(BaseDataSource):
                                              type=DocumentType.DOCUMENT))
             if len(parsed_docs) >= 50:
                 total_fed += len(parsed_docs)
-                IndexingQueue.get().feed(docs=parsed_docs)
+                IndexQueue.get_instance().put(docs=parsed_docs)
                 parsed_docs = []
 
-        IndexingQueue.get().feed(docs=parsed_docs)
+        IndexQueue.get_instance().put(docs=parsed_docs)
         total_fed += len(parsed_docs)
         if total_fed > 0:
             logging.info(f'Worker fed {total_fed} documents')
