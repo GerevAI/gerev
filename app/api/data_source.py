@@ -54,6 +54,13 @@ async def list_connected_data_sources() -> List[str]:
         return [data_source.type.name for data_source in data_sources]
 
 
+@router.get("/list")
+async def list_connected_data_sources() -> List[dict]:
+    with Session() as session:
+        data_sources = session.query(DataSource).all()
+        return [{'id': data_source.id} for data_source in data_sources]
+
+
 class AddDataSource(BaseModel):
     name: str
     config: dict
@@ -86,3 +93,15 @@ async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks)
         background_tasks.add_task(data_source.index)
 
         return {"success": "Data source added successfully"}
+
+
+@router.post("/delete")
+async def delete_integration(data_source_id: int):
+    with Session() as session:
+        data_source: DataSource = session.query(DataSource).filter_by(id=data_source_id).first()
+        if data_source is None:
+            return {"error": "Data source does not exist"}
+
+        session.delete(data_source)
+        session.commit()
+        return {"success": "Data source deleted successfully"}

@@ -89,7 +89,7 @@ class BaseDataSource(ABC):
 
     def index(self) -> None:
         try:
-            self._set_last_index_time()
             self._feed_new_documents()
+            self._set_last_index_time()
         except Exception as e:
             logging.exception("Error while indexing data source")

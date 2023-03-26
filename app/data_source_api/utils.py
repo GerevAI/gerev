@@ -29,15 +29,26 @@ def get_class_by_data_source_name(data_source_name: str):
                              f"make sure you named the class correctly (it should be <Platform>DataSource)")
 
 
-def parse_with_workers(method_name: callable, items: list, **kwargs):
+def _wrap_with_try_except(func):
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            logger.exception("Failed to parse data source", exc_info=e)
+            raise e
+
+    return wrapper
+
+
+def parse_with_workers(method: callable, items: list, **kwargs):
     workers = 10  # should be a config value
 
-    logger.info(f'Parsing {len(items)} documents (with {workers} workers)...')
+    logger.info(f'Parsing {len(items)} documents using {method} (with {workers} workers)...')
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
         futures = []
         for i in range(workers):
-            futures.append(executor.submit(method_name, items[i::workers], **kwargs))
+            futures.append(executor.submit(_wrap_with_try_except(method), items[i::workers], **kwargs))
         concurrent.futures.wait(futures)
         for w in futures:
             e = w.exception()

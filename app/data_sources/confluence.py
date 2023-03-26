@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import List, Dict
 
 from atlassian import Confluence
+from atlassian.errors import ApiError
+from requests import HTTPError
 
 from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
@@ -93,7 +95,13 @@ class ConfluenceDataSource(BaseDataSource):
                 continue
 
             doc_id = raw_page['id']
-            fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
+            try:
+                fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
+            except HTTPError as e:
+                logging.warning(f'Confluence returned status code {e.response.status_code} for document {doc_id} ({raw_page["title"]}). skipping.')
+                continue
+            except ApiError as e:
+                logging.warning(f'unable to access document {doc_id} ({raw_page["title"]}). reason: "{e.reason}". skipping.')
 
             author = fetched_raw_page['history']['createdBy']['displayName']
             author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
