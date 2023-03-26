@@ -3,11 +3,14 @@ import pickle
 import nltk
 import numpy as np
 from rank_bm25 import BM25Okapi
+from sqlalchemy import Connection
 from typing import List
 
 from db_engine import Session
 from schemas import Paragraph
 from paths import BM25_INDEX_PATH
+
+
 
 
 def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
@@ -45,13 +48,25 @@ class Bm25Index:
         self.index = None
         self.id_map = []
 
-    def update(self):
-        with Session() as session:
-            all_paragraphs = session.query(Paragraph).all()
-            corpus = [nltk.word_tokenize(_add_metadata_for_indexing(paragraph)) for paragraph in all_paragraphs]
-            id_map = [paragraph.id for paragraph in all_paragraphs]
-            self.index = BM25Okapi(corpus)
-            self.id_map = id_map
+    def _update(self, session):
+        all_paragraphs = session.query(Paragraph).all()
+        if len(all_paragraphs) == 0:
+            self.index = None
+            self.id_map = []
+            return
+
+        corpus = [nltk.word_tokenize(_add_metadata_for_indexing(paragraph)) for paragraph in all_paragraphs]
+        id_map = [paragraph.id for paragraph in all_paragraphs]
+        self.index = BM25Okapi(corpus)
+        self.id_map = id_map
+
+    def update(self, session = None):
+        if session is None:
+            with Session() as session:
+                self._update(session)
+        else:
+            self._update(session)
+        
         self._save()
 
     def search(self, query: str, top_k: int) -> List[int]:

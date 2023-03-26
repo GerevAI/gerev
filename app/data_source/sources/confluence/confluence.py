@@ -4,7 +4,8 @@ from typing import List, Dict
 
 from atlassian import Confluence
 from pydantic import BaseModel
-
+from atlassian.errors import ApiError
+from requests import HTTPError
 from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source.basic_document import BasicDocument, DocumentType
 from data_source.exception import InvalidDataSourceConfig
@@ -103,7 +104,16 @@ class ConfluenceDataSource(BaseDataSource):
             return
 
         doc_id = raw_doc['id']
-        fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
+        try:
+            fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
+        except HTTPError as e:
+            logging.warning(
+                f'Confluence returned status code {e.response.status_code} for document {doc_id} ({raw_doc["title"]}). skipping.')
+            return
+        except ApiError as e:
+            logging.warning(
+                f'unable to access document {doc_id} ({raw_doc["title"]}). reason: "{e.reason}". skipping.')
+            return
 
         author = fetched_raw_page['history']['createdBy']['displayName']
         author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']

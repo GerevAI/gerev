@@ -51,6 +51,13 @@ async def list_connected_data_sources() -> List[str]:
         return [data_source.type.name for data_source in data_sources]
 
 
+@router.get("/list")
+async def list_connected_data_sources() -> List[dict]:
+    with Session() as session:
+        data_sources = session.query(DataSource).all()
+        return [{'id': data_source.id} for data_source in data_sources]
+
+
 class AddDataSource(BaseModel):
     name: str
     config: dict
