@@ -1,4 +1,3 @@
-import concurrent.futures
 import logging
 from datetime import datetime
 from typing import List, Dict
@@ -9,9 +8,12 @@ from data_source_api.basic_document import BasicDocument, DocumentType
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.exception import InvalidDataSourceConfig
 from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 from parsers.html import html_to_text
 from pydantic import BaseModel
+
+
+logger = logging.getLogger(__name__)
 
 
 class ConfluenceConfig(BaseModel):
@@ -29,12 +31,12 @@ class ConfluenceDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def list_spaces(confluence: Confluence) -> List[Dict]:
+    def list_spaces(confluence: Confluence, start=0) -> List[Dict]:
         # Usually the confluence connection fails, so we retry a few times
         retries = 3
         for i in range(retries):
             try:
-                return confluence.get_all_spaces(expand='status')['results']
+                return confluence.get_all_spaces(expand='status', start=start)['results']
             except Exception as e:
                 logging.error(f'Confluence connection failed: {e}')
                 if i == retries - 1:
@@ -55,9 +57,24 @@ class ConfluenceDataSource(BaseDataSource):
         self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token, verify_ssl=False)
 
     def _list_spaces(self) -> List[Dict]:
-        return ConfluenceDataSource.list_spaces(confluence=self._confluence)
+        logger.info('Listing spaces')
+
+        spaces = []
+        start = 0
+        while True:
+            new_spaces = ConfluenceDataSource.list_spaces(confluence=self._confluence, start=start)
+            if len(new_spaces) == 0:
+                break
+
+            spaces.extend(new_spaces)
+            start += len(new_spaces)
+
+        logger.info(f'Found {len(spaces)} spaces')
+        return spaces
 
     def _feed_new_documents(self) -> None:
+        logger.info('Feeding new documents with Confluence')
+
         spaces = self._list_spaces()
         raw_docs = []
         for space in spaces:
@@ -98,10 +115,10 @@ class ConfluenceDataSource(BaseDataSource):
                                              type=DocumentType.DOCUMENT))
             if len(parsed_docs) >= 50:
                 total_fed += len(parsed_docs)
-                IndexingQueue.get().feed(docs=parsed_docs)
+                IndexQueue.get_instance().put(docs=parsed_docs)
                 parsed_docs = []
 
-        IndexingQueue.get().feed(docs=parsed_docs)
+        IndexQueue.get_instance().put(docs=parsed_docs)
         total_fed += len(parsed_docs)
         if total_fed > 0:
             logging.info(f'Worker fed {total_fed} documents')

@@ -62,7 +62,7 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     background: '#221f2e',
-    width: '50vw',
+    width: '52vw',
     border: 'solid #694f94 0.5px',
     borderRadius: '12px',
     padding: '0px'
@@ -268,7 +268,7 @@ export default class App extends React.Component <{}, AppState>{
         this.setState({isPreparingIndexing: false})
         toast.success("Indexing finished.", {autoClose: 2000});
       }
-    }, 30000);
+    }, 1000 * 120);
   }
 
   render() {
@@ -389,7 +389,7 @@ export default class App extends React.Component <{}, AppState>{
               <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
                 {this.state.results.length} Results ({this.state.searchDuration} seconds)
               </span>
-              <div className='w-6/12 sm:w-8/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
+              <div className='w-[100vw] 2xl:w-8/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                 {this.state.results.map((result, index) => {
                     return (
                       <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
@@ -444,10 +444,14 @@ export default class App extends React.Component <{}, AppState>{
               isNoResults: response.data.length === 0
             });
             addToSearchHistory(this.state.query);
+
+            if(response.data.length === 0) {
+              toast.warn("No results found");
+            }
           }
         );
     } catch (error) {
-      console.error(error);
+      toast.error("Error searching: " + error.response.data, { autoClose: 10000 });
     }
   };
   

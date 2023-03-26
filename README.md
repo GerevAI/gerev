@@ -1,14 +1,18 @@
-![first image](./images/api.gif)
-**Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
-**Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
-
 ## Join Discord for early access code!
 
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-   [Join here!](https://discord.gg/aMRRcmhAdW)
-# Search focused on devs
-Devs are the best early adopters, they adopt technology early and aid in spreading it to their non-technical peers. That's why gerev is focused on making a product dev's adore and love    ❤️
+   [Join here!](https://discord.gg/NKhTX7JZAF)
+  
+# **New!** 🎉 ChatGPT plugin support!
+**Connect Gerev as a plugin to ChatGPT -> ask questions about your entire organization.**  
+See more awesome plugins [awesome-chatgpt-plugins](https://github.com/GerevAI/awesome-chatgpt-plugins)
+![ChatGPT Integration](./images/integ.jpeg)
+
+# Search engine for your organization!
+![first image](./images/api.gif)
+**Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
+**Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
 ## Made for devs 👨‍💻
 -  **For finding internal pages _fast_ ⚡️**
@@ -25,17 +29,20 @@ Coming Soon...
  - [x] Confluence
  - [x] Google Drive (Docs, .docx, .pptx)
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
- - [ ] Bookstack
- - [ ] RocketChat (in PR)
- - [ ] Gitlab Issues (In PR)
- - [ ] Notion (In Progress...)
+ - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
+ - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
+ - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
+ - [ ] Gitlab Issues (In PR :pray:)
+ - [ ] Zendesk (In PR :pray:)
+ - [ ] Notion (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
+ - [ ] Jira
  
 :pray:  - by the community 
- 
 
-## Natural Langauge
+
+## Natural Language
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
 ---  

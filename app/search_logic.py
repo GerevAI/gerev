@@ -1,32 +1,32 @@
-import base64
 import datetime
 import json
 import logging
-
+import re
+import urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from io import BytesIO
 from typing import List
 from typing import Optional
-import re
+
 import nltk
-import requests
 import torch
-import urllib.parse
 from sentence_transformers import CrossEncoder
 
+from data_source_api.basic_document import DocumentType, FileType
+from data_source_api.utils import get_confluence_user_image
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from data_source_api.basic_document import DocumentType, FileType
 from models import bi_encoder, cross_encoder_small, cross_encoder_large, qa_model
 from schemas import Paragraph, Document
+from util import threaded_method
 
 BM_25_CANDIDATES = 100 if torch.cuda.is_available() else 20
 BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
 SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
 nltk.download('punkt')
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -74,6 +74,7 @@ class Candidate:
             url += urllib.parse.quote(text).replace('-', '%2D')
         return url
 
+    @threaded_method
     def to_search_result(self) -> SearchResult:
         answer = TextPart(self.content[self.answer_start: self.answer_end], True)
         content = [answer]
@@ -85,15 +86,8 @@ class Candidate:
 
         data_uri = None
         if self.document.data_source.type.name == 'confluence':
-            url = self.document.author_image_url
-            if "anonymous.svg" in url:
-                url = url.replace(".svg", ".png")
-
             config = json.loads(self.document.data_source.config)
-            response = requests.get(url=url, headers={'Accept': 'application/json',
-                                                      "Authorization": f"Bearer {config['token']}"})
-            image_bytes = BytesIO(response.content)
-            data_uri = f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
+            data_uri = get_confluence_user_image(self.document.author_image_url, config['token'])
 
         return SearchResult(score=(self.score + 12) / 24 * 100,
                             content=content,
@@ -120,7 +114,7 @@ def _cross_encode(
         contents = [candidate.content[candidate.answer_start:candidate.answer_end] for candidate in candidates]
     else:
         contents = [candidate.content for candidate in candidates]
-    
+
     if use_titles:
         contents = [
             content + ' [SEP] ' + candidate.document.title
@@ -152,6 +146,10 @@ def _assign_answer_sentence(candidate: Candidate, answer: str):
 def _find_answers_in_candidates(candidates: List[Candidate], query: str) -> List[Candidate]:
     contexts = [candidate.content for candidate in candidates]
     answers = qa_model(question=[query] * len(contexts), context=contexts)
+
+    if type(answers) == dict:
+        answers = [answers]
+
     for candidate, answer in zip(candidates, answers):
         _assign_answer_sentence(candidate, answer['answer'])
 
@@ -178,7 +176,6 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
                       for paragraph in paragraphs]
 
         # calculate small cross-encoder scores to leave just a few candidates
-        logger = logging.getLogger('search')
         logger.info(f'Found {len(candidates)} candidates, filtering...')
         candidates = _cross_encode(cross_encoder_small, query, candidates, BI_ENCODER_CANDIDATES, use_titles=True)
         # calculate large cross-encoder scores to leave just top_k candidates

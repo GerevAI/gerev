@@ -1,6 +1,12 @@
+import base64
 import importlib
 import logging
 import concurrent.futures
+from functools import lru_cache
+from io import BytesIO
+from typing import Optional
+
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -37,3 +43,17 @@ def parse_with_workers(method_name: callable, items: list, **kwargs):
             e = w.exception()
             if e:
                 logging.exception("Worker failed", exc_info=e)
+
+
+@lru_cache(maxsize=512)
+def get_confluence_user_image(image_url: str, token: str) -> Optional[str]:
+    try:
+        if "anonymous.svg" in image_url:
+            image_url = image_url.replace(".svg", ".png")
+
+        response = requests.get(url=image_url, timeout=1, headers={'Accept': 'application/json',
+                                                                   "Authorization": f"Bearer {token}"})
+        image_bytes = BytesIO(response.content)
+        return f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
+    except:
+        logger.warning(f"Failed to get confluence user image {image_url}")

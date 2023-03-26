@@ -17,10 +17,13 @@ from pydantic import BaseModel
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import BasicDocument, DocumentType, FileType
 from data_source_api.exception import InvalidDataSourceConfig, KnownException
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
 from parsers.docx import docx_to_html
+
+
+logger = logging.getLogger(__name__)
 
 
 class GoogleDriveConfig(BaseModel):
@@ -185,7 +188,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 file_type=FileType.from_mime_type(mime_type=file['mimeType'])
             ))
 
-        IndexingQueue.get().feed(documents)
+        IndexQueue.get_instance().put(documents)
 
     def _get_all_drives(self) -> List[dict]:
         return [{'name': 'My Drive', 'id': None}] \

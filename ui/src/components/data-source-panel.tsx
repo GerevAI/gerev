@@ -214,13 +214,23 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
-                                 this.state.selectedDataSource.value === 'confluence' && (
+                              this.state.selectedDataSource.value === 'mattermost' && (
+                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
+                                       <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Copy the Access Token"}</span>
+                                       <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" rel="noreferrer" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">Click for more info</a></span>
+                                 </span>
+                              )
+                              }
+                              {
+                              this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
-                                 )
+                              )
                               }
                               {
                                  this.state.selectedDataSource.value === 'confluence_cloud' && (
@@ -283,6 +293,28 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
+                                 </span>
+                              )}
+
+                              {
+                                 this.state.selectedDataSource.value === 'bookstack' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Bookstack -> top-right profile picture -> Edit profile'}</span>
+                                       <span>2. {'Scroll down to API tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Set 'Expiry Date' 01/01/2100, create, copy token id + token secret"}</span>
+                                    </span>
+                                 )
+                              }
+
+                              {this.state.selectedDataSource.value === 'rocketchat' && (
+                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                    <span>1. {'In Rocket.Chat, click your profile picture -> My Account.'}</span>
+                                    <span>2. {'Click Personal Access Tokens.'}</span>
+                                    <span>3. {'Check "Ignore Two Factor Authentication".'}</span>
+                                    <span>4. {'Give the token a name and press "Add".'}</span>
+                                    <span>5. {'Type in your password, if needed.'}</span>
+                                    <span>6. {'Copy the token and user id here.'}</span>
+                                    <p>Note that the url must begin with either http:// or https://</p>
                                  </span>
                               )}
                            </div>

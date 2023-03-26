@@ -24,6 +24,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: 🐷 TruffleHog OSS
+        uses: trufflesecurity/trufflehog@v3.29.1
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+
+
       # Use Caching for npm
       - name: Cache node modules
         uses: actions/cache@v2
