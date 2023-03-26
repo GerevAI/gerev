@@ -3,9 +3,9 @@ from typing import List, Dict
 from atlassian import Confluence
 from pydantic import BaseModel
 
-from data_source_api.base_data_source import ConfigField, HTMLInputType
-from data_source_api.exception import InvalidDataSourceConfig
-from data_sources.confluence import ConfluenceDataSource
+from data_source.base_data_source import ConfigField, HTMLInputType
+from data_source.exception import InvalidDataSourceConfig
+from data_source.sources.confluence.confluence import ConfluenceDataSource
 
 
 class ConfluenceCloudConfig(BaseModel):

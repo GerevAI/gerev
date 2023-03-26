@@ -2,12 +2,13 @@ import logging
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Callable
 import re
 
 from pydantic import BaseModel
 
 from db_engine import Session
+from queues.task_queue import TaskQueue, Task
 from schemas import DataSource
 
 
@@ -86,6 +87,16 @@ class BaseDataSource(ABC):
             data_source: DataSource = session.query(DataSource).filter_by(id=self._data_source_id).first()
             data_source.last_indexed_at = datetime.now()
             session.commit()
+
+    def add_task_to_queue(self, function: Callable, **kwargs):
+        task = Task(data_source_id=self._data_source_id,
+                    function_name=function.__name__,
+                    kwargs=kwargs)
+        TaskQueue.get_instance().add_task(task)
+
+    def run_task(self, function_name: str, **kwargs) -> None:
+        function = getattr(self, function_name)
+        function(**kwargs)
 
     def index(self) -> None:
         try:

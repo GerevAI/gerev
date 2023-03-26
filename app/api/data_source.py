@@ -1,15 +1,12 @@
 import base64
 import json
-from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter
 from pydantic import BaseModel
-from starlette.responses import Response
 
-from data_source_api.base_data_source import ConfigField
-from data_source_api.exception import KnownException
-from data_source_api.utils import get_class_by_data_source_name
+from data_source.base_data_source import ConfigField
+from data_source.context import DataSourceContext
 from db_engine import Session
 from schemas import DataSourceType, DataSource
 
@@ -67,41 +64,11 @@ class AddDataSource(BaseModel):
 
 
 @router.post("/add")
-async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks):
-    with Session() as session:
-        data_source_type = session.query(DataSourceType).filter_by(name=dto.name).first()
-        if data_source_type is None:
-            return {"error": "Data source type does not exist"}
+async def add_integration(dto: AddDataSource):
+    data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
 
-        data_source_class = get_class_by_data_source_name(dto.name)
-        try:
-            data_source_class.validate_config(dto.config)
-        except KnownException as e:
-            return Response(e.message, status_code=501)
+    # in main.py we have a background task that runs every 5 minutes and indexes the data source
+    # but here we want to index the data source immediately
+    data_source.add_task_to_queue(data_source.index)
 
-        config_str = json.dumps(dto.config)
-        ds = DataSource(type_id=data_source_type.id, config=config_str, created_at=datetime.now())
-        session.add(ds)
-        session.commit()
-
-        data_source_id = session.query(DataSource).filter_by(type_id=data_source_type.id)\
-            .order_by(DataSource.id.desc()).first().id
-        data_source = data_source_class(config=dto.config, data_source_id=data_source_id)
-
-        # in main.py we have a background task that runs every 5 minutes and indexes the data source
-        # but here we want to index the data source immediately
-        background_tasks.add_task(data_source.index)
-
-        return {"success": "Data source added successfully"}
-
-
-@router.post("/delete")
-async def delete_integration(data_source_id: int):
-    with Session() as session:
-        data_source: DataSource = session.query(DataSource).filter_by(id=data_source_id).first()
-        if data_source is None:
-            return {"error": "Data source does not exist"}
-
-        session.delete(data_source)
-        session.commit()
-        return {"success": "Data source deleted successfully"}
+    return {"success": "Data source added successfully"}

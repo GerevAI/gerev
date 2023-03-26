@@ -7,10 +7,10 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from slack_sdk import WebClient
 
-from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source_api.basic_document import DocumentType, BasicDocument
-from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.basic_document import DocumentType, BasicDocument
+from data_source.utils import parse_with_workers
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -93,24 +93,19 @@ class SlackDataSource(BaseDataSource):
         joined_conversations = self._join_conversations(conversations)
         logger.info(f'Joined {len(joined_conversations)} conversations')
 
-        parse_with_workers(self._parse_conversations_worker, joined_conversations)
-
-    def _parse_conversations_worker(self, conversations: List[SlackConversation]) -> None:
-        for conv in conversations:
-            self._feed_conversation(conv)
+        for conv in joined_conversations:
+            self.add_task_to_queue(self._feed_conversation, conv=conv)
 
     def _feed_conversation(self, conv):
         logger.info(f'Feeding conversation {conv.name}')
 
         last_msg: Optional[BasicDocument] = None
-        total_fed = 0
-        documents = []
 
         messages = self._fetch_conversation_messages(conv)
         for message in messages:
             if not self._is_valid_message(message):
                 if last_msg is not None:
-                    documents.append(last_msg)
+                    IndexQueue.get_instance().put_single(doc=last_msg)
                     last_msg = None
                 continue
 
@@ -122,11 +117,8 @@ class SlackDataSource(BaseDataSource):
                     last_msg.content += f"\n{text}"
                     continue
                 else:
-                    documents.append(last_msg)
-                    if len(documents) == SlackDataSource.FEED_BATCH_SIZE:
-                        total_fed += SlackDataSource.FEED_BATCH_SIZE
-                        IndexingQueue.get().feed(docs=documents)
-                        documents = []
+                    IndexQueue.get_instance().put_single(doc=last_msg)
+                    last_msg = None
 
             timestamp = message['ts']
             message_id = message['client_msg_id']
@@ -139,19 +131,14 @@ class SlackDataSource(BaseDataSource):
                                      type=DocumentType.MESSAGE)
 
         if last_msg is not None:
-            documents.append(last_msg)
-
-        IndexingQueue.get().feed(docs=documents)
-        total_fed += len(documents)
-        if total_fed > 0:
-            logger.info(f'Slack worker fed {total_fed} documents')
+            IndexQueue.get_instance().put_single(doc=last_msg)
 
     def _fetch_conversation_messages(self, conv):
         messages = []
         cursor = None
         has_more = True
         last_index_unix = self._last_index_time.timestamp()
-        logger.info(f'Fetching messages for conversation {conv.name} since {last_index_unix}')
+        logger.info(f'Fetching messages for conversation {conv.name}')
 
         while has_more:
             response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),

@@ -10,6 +10,8 @@ if not STORAGE_PATH.exists():
 
 UI_PATH = Path('/ui/') if IS_IN_DOCKER else Path('../ui/build/')
 SQLITE_DB_PATH = STORAGE_PATH / 'db.sqlite3'
+SQLITE_TASKS_PATH = STORAGE_PATH / 'tasks.sqlite3'
+SQLITE_INDEXING_PATH = STORAGE_PATH / 'indexing.sqlite3'
 FAISS_INDEX_PATH = str(STORAGE_PATH / 'faiss_index.bin')
 BM25_INDEX_PATH = str(STORAGE_PATH / 'bm25_index.bin')
 UUID_PATH = str(STORAGE_PATH / '.uuid')

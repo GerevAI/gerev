@@ -3,17 +3,14 @@ from datetime import datetime
 from typing import List, Dict
 
 from atlassian import Confluence
+from pydantic import BaseModel
 from atlassian.errors import ApiError
 from requests import HTTPError
-
-from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source_api.exception import InvalidDataSourceConfig
-from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.basic_document import BasicDocument, DocumentType
+from data_source.exception import InvalidDataSourceConfig
 from parsers.html import html_to_text
-from pydantic import BaseModel
-
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -76,62 +73,11 @@ class ConfluenceDataSource(BaseDataSource):
 
     def _feed_new_documents(self) -> None:
         logger.info('Feeding new documents with Confluence')
-
         spaces = self._list_spaces()
-        raw_docs = []
         for space in spaces:
-            raw_docs.extend(self._list_space_docs(space))
+            self.add_task_to_queue(self._feed_space_docs, space=space)
 
-        parse_with_workers(self._parse_documents_worker, raw_docs)
-
-    def _parse_documents_worker(self, raw_docs: List[Dict]):
-        logging.info(f'Worker parsing {len(raw_docs)} documents')
-
-        parsed_docs = []
-        total_fed = 0
-        for raw_page in raw_docs:
-            last_modified = datetime.strptime(raw_page['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if last_modified < self._last_index_time:
-                continue
-
-            doc_id = raw_page['id']
-            try:
-                fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
-            except HTTPError as e:
-                logging.warning(f'Confluence returned status code {e.response.status_code} for document {doc_id} ({raw_page["title"]}). skipping.')
-                continue
-            except ApiError as e:
-                logging.warning(f'unable to access document {doc_id} ({raw_page["title"]}). reason: "{e.reason}". skipping.')
-
-            author = fetched_raw_page['history']['createdBy']['displayName']
-            author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
-            author_image_url = fetched_raw_page['_links']['base'] + author_image
-            html_content = fetched_raw_page['body']['storage']['value']
-            plain_text = html_to_text(html_content)
-
-            url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
-
-            parsed_docs.append(BasicDocument(title=fetched_raw_page['title'],
-                                             content=plain_text,
-                                             author=author,
-                                             author_image_url=author_image_url,
-                                             timestamp=last_modified,
-                                             id=doc_id,
-                                             data_source_id=self._data_source_id,
-                                             location=raw_page['space_name'],
-                                             url=url,
-                                             type=DocumentType.DOCUMENT))
-            if len(parsed_docs) >= 50:
-                total_fed += len(parsed_docs)
-                IndexingQueue.get().feed(docs=parsed_docs)
-                parsed_docs = []
-
-        IndexingQueue.get().feed(docs=parsed_docs)
-        total_fed += len(parsed_docs)
-        if total_fed > 0:
-            logging.info(f'Worker fed {total_fed} documents')
-
-    def _list_space_docs(self, space: Dict) -> List[Dict]:
+    def _feed_space_docs(self, space: Dict) -> List[Dict]:
         logging.info(f'Getting documents from space {space["name"]} ({space["key"]})')
         start = 0
         limit = 200  # limit when expanding the version
@@ -140,16 +86,53 @@ class ConfluenceDataSource(BaseDataSource):
         while True:
             new_batch = self._confluence.get_all_pages_from_space(space['key'], start=start, limit=limit,
                                                                   expand='version')
-            for doc in new_batch:
-                doc['space_name'] = space['name']
+            for raw_doc in new_batch:
+                raw_doc['space_name'] = space['name']
+                self.add_task_to_queue(self._feed_doc, raw_doc=raw_doc)
 
-            space_docs.extend(new_batch)
             if len(new_batch) < limit:
                 break
 
             start += limit
 
         return space_docs
+
+    def _feed_doc(self, raw_doc: Dict):
+        last_modified = datetime.strptime(raw_doc['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
+
+        if last_modified < self._last_index_time:
+            return
+
+        doc_id = raw_doc['id']
+        try:
+            fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
+        except HTTPError as e:
+            logging.warning(
+                f'Confluence returned status code {e.response.status_code} for document {doc_id} ({raw_doc["title"]}). skipping.')
+            return
+        except ApiError as e:
+            logging.warning(
+                f'unable to access document {doc_id} ({raw_doc["title"]}). reason: "{e.reason}". skipping.')
+            return
+        author = fetched_raw_page['history']['createdBy']['displayName']
+        author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
+        author_image_url = fetched_raw_page['_links']['base'] + author_image
+        html_content = fetched_raw_page['body']['storage']['value']
+        plain_text = html_to_text(html_content)
+
+        url = fetched_raw_page['_links']['base'] + fetched_raw_page['_links']['webui']
+
+        doc = BasicDocument(title=fetched_raw_page['title'],
+                            content=plain_text,
+                            author=author,
+                            author_image_url=author_image_url,
+                            timestamp=last_modified,
+                            id=doc_id,
+                            data_source_id=self._data_source_id,
+                            location=raw_doc['space_name'],
+                            url=url,
+                            type=DocumentType.DOCUMENT)
+        IndexQueue.get_instance().put_single(doc=doc)
 
 
 # if __name__ == '__main__':
