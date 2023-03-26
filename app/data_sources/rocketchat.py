@@ -9,7 +9,7 @@ from rocketchat_API.rocketchat import RocketChat
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import DocumentType, BasicDocument
 from data_source_api.exception import InvalidDataSourceConfig
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 
 
 @dataclass
@@ -191,7 +191,7 @@ class RocketchatDataSource(BaseDataSource):
                 documents.append(last_msg)
 
         logging.info(f"Total messages : {len(documents)}")
-        IndexingQueue.get().feed(docs=documents)
+        IndexQueue.get_instance().put(docs=documents)
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ from slack_sdk import WebClient
 from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source_api.basic_document import DocumentType, BasicDocument
 from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class SlackDataSource(BaseDataSource):
                     documents.append(last_msg)
                     if len(documents) == SlackDataSource.FEED_BATCH_SIZE:
                         total_fed += SlackDataSource.FEED_BATCH_SIZE
-                        IndexingQueue.get().feed(docs=documents)
+                        IndexQueue.get_instance().put(docs=documents)
                         documents = []
 
             timestamp = message['ts']
@@ -141,7 +141,7 @@ class SlackDataSource(BaseDataSource):
         if last_msg is not None:
             documents.append(last_msg)
 
-        IndexingQueue.get().feed(docs=documents)
+        IndexQueue.get_instance().put(docs=documents)
         total_fed += len(documents)
         if total_fed > 0:
             logger.info(f'Slack worker fed {total_fed} documents')
@@ -151,7 +151,7 @@ class SlackDataSource(BaseDataSource):
         cursor = None
         has_more = True
         last_index_unix = self._last_index_time.timestamp()
-        logger.info(f'Fetching messages for conversation {conv.name} since {last_index_unix}')
+        logger.info(f'Fetching messages for conversation {conv.name}')
 
         while has_more:
             response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
