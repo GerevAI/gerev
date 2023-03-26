@@ -2,7 +2,7 @@ import logging
 import re
 from typing import List
 
-from data_source_api.basic_document import BasicDocument
+from data_source.basic_document import BasicDocument
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
 from models import bi_encoder

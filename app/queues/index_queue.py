@@ -4,8 +4,8 @@ from typing import List
 
 from persistqueue import SQLiteAckQueue
 
-from data_source_api.basic_document import BasicDocument
-from paths import SQLITE_TASKS_PATH
+from data_source.basic_document import BasicDocument
+from paths import SQLITE_INDEXING_PATH
 
 
 @dataclass
@@ -30,7 +30,7 @@ class IndexQueue(SQLiteAckQueue):
             raise RuntimeError("Queue is a singleton, use .get() to get the instance")
 
         self.condition = threading.Condition()
-        super().__init__(path=SQLITE_TASKS_PATH, multithreading=True, name="index")
+        super().__init__(path=SQLITE_INDEXING_PATH, multithreading=True, name="index")
 
     def put_single(self, doc: BasicDocument):
         self.put([doc])
@@ -49,8 +49,8 @@ class IndexQueue(SQLiteAckQueue):
             queue_items = []
             count = 0
             while not super().empty() and count < max_docs:
-                raw_items = super().get(raw=True)
-                queue_items.append(IndexQueueItem(queue_item_id=raw_items['pqid'], doc=raw_items['data']))
+                raw_item = super().get(raw=True)
+                queue_items.append(IndexQueueItem(queue_item_id=raw_item['pqid'], doc=raw_item['data']))
                 count += 1
 
             return queue_items

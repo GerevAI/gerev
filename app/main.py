@@ -1,9 +1,5 @@
-import json
 import logging
-import os
 from dataclasses import dataclass
-from datetime import datetime
-from typing import List
 
 import torch
 from fastapi import FastAPI, Request
@@ -14,18 +10,17 @@ from starlette.responses import Response
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
-from data_source_api.exception import KnownException
-from data_source_api.utils import get_class_by_data_source_name
+from data_source.exception import KnownException
+from data_source.context import DataSourceContext
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
-from index_queue import IndexQueue
+from queues.index_queue import IndexQueue
 from paths import UI_PATH
-from schemas import DataSource
-from schemas.data_source_type import DataSourceType
 from schemas.document import Document
 from schemas.paragraph import Paragraph
+from slaves import Slaves
 from telemetry import Posthog
 
 logging.basicConfig(level=logging.INFO,
@@ -94,40 +89,21 @@ def send_daily_telemetry():
         pass
 
 
-def load_data_source_types():
-    supported_data_source_type = []
-    for file in os.listdir("data_sources"):
-        if file.endswith(".py") and file != "__init__.py":
-            supported_data_source_type.append(file[:-3])
-
-    with Session() as session:
-        for data_source_type in supported_data_source_type:
-            if session.query(DataSourceType).filter_by(name=data_source_type).first():
-                continue
-
-            data_source_class = get_class_by_data_source_name(data_source_type)
-            config_fields = data_source_class.get_config_fields()
-            config_fields_str = json.dumps([config_field.dict() for config_field in config_fields])
-            new_data_source = DataSourceType(name=data_source_type,
-                                             display_name=data_source_class.get_display_name(),
-                                             config_fields=config_fields_str)
-            session.add(new_data_source)
-            session.commit()
-
-
 @app.on_event("startup")
 async def startup_event():
     if not torch.cuda.is_available():
         logger.warning("CUDA is not available, using CPU. This will make indexing and search very slow!!!")
     FaissIndex.create()
     Bm25Index.create()
-    load_data_source_types()
+    DataSourceContext.init()
     BackgroundIndexer.start()
+    Slaves.start()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     BackgroundIndexer.stop()
+    Slaves.stop()
 
 
 @app.get("/status")
@@ -157,6 +133,6 @@ except Exception as e:
     logger.warning(f"Failed to mount UI (you probably need to build it): {e}")
 
 
-# if __name__ == '__main__':
-#     import uvicorn
-#     uvicorn.run("main:app", host="localhost", port=8000)
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run("main:app", host="localhost", port=8000)
