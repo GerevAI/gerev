@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime
 from typing import List, Dict
+import os
 
 from atlassian import Confluence
 
@@ -54,7 +55,9 @@ class ConfluenceDataSource(BaseDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         confluence_config = ConfluenceConfig(**self._config)
-        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token, verify_ssl=False)
+        should_verify_ssl = os.environ.get('CONFLUENCE_VERIFY_SSL') is not None
+        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token,
+                                      verify_ssl=should_verify_ssl)
 
     def _list_spaces(self) -> List[Dict]:
         logger.info('Listing spaces')
