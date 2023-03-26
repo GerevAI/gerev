@@ -114,6 +114,7 @@ class ConfluenceDataSource(BaseDataSource):
             logging.warning(
                 f'unable to access document {doc_id} ({raw_doc["title"]}). reason: "{e.reason}". skipping.')
             return
+
         author = fetched_raw_page['history']['createdBy']['displayName']
         author_image = fetched_raw_page['history']['createdBy']['profilePicture']['path']
         author_image_url = fetched_raw_page['_links']['base'] + author_image
