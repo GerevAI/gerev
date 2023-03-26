@@ -1,5 +1,6 @@
 import logging
 import threading
+import time
 
 from data_source.context import DataSourceContext
 from queues.task_queue import TaskQueue
@@ -41,12 +42,10 @@ class Slaves:
 
             try:
                 data_source = DataSourceContext.get_data_source(task_item.task.data_source_id)
-                # load kwargs dict to real kwargs
                 data_source.run_task(task_item.task.function_name, **task_item.task.kwargs)
                 task_queue.ack(id=task_item.queue_item_id)
             except Exception as e:
                 logger.exception(f'Failed to ack task {task_item.task.function_name} '
                                  f'for data source {task_item.task.data_source_id}')
                 task_queue.nack(id=task_item.queue_item_id)
-                import time
                 time.sleep(1)
