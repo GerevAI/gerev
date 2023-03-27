@@ -13,9 +13,9 @@ from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 
-from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source.basic_document import BasicDocument, DocumentType, FileType
-from data_source.exception import KnownException
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.basic_document import BasicDocument, DocumentType, FileType
+from data_source.api.exception import KnownException
 from parsers.docx import docx_to_html
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text

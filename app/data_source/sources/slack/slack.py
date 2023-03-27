@@ -7,9 +7,8 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from slack_sdk import WebClient
 
-from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source.basic_document import DocumentType, BasicDocument
-from data_source.utils import parse_with_workers
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.basic_document import DocumentType, BasicDocument
 from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)

@@ -6,9 +6,9 @@ from typing import Optional, Dict, List
 from pydantic import BaseModel
 from rocketchat_API.rocketchat import RocketChat
 
-from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source.basic_document import DocumentType, BasicDocument
-from data_source.exception import InvalidDataSourceConfig
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.basic_document import DocumentType, BasicDocument
+from data_source.api.exception import InvalidDataSourceConfig
 from queues.index_queue import IndexQueue
 
 

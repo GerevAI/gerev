@@ -3,8 +3,8 @@ from typing import List, Dict
 from atlassian import Confluence
 from pydantic import BaseModel
 
-from data_source.base_data_source import ConfigField, HTMLInputType
-from data_source.exception import InvalidDataSourceConfig
+from data_source.api.base_data_source import ConfigField, HTMLInputType
+from data_source.api.exception import InvalidDataSourceConfig
 from data_source.sources.confluence.confluence import ConfluenceDataSource
 
 

@@ -1,6 +1,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
+from typing import Union
 
 
 class DocumentType(Enum):
@@ -32,7 +33,7 @@ class FileType(Enum):
 
 @dataclass
 class BasicDocument:
-    id: int | str
+    id: Union[int, str]
     data_source_id: int
     type: DocumentType
     title: str

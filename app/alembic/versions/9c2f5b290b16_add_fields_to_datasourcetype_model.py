@@ -10,7 +10,7 @@ import json
 from alembic import op
 import sqlalchemy as sa
 
-from data_source.dynamic_loader import DynamicLoader
+from data_source.api.dynamic_loader import DynamicLoader
 from db_engine import Session
 from schemas import DataSourceType
 

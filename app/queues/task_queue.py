@@ -21,18 +21,18 @@ class TaskQueueItem:
 
 
 class TaskQueue(SQLiteAckQueue):
-    __instance = None
-    __lock = threading.Lock()
+    _instance = None
+    _lock = threading.Lock()
 
     @classmethod
     def get_instance(cls):
-        with cls.__lock:
-            if cls.__instance is None:
-                cls.__instance = cls()
-        return cls.__instance
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = cls()
+        return cls._instance
 
     def __init__(self):
-        if TaskQueue.__instance is not None:
+        if TaskQueue._instance is not None:
             raise RuntimeError("TaskQueue is a singleton, use .get() to get the instance")
 
         self.condition = threading.Condition()

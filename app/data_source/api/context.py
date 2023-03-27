@@ -2,14 +2,19 @@ import json
 from datetime import datetime
 from typing import Dict, List
 
-from data_source.base_data_source import BaseDataSource
-from data_source.dynamic_loader import DynamicLoader, ClassInfo
-from data_source.exception import KnownException
+from data_source.api.base_data_source import BaseDataSource
+from data_source.api.dynamic_loader import DynamicLoader, ClassInfo
+from data_source.api.exception import KnownException
 from db_engine import Session
 from schemas import DataSourceType, DataSource
 
 
 class DataSourceContext:
+    """
+    This class is responsible for loading data sources and caching them.
+    It dynamically loads data source types from the data_source/sources directory.
+    It loads data sources from the database and caches them.
+    """
     _initialized = False
     _data_sources: Dict[int, BaseDataSource] = {}
 
@@ -42,6 +47,18 @@ class DataSourceContext:
             cls._data_sources[data_source_id] = data_source
 
             return data_source
+
+    @classmethod
+    def delete_data_source(cls, data_source_id: int):
+        with Session() as session:
+            data_source = session.query(DataSource).filter_by(id=data_source_id).first()
+            if data_source is None:
+                raise KnownException(message=f"Data source {data_source_id} does not exist")
+
+            session.delete(data_source)
+            session.commit()
+
+            del cls._data_sources[data_source_id]
 
     @classmethod
     def init(cls):

@@ -6,9 +6,9 @@ from atlassian import Confluence
 from pydantic import BaseModel
 from atlassian.errors import ApiError
 from requests import HTTPError
-from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source.basic_document import BasicDocument, DocumentType
-from data_source.exception import InvalidDataSourceConfig
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.basic_document import BasicDocument, DocumentType
+from data_source.api.exception import InvalidDataSourceConfig
 from parsers.html import html_to_text
 from queues.index_queue import IndexQueue
 

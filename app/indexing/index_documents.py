@@ -2,7 +2,7 @@ import logging
 import re
 from typing import List
 
-from data_source.basic_document import BasicDocument
+from data_source.api.basic_document import BasicDocument
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
 from models import bi_encoder
@@ -24,14 +24,14 @@ class Indexer:
 
         with Session() as session:
             documents_to_delete = session.query(Document).filter(Document.id_in_data_source.in_(ids_in_data_source)).all()
-        
-            logging.info(f'removing documents that were updated and need to be re-indexed.')
-            Indexer.remove_documents(documents_to_delete, session)
-            for document in documents_to_delete:
-                # Currently bulk deleting doesn't cascade. So we need to delete them one by one.
-                # See https://stackoverflow.com/a/19245058/3541901
-                session.delete(document)
-            session.commit()
+            if documents_to_delete:
+                logging.info(f'removing documents that were updated and need to be re-indexed.')
+                Indexer.remove_documents(documents_to_delete, session)
+                for document in documents_to_delete:
+                    # Currently bulk deleting doesn't cascade. So we need to delete them one by one.
+                    # See https://stackoverflow.com/a/19245058/3541901
+                    session.delete(document)
+                session.commit()
 
         with Session() as session:
             db_documents = []
@@ -63,7 +63,12 @@ class Indexer:
             session.commit()
 
             # Create a list of all the paragraphs in the documents
+            logger.info(f"Indexing {len(db_documents)} documents => {len(paragraphs)} paragraphs")
             paragraphs = [paragraph for document in db_documents for paragraph in document.paragraphs]
+            if len(paragraphs) == 0:
+                logger.info(f"No paragraphs to index")
+                return
+
             paragraph_ids = [paragraph.id for paragraph in paragraphs]
             paragraph_contents = [Indexer._add_metadata_for_indexing(paragraph) for paragraph in paragraphs]
 

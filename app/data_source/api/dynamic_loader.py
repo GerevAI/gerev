@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import Dict
 import importlib
 
-from data_source.utils import snake_case_to_pascal_case
+from data_source.api.utils import snake_case_to_pascal_case
 
 
 @dataclass
@@ -15,6 +15,10 @@ class ClassInfo:
 
 
 class DynamicLoader:
+    """
+    This class is used to dynamically load classes from files.
+    Specifically, it is used to load data sources from the data_source/sources directory.
+    """
     SOURCES_PATH = 'data_source/sources'
 
     @staticmethod

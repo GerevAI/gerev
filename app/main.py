@@ -1,5 +1,8 @@
+import json
+from datetime import datetime
 import logging
 from dataclasses import dataclass
+from typing import List
 
 import torch
 from fastapi import FastAPI, Request
@@ -10,14 +13,16 @@ from starlette.responses import Response
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
-from data_source.exception import KnownException
-from data_source.context import DataSourceContext
+from data_source.api.dynamic_loader import DynamicLoader
+from data_source.api.exception import KnownException
+from data_source.api.context import DataSourceContext
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from queues.index_queue import IndexQueue
 from paths import UI_PATH
+from schemas import DataSource
 from schemas.document import Document
 from schemas.paragraph import Paragraph
 from slaves import Slaves
@@ -26,6 +31,7 @@ from telemetry import Posthog
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s | %(levelname)s | %(filename)s:%(lineno)d | %(message)s')
 logger = logging.getLogger(__name__)
+logging.getLogger("urllib3").propagate = False
 
 app = FastAPI()
 
@@ -63,11 +69,12 @@ def _check_for_new_documents(force=False):
                 continue
 
             logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
-            data_source_cls = get_class_by_data_source_name(data_source.type.name)
+            data_source_cls = DynamicLoader.get_data_source_class(data_source.type.name)
             config = json.loads(data_source.config)
             data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
                                                    last_index_time=data_source.last_indexed_at)
             data_source_instance.index()
+
 
 @app.on_event("startup")
 @repeat_every(seconds=60)

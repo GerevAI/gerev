@@ -5,13 +5,13 @@ from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from data_source.base_data_source import ConfigField
-from data_source.context import DataSourceContext
+from data_source.api.base_data_source import ConfigField
+from data_source.api.context import DataSourceContext
 from db_engine import Session
 from schemas import DataSourceType, DataSource
 
 router = APIRouter(
-    prefix='/data-source',
+    prefix='/data-sources',
 )
 
 
@@ -36,7 +36,12 @@ class DataSourceTypeDto(BaseModel):
         )
 
 
-@router.get("/list-types")
+class ConnectedDataSourceDto(BaseModel):
+    id: int
+    name: str
+
+
+@router.get("/types")
 async def list_data_source_types() -> List[DataSourceTypeDto]:
     with Session() as session:
         data_source_types = session.query(DataSourceType).all()
@@ -44,18 +49,12 @@ async def list_data_source_types() -> List[DataSourceTypeDto]:
                 for data_source_type in data_source_types]
 
 
-@router.get("/list-connected")
-async def list_connected_data_sources() -> List[str]:
+@router.get("/connected")
+async def list_connected_data_sources() -> List[ConnectedDataSourceDto]:
     with Session() as session:
         data_sources = session.query(DataSource).all()
-        return [data_source.type.name for data_source in data_sources]
-
-
-@router.get("/list")
-async def list_connected_data_sources() -> List[dict]:
-    with Session() as session:
-        data_sources = session.query(DataSource).all()
-        return [{'id': data_source.id} for data_source in data_sources]
+        return [ConnectedDataSourceDto(id=data_source.id, name=data_source.type.name)
+                for data_source in data_sources]
 
 
 class AddDataSource(BaseModel):
@@ -63,7 +62,13 @@ class AddDataSource(BaseModel):
     config: dict
 
 
-@router.post("/add")
+@router.delete("/{data_source_id}")
+async def delete_data_source(data_source_id: int):
+    DataSourceContext.delete_data_source(data_source_id=data_source_id)
+    return {"success": "Data source deleted successfully"}
+
+
+@router.post("")
 async def add_integration(dto: AddDataSource):
     data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
 

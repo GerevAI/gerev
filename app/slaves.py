@@ -2,7 +2,7 @@ import logging
 import threading
 import time
 
-from data_source.context import DataSourceContext
+from data_source.api.context import DataSourceContext
 from queues.task_queue import TaskQueue
 
 logger = logging.getLogger()
@@ -48,4 +48,3 @@ class Slaves:
                 logger.exception(f'Failed to ack task {task_item.task.function_name} '
                                  f'for data source {task_item.task.data_source_id}')
                 task_queue.nack(id=task_item.queue_item_id)
-                time.sleep(1)

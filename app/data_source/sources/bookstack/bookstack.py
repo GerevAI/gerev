@@ -8,9 +8,9 @@ from pydantic import BaseModel
 from requests import Session, HTTPError
 from requests.auth import AuthBase
 
-from data_source.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source.basic_document import BasicDocument, DocumentType
-from data_source.exception import InvalidDataSourceConfig
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.basic_document import BasicDocument, DocumentType
+from data_source.api.exception import InvalidDataSourceConfig
 from parsers.html import html_to_text
 from queues.index_queue import IndexQueue
 
