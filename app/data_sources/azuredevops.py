@@ -4,6 +4,7 @@ from typing import Dict, List
 import requests
 import base64
 import urllib.parse
+from dataclasses import dataclass
 
 from azure.devops.connection import Connection
 from msrest.authentication import BasicAuthentication
@@ -18,11 +19,18 @@ from data_source_api.utils import parse_with_workers
 
 logger = logging.getLogger(__name__)
 
-class DevOpsConfig(BaseModel):
+@dataclass
+class DevOpsConfig():
     organization_url: str
     access_token: str
     project_name: str
     query_id: str
+
+    def __post_init__(self):
+        self.query_id = self.query_id.strip()
+        self.access_token = self.access_token.strip()
+        self.project_name = self.project_name.strip()
+        self.organization_url = self.organization_url.strip()
 
 class AzuredevopsDataSource(BaseDataSource):
     @staticmethod
@@ -47,18 +55,13 @@ class AzuredevopsDataSource(BaseDataSource):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        devops_config = DevOpsConfig(**self._config)
-        self._query_id = devops_config.query_id.strip()
-        self._access_token = devops_config.access_token.strip()
-        self._project_name = devops_config.project_name.strip()
-        self._organization_url = devops_config.organization_url.strip()
-        credentials = BasicAuthentication('', self._access_token)
-        connection = Connection(base_url=self._organization_url, creds=credentials)
+        self._config['devops_config'] = DevOpsConfig(**self._config)
+        credentials = BasicAuthentication('', self._config['devops_config'].access_token)
+        connection = Connection(base_url=self._config['devops_config'].organization_url, creds=credentials)
         self._work_item_tracking_client = connection.clients.get_work_item_tracking_client()
 
     def _parse_documents_worker(self, raw_docs: List[Dict]):
         logging.info(f'Worker parsing {len(raw_docs)} documents')
-
         parsed_docs = []
         total_fed = 0
         for item in raw_docs:
@@ -72,7 +75,7 @@ class AzuredevopsDataSource(BaseDataSource):
                 html_content = raw_page['text']
                 plain_text = html_to_text(html_content)
                 author_image_url = raw_page['createdBy']['_links']['avatar']['href']
-                url = f"{self._organization_url}/{urllib.parse.quote(self._project_name)}/_workitems/edit/{raw_page['workItemId']}".strip()
+                url = f"{self._config['devops_config'].organization_url}/{urllib.parse.quote(self._config['devops_config'].project_name)}/_workitems/edit/{raw_page['workItemId']}".strip()
 
                 parsed_docs.append(BasicDocument(
                     id=workitem_id,
@@ -83,7 +86,7 @@ class AzuredevopsDataSource(BaseDataSource):
                     type=DocumentType.COMMENT,
                     title=title,
                     timestamp=create_date,
-                    location=self._project_name,
+                    location=self._config['devops_config'].project_name,
                     url=url
                 ))
 
@@ -99,7 +102,7 @@ class AzuredevopsDataSource(BaseDataSource):
 
 
     def _list_work_item_comments(self, work_item_url) -> List[Dict]:
-        authorization = str(base64.b64encode(bytes(':'+self._access_token, 'ascii')), 'ascii')
+        authorization = str(base64.b64encode(bytes(':'+self._config['devops_config'].access_token, 'ascii')), 'ascii')
         headers = {
             'Accept': 'application/json',
             'Authorization': 'Basic '+authorization
@@ -109,7 +112,7 @@ class AzuredevopsDataSource(BaseDataSource):
     def _feed_new_documents(self) -> None:
         logger.info('Feeding new Azure DevOps Work Items')
         raw_docs = []
-        work_item_results = self._work_item_tracking_client.query_by_id(self._query_id)
+        work_item_results = self._work_item_tracking_client.query_by_id(self._config['devops_config'].query_id)
         for work_item in work_item_results.work_items:
             result = self._list_work_item_comments(work_item.url)
             if result['totalCount'] > 0:
