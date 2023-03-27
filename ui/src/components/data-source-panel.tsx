@@ -266,6 +266,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <span className="ml-8 mt-2">
                                        <img alt="" className="h-[120px] rounded-xl p-1" src={CopyThis} />
                                     </span>
+                                    <span className="text-violet-300/[.75] mt-1 text-sm"> *Gerev bot will join your channels.</span>
                                  </span>
                               )
                               }

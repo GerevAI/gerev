@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import APIRouter
 from pydantic import BaseModel
+from starlette.background import BackgroundTasks
 
 from data_source.api.base_data_source import ConfigField
 from data_source.api.context import DataSourceContext
@@ -69,11 +70,11 @@ async def delete_data_source(data_source_id: int):
 
 
 @router.post("")
-async def add_integration(dto: AddDataSource):
+async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks):
     data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
 
     # in main.py we have a background task that runs every 5 minutes and indexes the data source
     # but here we want to index the data source immediately
-    data_source.add_task_to_queue(data_source.index)
+    background_tasks.add_task(data_source.index)
 
     return {"success": "Data source added successfully"}

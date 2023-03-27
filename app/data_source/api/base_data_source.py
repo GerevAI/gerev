@@ -81,8 +81,12 @@ class BaseDataSource(ABC):
         if last_index_time is None:
             last_index_time = datetime(2012, 1, 1)
         self._last_index_time = last_index_time
+        self._last_task_time = None
 
-    def _set_last_index_time(self) -> None:
+    def _save_index_time_in_db(self) -> None:
+        """
+        Sets the index time in the database, to be now
+        """
         with Session() as session:
             data_source: DataSource = session.query(DataSource).filter_by(id=self._data_source_id).first()
             data_source.last_indexed_at = datetime.now()
@@ -95,12 +99,19 @@ class BaseDataSource(ABC):
         TaskQueue.get_instance().add_task(task)
 
     def run_task(self, function_name: str, **kwargs) -> None:
+        self._last_task_time = datetime.now()
         function = getattr(self, function_name)
         function(**kwargs)
 
-    def index(self) -> None:
+    def index(self, force: bool = False) -> None:
+        if self._last_task_time is not None and not force:
+            # Don't index if the last task was less than an hour ago
+            time_since_last_task = datetime.now() - self._last_task_time
+            if time_since_last_task.total_seconds() < 60 * 60:
+                logging.info("Skipping indexing data source because it was indexed recently")
+
         try:
+            self._save_index_time_in_db()
             self._feed_new_documents()
-            self._set_last_index_time()
         except Exception as e:
             logging.exception("Error while indexing data source")

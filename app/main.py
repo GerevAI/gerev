@@ -69,11 +69,9 @@ def _check_for_new_documents(force=False):
                 continue
 
             logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
-            data_source_cls = DynamicLoader.get_data_source_class(data_source.type.name)
-            config = json.loads(data_source.config)
-            data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
-                                                   last_index_time=data_source.last_indexed_at)
-            data_source_instance.index()
+            data_source_instance = DataSourceContext.get_data_source(data_source_id=data_source.id)
+            data_source_instance._last_index_time = data_source.last_indexed_at
+            data_source_instance.index(force=force)
 
 
 @app.on_event("startup")
@@ -147,6 +145,6 @@ except Exception as e:
     logger.warning(f"Failed to mount UI (you probably need to build it): {e}")
 
 
-# if __name__ == '__main__':
-#    import uvicorn
-#    uvicorn.run("main:app", host="localhost", port=8000)
+if __name__ == '__main__':
+   import uvicorn
+   uvicorn.run("main:app", host="localhost", port=8000)
