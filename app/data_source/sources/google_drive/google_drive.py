@@ -180,7 +180,7 @@ class GoogleDriveDataSource(BaseDataSource):
             title=file['name'],
             content=content,
             author=file['lastModifyingUser']['displayName'],
-            author_image_url=file['lastModifyingUser']['photoLink'],
+            author_image_url=file['lastModifyingUser'].get('photoLink'),
             location=parent_name,
             url=file['webViewLink'],
             timestamp=last_modified,
