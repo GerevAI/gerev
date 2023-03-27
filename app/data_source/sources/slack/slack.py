@@ -146,7 +146,8 @@ class SlackDataSource(BaseDataSource):
                                                              limit=1000, cursor=cursor)
             except SlackApiError as e:
                 logger.warning(f'Error fetching messages for conversation {conv.name}: {e}')
-                if e.response['error'] == 'ratelimited':
+                response = e.response
+                if response['error'] == 'ratelimited':
                     retry_after_seconds = int(response['headers']['Retry-After'])
                     logger.warning(f'Ratelimited: Slack API rate limit exceeded,'
                                    f' retrying after {retry_after_seconds} seconds')
