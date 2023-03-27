@@ -13,7 +13,6 @@ from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLIn
 from data_source_api.basic_document import DocumentType, BasicDocument
 from data_source_api.exception import InvalidDataSourceConfig
 from index_queue import IndexQueue
-from pydantic import BaseModel
 from parsers.html import html_to_text
 from data_source_api.utils import parse_with_workers
 
