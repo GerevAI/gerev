@@ -1,11 +1,12 @@
 from typing import List, Dict
+import os
 
 from atlassian import Confluence
 from pydantic import BaseModel
 
-from data_source_api.base_data_source import ConfigField, HTMLInputType
-from data_source_api.exception import InvalidDataSourceConfig
-from data_sources.confluence import ConfluenceDataSource
+from data_source.api.base_data_source import ConfigField, HTMLInputType
+from data_source.api.exception import InvalidDataSourceConfig
+from data_source.sources.confluence.confluence import ConfluenceDataSource
 
 
 class ConfluenceCloudConfig(BaseModel):
@@ -37,5 +38,6 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         confluence_config = ConfluenceCloudConfig(**self._config)
+        should_verify_ssl = os.environ.get('CONFLUENCE_CLOUD_VERIFY_SSL') is not None
         self._confluence = Confluence(url=confluence_config.url, username=confluence_config.username,
-                                      password=confluence_config.token, verify_ssl=False, cloud=True)
+                                      password=confluence_config.token, verify_ssl=should_verify_ssl, cloud=True)

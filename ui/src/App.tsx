@@ -22,7 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
-import { DataSourceType } from "./data-source";
+import { ConnectedDataSourceType, DataSourceType } from "./data-source";
 
 export interface AppState {
   query: string
@@ -125,7 +125,7 @@ export default class App extends React.Component <{}, AppState>{
 
   async listDataSourceTypes() {
     try {
-      const response = await api.get<DataSourceType[]>('/data-source/list-types');
+      const response = await api.get<DataSourceType[]>('/data-sources/types');
       let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
       response.data.forEach((dataSourceType) => { 
         dataSourceTypesDict[dataSourceType.name] = dataSourceType;
@@ -137,8 +137,9 @@ export default class App extends React.Component <{}, AppState>{
 
   async listConnectedDataSources() {
     try {
-       const response = await api.get('/data-source/list-connected');
-       this.setState({ connectedDataSources: response.data })
+      const response = await api.get<ConnectedDataSourceType[]>('/data-sources/connected');
+      let nameList = response.data.map((dataSource) => dataSource.name);
+      this.setState({ connectedDataSources: nameList })
     } catch (error) {
     }
   }

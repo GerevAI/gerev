@@ -177,6 +177,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
                            })
                         }
+                        <div onClick={() => this.setState({ isAdding: true})} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                           <h1 className="text-gray-500">Add</h1>
+                           <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
+                        </div>
                      </div>
                   </div>
                )
@@ -291,6 +295,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <span className="ml-8 mt-2">
                                        <img alt="" className="h-[120px] rounded-xl p-1" src={CopyThis} />
                                     </span>
+                                    <span className="text-violet-300/[.75] mt-1 text-sm"> *Gerev bot will join your channels.</span>
                                  </span>
                               )
                               }
@@ -395,7 +400,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          config: config
       }
       this.setState({ isAddingLoading: true });
-      api.post(`/data-source/add`, payload).then(response => {
+      api.post(`/data-sources`, payload).then(response => {
          toast.success("Data source added successfully, indexing...");
 
          let selectedDataSource = this.state.selectedDataSource;

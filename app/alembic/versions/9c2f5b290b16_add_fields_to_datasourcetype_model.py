@@ -10,7 +10,7 @@ import json
 from alembic import op
 import sqlalchemy as sa
 
-from data_source_api.utils import get_class_by_data_source_name
+from data_source.api.dynamic_loader import DynamicLoader
 from db_engine import Session
 from schemas import DataSourceType
 
@@ -29,7 +29,7 @@ def upgrade() -> None:
             # update existing data sources
             data_source_types = session.query(DataSourceType).all()
             for data_source_type in data_source_types:
-                data_source_class = get_class_by_data_source_name(data_source_type.name)
+                data_source_class = DynamicLoader.get_data_source_class(data_source_type.name)
                 config_fields = data_source_class.get_config_fields()
 
                 data_source_type.config_fields = json.dumps([config_field.dict() for config_field in config_fields])

@@ -2,7 +2,7 @@ import logging
 import threading
 from typing import List
 
-from index_queue import IndexQueue
+from queues.index_queue import IndexQueue
 from indexing.index_documents import Indexer
 
 
