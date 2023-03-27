@@ -42,6 +42,10 @@ class AzuredevopsDataSource(BaseDataSource):
             ConfigField(label="Query ID", name="query_id"),
         ]
     
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "Azure DevOps"
+    
     @staticmethod
     def validate_config(config: Dict) -> None:
         try:
