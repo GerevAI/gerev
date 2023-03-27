@@ -11,10 +11,11 @@ logger = logging.getLogger()
 class Slaves:
     _threads = []
     _stop_event = threading.Event()
+    SLAVE_AMOUNT = 20
 
     @classmethod
     def start(cls):
-        for i in range(0, 20):
+        for i in range(cls.SLAVE_AMOUNT):
             cls._threads.append(threading.Thread(target=cls.run))
         for thread in cls._threads:
             thread.start()
