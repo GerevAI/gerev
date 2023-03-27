@@ -19,3 +19,8 @@ export interface DataSourceType {
     config_fields: ConfigField[]
     image_base64: string
 }
+
+export interface ConnectedDataSourceType {
+    id: number
+    name: string
+}
