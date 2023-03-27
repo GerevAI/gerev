@@ -6,6 +6,7 @@ from typing import Optional, Dict, List
 
 from pydantic import BaseModel
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
 from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
 from data_source.api.basic_document import DocumentType, BasicDocument
@@ -140,13 +141,17 @@ class SlackDataSource(BaseDataSource):
         logger.info(f'Fetching messages for conversation {conv.name}')
 
         while has_more:
-            response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
-                                                         limit=1000, cursor=cursor)
-            if not response['ok'] and response['error'] == 'ratelimited':
-                retry_after_seconds = int(response['headers']['Retry-After'])
-                logger.warning(f'Slack API rate limit exceeded, retrying after {retry_after_seconds} seconds')
-                time.sleep(retry_after_seconds)
-                continue
+            try:
+                response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
+                                                             limit=1000, cursor=cursor)
+            except SlackApiError as e:
+                logger.warning(f'Error fetching messages for conversation {conv.name}: {e}')
+                if e.response['error'] == 'ratelimited':
+                    retry_after_seconds = int(response['headers']['Retry-After'])
+                    logger.warning(f'Ratelimited: Slack API rate limit exceeded,'
+                                   f' retrying after {retry_after_seconds} seconds')
+                    time.sleep(retry_after_seconds)
+                    continue
 
             logger.info(f'Fetched {len(response["messages"])} messages for conversation {conv.name}')
             messages.extend(response['messages'])
