@@ -297,6 +297,21 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <p>Note that the url must begin with either http:// or https://</p>
                                  </span>
                               )}
+
+                              {
+                                 this.state.selectedDataSource.value === 'azuredevops' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Azure DevOps -> top-right Person with the Gear -> Personal Access Token'}</span>
+                                       <span>2. {'Fill out the details, and set your expiration date'}</span>
+                                       <span>3. {"Make sure Read under Work Items is checked and save your token"}</span>
+                                       <span>4. {"Copy the token and paste it here"}</span>
+                                       <span>5. {"Add your Project Name here"}</span>
+                                       <span>6. {"Navigate to Your Project then Boards > Queries"}</span>
+                                       <span>7. {"Select the query that you want from the list and get the id from the end of the URL"}</span>
+                                       <span>ex. {"https://dev.azure.com/{org}/{project}/_queries/query/{query_id}/"}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
