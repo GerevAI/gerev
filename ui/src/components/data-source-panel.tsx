@@ -70,7 +70,7 @@ const slackManifest = {
    }
 }
 
-// let editMode = false;
+
 let addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
 
 export default class DataSourcePanel extends React.Component<DataSourcePanelProps, DataSourcePanelState> {
@@ -123,7 +123,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    render() {
       return (
-         <div className="relative flex flex-col bg-[#221f2e] items-start px-8 pt-0 pb-4 min-h-[300px]">1
+         <div className="relative flex flex-col bg-[#221f2e] items-start px-8 pt-0 pb-4 min-h-[300px]">
             {
                !this.state.isAdding && <h1 className="mt-4 relative self-center text-white block text-4xl mb-8 font-poppins">Data Source Panel</h1>
             }
@@ -131,14 +131,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             {/* X and Edit in top right */}
             <div className="absolute flex flex-col items-center right-4 top-3 text-2xl text-white gap-4">
                <IoMdClose onClick={this.props.onClose} className='hover:text-[#9875d4] hover:cursor-pointer' />
-               {this.state.isAdding === false && <BsFillPencilFill key="pencil" onClick={this.swithcMode} className='text-base hover:text-[#9875d4] hover:cursor-pointer' />}
+
             </div>
             {
                !this.state.isAdding && (
                   <div>
                      <h1 className="text-2xl block text-white mb-4">
-                        {/* h1 tag specifies whether there are active data sources */}
                         {this.props.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
+                        <BsFillPencilFill key="pencil" onClick={this.swithcMode} className='text-white float-right inline hover:text-[#9875d4] hover:cursor-pointer' />
                      </h1>
                      <div className="flex flex-row w-[100%] flex-wrap">
                         {this.props.connectedDataSources.map((data_source) => {
@@ -147,8 +147,14 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
                                  <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
-                                 {addOrRemoveIcon}
-                                 
+
+                                 {this.state.editMode ? (
+                                    <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 text-[#df335e] text-2xl hover:text-[#ff6289]" />
+                                 ) : (
+                                    <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />
+                                 )
+                                 }
+
                               </div>
                            )
                         })
@@ -214,23 +220,23 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         <div className="flex flex-col ">
                            <div className="bg-[#352C45] py-[26px] px-10 rounded-xl border-[1px] border-[#4e326b]">
                               {
-                              this.state.selectedDataSource.value === 'mattermost' && (
-                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                 this.state.selectedDataSource.value === 'mattermost' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Mattermost -> top-right profile picture -> Profile'}</span>
                                        <span>2. {'Security -> Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Copy the Access Token"}</span>
                                        <span className="text-violet-300/[.75] text-sm"> {"* Personal Access Tokens must be on"} - <a className="inline hover:underline text-violet-400/[.75]" target="_blank" rel="noreferrer" href="https://developers.mattermost.com/integrate/reference/personal-access-token/">Click for more info</a></span>
-                                 </span>
-                              )
+                                    </span>
+                                 )
                               }
                               {
-                              this.state.selectedDataSource.value === 'confluence' && (
+                                 this.state.selectedDataSource.value === 'confluence' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. {'Go to your Confluence -> top-right profile picture -> Settings'}</span>
                                        <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
                                        <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
                                     </span>
-                              )
+                                 )
                               }
                               {
                                  this.state.selectedDataSource.value === 'confluence_cloud' && (
@@ -414,17 +420,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       let index = connected.indexOf(this.state.selectedDataSource.value);
       connected.splice(index, 1);
    }
-   
-   
+
+
    swithcMode = () => {
-      if (this.state.editMode === true) {
-         this.setState({editMode: false})
-         addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
-      } else {
-         this.setState({editMode: true})
-         addOrRemoveIcon = <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 text-[#df335e] text-2xl" />;
-      }
-      console.log(this.state.editMode);
+      this.setState({editMode: !this.state.editMode})
    }
 }
 
