@@ -22,3 +22,4 @@ python-pptx
 alembic
 rocketchat-API
 mattermostdriver
+azure-devops
