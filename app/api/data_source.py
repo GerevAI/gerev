@@ -1,20 +1,18 @@
 import base64
 import json
-from datetime import datetime
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter
 from pydantic import BaseModel
-from starlette.responses import Response
+from starlette.background import BackgroundTasks
 
-from data_source_api.base_data_source import ConfigField
-from data_source_api.exception import KnownException
-from data_source_api.utils import get_class_by_data_source_name
+from data_source.api.base_data_source import ConfigField
+from data_source.api.context import DataSourceContext
 from db_engine import Session
 from schemas import DataSourceType, DataSource
 
 router = APIRouter(
-    prefix='/data-source',
+    prefix='/data-sources',
 )
 
 
@@ -39,7 +37,12 @@ class DataSourceTypeDto(BaseModel):
         )
 
 
-@router.get("/list-types")
+class ConnectedDataSourceDto(BaseModel):
+    id: int
+    name: str
+
+
+@router.get("/types")
 async def list_data_source_types() -> List[DataSourceTypeDto]:
     with Session() as session:
         data_source_types = session.query(DataSourceType).all()
@@ -47,11 +50,12 @@ async def list_data_source_types() -> List[DataSourceTypeDto]:
                 for data_source_type in data_source_types]
 
 
-@router.get("/list-connected")
-async def list_connected_data_sources() -> List[str]:
+@router.get("/connected")
+async def list_connected_data_sources() -> List[ConnectedDataSourceDto]:
     with Session() as session:
         data_sources = session.query(DataSource).all()
-        return [data_source.type.name for data_source in data_sources]
+        return [ConnectedDataSourceDto(id=data_source.id, name=data_source.type.name)
+                for data_source in data_sources]
 
 
 class AddDataSource(BaseModel):
@@ -59,30 +63,18 @@ class AddDataSource(BaseModel):
     config: dict
 
 
-@router.post("/add")
+@router.delete("/{data_source_id}")
+async def delete_data_source(data_source_id: int):
+    DataSourceContext.delete_data_source(data_source_id=data_source_id)
+    return {"success": "Data source deleted successfully"}
+
+
+@router.post("")
 async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks):
-    with Session() as session:
-        data_source_type = session.query(DataSourceType).filter_by(name=dto.name).first()
-        if data_source_type is None:
-            return {"error": "Data source type does not exist"}
+    data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
 
-        data_source_class = get_class_by_data_source_name(dto.name)
-        try:
-            data_source_class.validate_config(dto.config)
-        except KnownException as e:
-            return Response(e.message, status_code=501)
+    # in main.py we have a background task that runs every 5 minutes and indexes the data source
+    # but here we want to index the data source immediately
+    background_tasks.add_task(data_source.index)
 
-        config_str = json.dumps(dto.config)
-        ds = DataSource(type_id=data_source_type.id, config=config_str, created_at=datetime.now())
-        session.add(ds)
-        session.commit()
-
-        data_source_id = session.query(DataSource).filter_by(type_id=data_source_type.id)\
-            .order_by(DataSource.id.desc()).first().id
-        data_source = data_source_class(config=dto.config, data_source_id=data_source_id)
-
-        # in main.py we have a background task that runs every 5 minutes and indexes the data source
-        # but here we want to index the data source immediately
-        background_tasks.add_task(data_source.index)
-
-        return {"success": "Data source added successfully"}
+    return {"success": "Data source added successfully"}
