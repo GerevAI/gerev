@@ -41,10 +41,8 @@ class DataSourceContext:
             session.add(data_source_row)
             session.commit()
 
-            data_source_id = session.query(DataSource).filter_by(type_id=data_source_type.id) \
-                .order_by(DataSource.id.desc()).first().id
-            data_source = data_source_class(config=config, data_source_id=data_source_id)
-            cls._data_sources[data_source_id] = data_source
+            data_source = data_source_class(config=config, data_source_id=data_source_row.id)
+            cls._data_sources[data_source_row.id] = data_source
 
             return data_source
 

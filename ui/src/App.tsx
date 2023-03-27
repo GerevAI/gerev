@@ -125,7 +125,7 @@ export default class App extends React.Component <{}, AppState>{
 
   async listDataSourceTypes() {
     try {
-      const response = await api.get<DataSourceType[]>('/data-source/types');
+      const response = await api.get<DataSourceType[]>('/data-sources/types');
       let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
       response.data.forEach((dataSourceType) => { 
         dataSourceTypesDict[dataSourceType.name] = dataSourceType;
@@ -137,7 +137,7 @@ export default class App extends React.Component <{}, AppState>{
 
   async listConnectedDataSources() {
     try {
-      const response = await api.get<ConnectedDataSourceType[]>('/data-source/connected');
+      const response = await api.get<ConnectedDataSourceType[]>('/data-sources/connected');
       let nameList = response.data.map((dataSource) => dataSource.name);
       this.setState({ connectedDataSources: nameList })
     } catch (error) {

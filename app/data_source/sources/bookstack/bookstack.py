@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from time import sleep
 from typing import List, Dict
@@ -29,6 +30,8 @@ class BookStackAuth(AuthBase):
 
 
 class BookStack(Session):
+    VERIFY_SSL = os.environ.get('BOOKSTACK_VERIFY_SSL') is not None
+
     def __init__(self, url: str, token_id: str, token_secret: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_url = url
@@ -40,7 +43,7 @@ class BookStack(Session):
             sleep(1)
 
         url = urljoin(self.base_url, url_path)
-        r = super().request(method, url, verify=False, *args, **kwargs)
+        r = super().request(method, url, verify=BookStack.VERIFY_SSL, *args, **kwargs)
 
         if r.status_code != 200:
             if r.status_code == 429:
@@ -50,7 +53,7 @@ class BookStack(Session):
                     sleep(60)
                     self.rate_limit_reach = False
                     logger.info("Done waiting for the API rate limit")
-                return self.request(method, url, verify=False, *args, **kwargs)
+                return self.request(method, url, verify=BookStack.VERIFY_SSL, *args, **kwargs)
             r.raise_for_status()
         return r
 
