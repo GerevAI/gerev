@@ -17,7 +17,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.add_column('document', sa.Column('id_in_data_source', sa.String(length=64), default='__none__'))
+    try:
+        op.add_column('document', sa.Column('id_in_data_source', sa.String(length=64), default='__none__'))
+    except:
+        pass
 
 
 def downgrade() -> None:
