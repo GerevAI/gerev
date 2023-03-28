@@ -8,14 +8,14 @@ from queues.task_queue import TaskQueue
 logger = logging.getLogger()
 
 
-class Slaves:
+class Workers:
     _threads = []
     _stop_event = threading.Event()
-    SLAVE_AMOUNT = 20
+    WORKER_AMOUNT = 20
 
     @classmethod
     def start(cls):
-        for i in range(cls.SLAVE_AMOUNT):
+        for i in range(cls.WORKER_AMOUNT):
             cls._threads.append(threading.Thread(target=cls.run))
         for thread in cls._threads:
             thread.start()
@@ -23,20 +23,20 @@ class Slaves:
     @classmethod
     def stop(cls):
         cls._stop_event.set()
-        logging.info('Stop event set, waiting for slaves to stop...')
+        logging.info('Stop event set, waiting for workers to stop...')
 
         for thread in cls._threads:
             thread.join()
-        logging.info('Slaves stopped')
+        logging.info('Workers stopped')
 
         cls._thread = None
 
     @staticmethod
     def run():
         task_queue = TaskQueue.get_instance()
-        logger.info(f'Slave started...')
+        logger.info(f'Worker started...')
 
-        while not Slaves._stop_event.is_set():
+        while not Workers._stop_event.is_set():
             task_item = task_queue.get_task()
             if not task_item:
                 continue

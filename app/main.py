@@ -25,7 +25,7 @@ from paths import UI_PATH
 from schemas import DataSource
 from schemas.document import Document
 from schemas.paragraph import Paragraph
-from slaves import Slaves
+from workers import Workers
 from telemetry import Posthog
 
 logging.basicConfig(level=logging.INFO,
@@ -105,13 +105,13 @@ async def startup_event():
     Bm25Index.create()
     DataSourceContext.init()
     BackgroundIndexer.start()
-    Slaves.start()
+    Workers.start()
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
     BackgroundIndexer.stop()
-    Slaves.stop()
+    Workers.stop()
 
 
 @app.get("/status")
