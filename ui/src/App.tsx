@@ -22,7 +22,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
-import { ConnectedDataSourceType, DataSourceType } from "./data-source";
+import { ConnectedDataSource, DataSourceType } from "./data-source";
 
 export interface AppState {
   query: string
@@ -30,7 +30,7 @@ export interface AppState {
   searchDuration: number
   dataSourceTypes: DataSourceType[]
   dataSourceTypesDict: { [key: string]: DataSourceType }
-  connectedDataSources: string[]
+  connectedDataSources: ConnectedDataSource[]
   isLoading: boolean
   isNoResults: boolean
   isModalOpen: boolean
@@ -137,9 +137,8 @@ export default class App extends React.Component <{}, AppState>{
 
   async listConnectedDataSources() {
     try {
-      const response = await api.get<ConnectedDataSourceType[]>('/data-sources/connected');
-      let nameList = response.data.map((dataSource) => dataSource.name);
-      this.setState({ connectedDataSources: nameList })
+      const response = await api.get<ConnectedDataSource[]>('/data-sources/connected');
+      this.setState({ connectedDataSources: response.data });
     } catch (error) {
     }
   }
@@ -168,7 +167,7 @@ export default class App extends React.Component <{}, AppState>{
       }
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
-                     docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
+                    docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
 
       let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
       setTimeout(() => this.fetchStatsusForever(), timeToSleep);
@@ -184,7 +183,7 @@ export default class App extends React.Component <{}, AppState>{
     })    
   }
 
-  shouldShowIndexingStatus() {
+  inIndexing() {
     return this.state.isPreparingIndexing || this.state.docsInIndexing > 0 || this.state.docsLeftToIndex > 0;
   }
 
@@ -261,8 +260,8 @@ export default class App extends React.Component <{}, AppState>{
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
   }
 
-  dataSourcesAdded = (dataSourceType: string) => {
-    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, dataSourceType]});
+  dataSourcesAdded = (newlyConnected: ConnectedDataSource) => {
+    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, newlyConnected]});
     // if had no data from server, show toast after 30 seconds
     setTimeout(() => {
       if (this.state.isPreparingIndexing) {
@@ -270,6 +269,10 @@ export default class App extends React.Component <{}, AppState>{
         toast.success("Indexing finished.", {autoClose: 2000});
       }
     }, 1000 * 120);
+  }
+
+  dataSourceRemoved = (removed: ConnectedDataSource) => {
+    this.setState({connectedDataSources: this.state.connectedDataSources.filter((ds) => ds.id !== removed.id)});
   }
 
   render() {
@@ -280,7 +283,7 @@ export default class App extends React.Component <{}, AppState>{
         className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
       </FiSettings>
         {
-          this.shouldShowIndexingStatus() &&
+          this.inIndexing() &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#191919] border-[#4F4F4F] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -348,7 +351,8 @@ export default class App extends React.Component <{}, AppState>{
           contentLabel="Example Modal"
           style={customStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict}/>
+            inIndexing={this.inIndexing()}
+            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict} onRemoved={this.dataSourceRemoved} />
         </Modal>
 
         {/* front search page*/}

@@ -20,7 +20,7 @@ export interface DataSourceType {
     image_base64: string
 }
 
-export interface ConnectedDataSourceType {
+export interface ConnectedDataSource {
     id: number
     name: string
 }

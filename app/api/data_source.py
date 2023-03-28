@@ -70,11 +70,11 @@ async def delete_data_source(data_source_id: int):
 
 
 @router.post("")
-async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks):
+async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks) -> int:
     data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
 
     # in main.py we have a background task that runs every 5 minutes and indexes the data source
     # but here we want to index the data source immediately
     background_tasks.add_task(data_source.index)
 
-    return {"success": "Data source added successfully"}
+    return data_source.get_id()

@@ -1,16 +1,14 @@
 import os
 import pickle
+from typing import List
+
 import nltk
 import numpy as np
 from rank_bm25 import BM25Okapi
-from sqlalchemy import Connection
-from typing import List
 
 from db_engine import Session
-from schemas import Paragraph
 from paths import BM25_INDEX_PATH
-
-
+from schemas import Paragraph
 
 
 def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
@@ -60,13 +58,13 @@ class Bm25Index:
         self.index = BM25Okapi(corpus)
         self.id_map = id_map
 
-    def update(self, session = None):
+    def update(self, session=None):
         if session is None:
             with Session() as session:
                 self._update(session)
         else:
             self._update(session)
-        
+
         self._save()
 
     def search(self, query: str, top_k: int) -> List[int]:
