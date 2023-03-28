@@ -431,8 +431,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
          this.props.onRemoved(connectedDataSource);
       }).catch(error => {
-         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
-         this.setState({ isAddingLoading: false });
+         toast.error("Error removing data source: " + error.response.data, { autoClose: 10000 });
       });
    }
 
