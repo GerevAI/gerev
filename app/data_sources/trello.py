@@ -111,7 +111,7 @@ class TrelloDataSource(BaseDataSource):
                                                     id=comment['id'],
                                                     data_source_id=self._data_source_id,
                                                     url=raw_page['shortUrl'],
-                                                    type=DocumentType.DOCUMENT,
+                                                    type=DocumentType.COMMENT,
                                                     location=self._fetch_board_name(raw_page['id'])))
                     if len(parsed_docs) >= 50:
                         total_fed += len(parsed_docs)
