@@ -83,6 +83,9 @@ class BaseDataSource(ABC):
         self._last_index_time = last_index_time
         self._last_task_time = None
 
+    def get_id(self):
+        return self._data_source_id
+
     def _save_index_time_in_db(self) -> None:
         """
         Sets the index time in the database, to be now

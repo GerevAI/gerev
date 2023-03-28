@@ -5,7 +5,7 @@ import copy from 'copy-to-clipboard';
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
 
-import { BsFillPencilFill } from 'react-icons/bs';
+import { FaRegEdit } from "react-icons/fa";
 import { AiFillCheckCircle } from "react-icons/ai";
 import { BiLinkExternal } from 'react-icons/bi';
 import { IoMdClose, IoMdCloseCircle } from "react-icons/io";
@@ -14,7 +14,7 @@ import { RxCopy } from 'react-icons/rx';
 import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
-import { ConfigField, DataSourceType } from "../data-source";
+import { ConfigField, ConnectedDataSource, DataSourceType } from "../data-source";
 
 
 export interface SelectOption {
@@ -34,8 +34,10 @@ export interface DataSourcePanelState {
 
 export interface DataSourcePanelProps {
    dataSourceTypesDict: { [key: string]: DataSourceType }
-   connectedDataSources: string[]
-   onAdded: (dataSourceType: string) => void
+   connectedDataSources: ConnectedDataSource[]
+   inIndexing: boolean
+   onAdded: (newlyConnected: ConnectedDataSource) => void
+   onRemoved: (removed: ConnectedDataSource) => void
    onClose: () => void
 }
 
@@ -136,19 +138,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                !this.state.isAdding && (
                   <div className="w-full">
                      <h1 className="text-2xl block text-white mb-4">
-                        {this.props.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
-                        <BsFillPencilFill key="pencil" onClick={this.swithcMode} className='text-white float-right inline hover:text-[#9875d4] hover:cursor-pointer' />
+                        {this.props.connectedDataSources.length > 0 ? (this.state.editMode ? 'Edit mode:' : 'Active data sources:') : 'No Active Data Sources. Add Now!'}
+                        {this.props.connectedDataSources.length > 0 && <FaRegEdit key="pencil" onClick={this.swithcMode} className='text-white mt-1 float-right inline hover:text-[#9875d4] hover:cursor-pointer' />}
                      </h1>
                      <div className="flex flex-row w-[100%] flex-wrap">
-                        {this.props.connectedDataSources.map((data_source) => {
+                        {this.props.connectedDataSources.map((dataSource) => {
                            return (
                               // connected data source
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
-                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
-                                 <h1 className="text-white width-full">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
+                                 <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[dataSource.name].image_base64}></img>
+                                 <h1 className="text-white width-full">{this.props.dataSourceTypesDict[dataSource.name].display_name}</h1>
 
                                  {this.state.editMode ? (
-                                    <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 fill-[#df335e] text-2xl hover:fill-[#ff85c2]" />
+                                    <IoMdCloseCircle onClick={() => this.removeDataSource(dataSource)} className="transition duration-150 ease-in-out  ml-6 fill-[#7d4ac3] hover:cursor-pointer text-2xl hover:fill-[#d80b0b]" />
                                  ) : (
                                     <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />
                                  )
@@ -161,7 +163,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {
                            Object.keys(this.props.dataSourceTypesDict).map((key) => {
                               let dataSource = this.props.dataSourceTypesDict[key];
-                              if (!this.props.connectedDataSources.includes(dataSource.name) && !this.state.editMode) {
+                              if (!this.state.editMode && !this.props.connectedDataSources.find((connectedDataSource) => connectedDataSource.name === dataSource.name)) {
                                  return (
                                     // unconnected data source
                                     <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
@@ -407,7 +409,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             field.value = '';
          });
          this.setState({ selectedDataSource: selectedDataSource });
-         this.props.onAdded(this.state.selectedDataSource.value);
+         this.props.onAdded({name: this.state.selectedDataSource.value, id: response.data});
          this.setState({ isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0] });
       }).catch(error => {
          toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
@@ -419,10 +421,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ selectedDataSource: event })
    }
 
-   removeDataSource = () => {
-      let connected = this.props.connectedDataSources;
-      let index = connected.indexOf(this.state.selectedDataSource.value);
-      connected.splice(index, 1);
+   removeDataSource = (connectedDataSource: ConnectedDataSource) => {
+      if (this.props.inIndexing) {
+         toast.error("Cannot remove data source while indexing is in progress");
+         return;
+      }
+
+      api.delete(`/data-sources/${connectedDataSource.id}`).then(response => {
+         toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
+         this.props.onRemoved(connectedDataSource);
+      }).catch(error => {
+         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
+         this.setState({ isAddingLoading: false });
+      });
    }
 
 
