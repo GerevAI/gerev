@@ -42,7 +42,7 @@ class Workers:
                 continue
 
             try:
-                data_source = DataSourceContext.get_data_source(task_item.task.data_source_id)
+                data_source = DataSourceContext.get_data_source_instance(task_item.task.data_source_id)
                 data_source.run_task(task_item.task.function_name, **task_item.task.kwargs)
                 task_queue.ack(id=task_item.queue_item_id)
             except Exception as e:

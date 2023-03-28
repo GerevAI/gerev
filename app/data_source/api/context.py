@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from typing import Dict, List
 
@@ -9,6 +10,9 @@ from db_engine import Session
 from schemas import DataSourceType, DataSource
 
 
+logger = logging.getLogger(__name__)
+
+
 class DataSourceContext:
     """
     This class is responsible for loading data sources and caching them.
@@ -16,15 +20,32 @@ class DataSourceContext:
     It loads data sources from the database and caches them.
     """
     _initialized = False
-    _data_sources: Dict[int, BaseDataSource] = {}
+    _data_source_instances: Dict[int, BaseDataSource] = {}
+    _data_source_classes: Dict[str, BaseDataSource] = {}
 
     @classmethod
-    def get_data_source(cls, data_source_id: int) -> BaseDataSource:
+    def get_data_source_instance(cls, data_source_id: int) -> BaseDataSource:
         if not cls._initialized:
             cls.init()
             cls._initialized = True
 
-        return cls._data_sources[data_source_id]
+        return cls._data_source_instances[data_source_id]
+
+    @classmethod
+    def get_data_source_class(cls, data_source_name: str) -> BaseDataSource:
+        if not cls._initialized:
+            cls.init()
+            cls._initialized = True
+
+        return cls._data_source_classes[data_source_name]
+
+    @classmethod
+    def get_data_source_classes(cls) -> Dict[str, BaseDataSource]:
+        if not cls._initialized:
+            cls.init()
+            cls._initialized = True
+
+        return cls._data_source_classes
 
     @classmethod
     def create_data_source(cls, name: str, config: dict) -> BaseDataSource:
@@ -34,6 +55,7 @@ class DataSourceContext:
                 raise KnownException(message=f"Data source type {name} does not exist")
 
             data_source_class = DynamicLoader.get_data_source_class(name)
+            logger.info(f"validating config for data source {name}")
             data_source_class.validate_config(config)
             config_str = json.dumps(config)
 
@@ -42,7 +64,7 @@ class DataSourceContext:
             session.commit()
 
             data_source = data_source_class(config=config, data_source_id=data_source_row.id)
-            cls._data_sources[data_source_row.id] = data_source
+            cls._data_source_instances[data_source_row.id] = data_source
 
             return data_source
 
@@ -57,17 +79,17 @@ class DataSourceContext:
             session.delete(data_source)
             session.commit()
 
-            del cls._data_sources[data_source_id]
+            del cls._data_source_instances[data_source_id]
 
             return data_source_name
 
     @classmethod
     def init(cls):
-        cls._add_data_sources_to_db()
-        cls._load_context_from_db()
+        cls._load_data_source_classes()
+        cls._load_connected_sources_from_db()
 
     @classmethod
-    def _load_context_from_db(cls):
+    def _load_connected_sources_from_db(cls):
         with Session() as session:
             data_sources: List[DataSource] = session.query(DataSource).all()
             for data_source in data_sources:
@@ -75,22 +97,23 @@ class DataSourceContext:
                 config = json.loads(data_source.config)
                 data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
                                                        last_index_time=data_source.last_indexed_at)
-                cls._data_sources[data_source.id] = data_source_instance
+                cls._data_source_instances[data_source.id] = data_source_instance
 
         cls._initialized = True
 
     @classmethod
-    def _add_data_sources_to_db(cls):
+    def _load_data_source_classes(cls):
         data_sources: Dict[str, ClassInfo] = DynamicLoader.find_data_sources()
 
         with Session() as session:
             for source_name in data_sources.keys():
-                if session.query(DataSourceType).filter_by(name=source_name).first():
-                    continue
-
                 class_info = data_sources[source_name]
                 data_source_class = DynamicLoader.get_class(file_path=class_info.file_path,
                                                             class_name=class_info.name)
+                cls._data_source_classes[source_name] = data_source_class
+
+                if session.query(DataSourceType).filter_by(name=source_name).first():
+                    continue
 
                 config_fields = data_source_class.get_config_fields()
                 config_fields_str = json.dumps([config_field.dict() for config_field in config_fields])

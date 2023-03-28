@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 
 from mattermostdriver import Driver
 
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig, Location
 from data_source.api.basic_document import BasicDocument, DocumentType
 from data_source.api.exception import InvalidDataSourceConfig
 from queues.index_queue import IndexQueue
@@ -26,6 +26,7 @@ class MattermostChannel:
 class MattermostConfig:
     url: str
     token: str
+    locations_to_index: Optional[List[Location]]
     scheme: Optional[str] = "https"
     port: Optional[int] = 443
 
@@ -63,7 +64,7 @@ class MattermostDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        mattermost_config = MattermostConfig(**self._config)
+        mattermost_config = MattermostConfig(**self._raw_config)
         self._mattermost = Driver(options=asdict(mattermost_config))
 
     def _list_channels(self) -> List[MattermostChannel]:

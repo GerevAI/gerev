@@ -16,7 +16,7 @@ import { RxCopy } from 'react-icons/rx';
 import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 import { api } from "../api";
-import { ConfigField, ConnectedDataSource, DataSourceType } from "../data-source";
+import { ConfigField, ConnectedDataSource, DataSourceType, IndexLocation } from "../data-source";
 
 
 export interface SelectOption {
@@ -24,13 +24,17 @@ export interface SelectOption {
    label: string;
    imageBase64: string
    configFields: ConfigField[]
+   hasAdditionalSteps: boolean
 }
 
 export interface DataSourcePanelState {
    selectOptions: SelectOption[]
    isAdding: boolean
    selectedDataSource: SelectOption
-   isAddingLoading: boolean
+   isLoading: boolean
+   locations: IndexLocation[]
+   selectedLocations: IndexLocation[]
+   isSelectingLocations: boolean
    removeInProgressIndex: number
    editMode: boolean
 }
@@ -84,8 +88,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.state = {
          selectOptions: [],
          isAdding: false,
-         isAddingLoading: false,
-         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] },
+         isLoading: false,
+         isSelectingLocations: false,
+         locations: [],
+         selectedLocations: [],
+         selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [], hasAdditionalSteps: false },
          removeInProgressIndex: -1,
          editMode: false
       }
@@ -98,7 +105,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             value: data_source.name,
             label: data_source.display_name,
             imageBase64: data_source.image_base64,
-            configFields: data_source.config_fields
+            configFields: data_source.config_fields,
+            hasAdditionalSteps: data_source.has_prerequisites
          }
       }
       );
@@ -154,6 +162,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                <IoMdClose onClick={this.props.onClose} className='hover:text-[#9875d4] hover:cursor-pointer' />
 
             </div>
+
+            {/* Panel main page */}
             {
                !this.state.isAdding && (
                   <div className="w-full">
@@ -215,12 +225,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                   </div>
                )
             }
+
+            {/* instructions + input page */}
+
             {
                this.state.isAdding && (
-                  <div className="flex flex-col w-[100%]">
+                  <div className="flex flex-col w-[100%] py-10">
                      <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
                         <img alt="" className={"mr-2 h-[32px]"} src={this.state.selectedDataSource.imageBase64}></img>
-                        <Select className="w-60 text-white" onChange={this.onSelectChange} value={this.state.selectedDataSource}
+                        <Select className="w-60 text-white" onChange={this.onSourceSelectChange} value={this.state.selectedDataSource}
                            options={this.state.selectOptions} isDisabled={false} isSearchable={false} components={{ Option }}
                            styles={{
                               control: (baseStyles, state) => ({
@@ -329,14 +342,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  </span>
                               )
                               }
-
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
-
                               {
                                  this.state.selectedDataSource.value === 'bookstack' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
@@ -346,7 +357,6 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                  )
                               }
-
                               {this.state.selectedDataSource.value === 'rocketchat' && (
                                  <span className="flex flex-col leading-9  text-xl text-white">
                                     <span>1. {'In Rocket.Chat, click your profile picture -> My Account.'}</span>
@@ -385,11 +395,64 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     return null;
                                  })
                               }
-                              <div onClick={this.submit} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
+                              {/* Selecting locations */}
+                              {
+                                 this.state.isSelectingLocations && (
+                                    <div className="flex flex-col w-[100%]">
+                                       <div className="flex flex-row justify-left ml-2 items-center mb-5 mt-5">
+                                          <div className="flex flex-col mr-10 mt-4">
+                                             <h1 className="text-lg block text-white mb-4">Select locations to index</h1>
+                                             <Select className="w-[500px] text-white" isMulti onChange={this.onLocationsSelectChange}
+                                                options={this.state.locations} isDisabled={false} isSearchable={true}
+                                                value={this.state.selectedLocations}
+                                                styles={{
+                                                   control: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      backgroundColor: '#352c45',
+                                                      borderColor: '#472f61'
+                                                   }),
+                                                   singleValue: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      color: '#ffffff',
+                                                   }),
+                                                   option: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      backgroundColor: '#352c45',
+                                                      ':hover': {
+                                                         backgroundColor: '#52446b',
+                                                      },
+                                                   }),
+                                                   valueContainer: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      backgroundColor: '#352c45',
+                                                      color: '#ffffff',
+                                                   }),
+                                                   menuList: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      backgroundColor: '#352c45',
+                                                   }),
+                                                   input: (baseStyles, state) => ({
+                                                      ...baseStyles,
+                                                      color: '#ffffff',
+                                                   })
+                                                }} />
+                                          </div>
+                                       </div>
+                                    </div>
+                                 )
+                              }
+                              <div onClick={this.proceed} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
                                   hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
-                                 {!this.state.isAddingLoading && <h1 className="text-white">Submit</h1>}
+                                 {!this.state.isLoading && !this.state.selectedDataSource.hasAdditionalSteps && <h1 className="text-white">Submit</h1>}
+
+                                 {!this.state.isLoading && this.state.selectedDataSource.hasAdditionalSteps &&
+                                    <h1 className="text-white">
+                                       {this.state.isSelectingLocations ? `Proceed with ${this.state.selectedLocations.length} locatons` :
+                                          'Proceed'}
+                                    </h1>}
+
                                  {
-                                    this.state.isAddingLoading &&
+                                    this.state.isLoading &&
                                     <ClipLoader
                                        color="#ffffff"
                                        loading={true}
@@ -398,13 +461,48 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     />
                                  }
                               </div>
+                              {
+                                 this.state.isSelectingLocations && (
+                                    <div onClick={this.indexEverything} className="flex py-2 px-3 mx-2 w-30 h-10 mt-4 flex-row items-center justify-center bg-[#352C45]
+                                  hover:bg-[#7459a1] hover:cursor-pointer rounded-lg font-poppins leading-[28px] border-[#522b60] transition duration-300 ease-in-out">
+                                       <h1 className="text-white">or Index everything</h1>
+
+                                       {
+                                          this.state.isLoading &&
+                                          <ClipLoader
+                                             color="#ffffff"
+                                             loading={true}
+                                             size={25}
+                                             aria-label="Loading Spinner"
+                                          />
+                                       }
+                                    </div>
+                                 )}
                            </div>
                         </div>
                      }
                   </div>
-               )}
+               )
+            }
          </div>
       );
+   }
+
+   proceed = () => {
+      if (!this.state.selectedDataSource.hasAdditionalSteps) {
+         return this.submit();
+      }
+
+      if (!this.state.isSelectingLocations) {
+         return this.getLocations();
+      }
+
+      if (this.state.selectedLocations.length === 0) {
+         toast.error("Please select at least one location to index");
+         return;
+      }
+
+      this.submit();
    }
 
    copyManifest = () => {
@@ -416,8 +514,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       }
    }
 
-
-   submit = () => {
+   getLocations = () => {
       if (!this.state.selectedDataSource) return;
 
       let config = {};
@@ -425,11 +522,43 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          config[field.name] = field.value;
       });
 
+      toast.info("Looking for confluence spaces (this may take a while)", { autoClose: 6000 });
+
+      this.setState({ isLoading: true });
+      api.post<IndexLocation[]>(`/data-sources/${this.state.selectedDataSource.value}/list-locations`, config, {
+         headers: {
+            uuid: localStorage.getItem('uuid')
+         }
+      }).then(response => {
+         toast.dismiss();
+         toast.success("Listed locations", { autoClose: 2000 });
+         this.setState({ isSelectingLocations: true, locations: response.data, isLoading: false });
+      }).catch(error => {
+         toast.dismiss();
+         toast.error("Error listing locations: " + error.response.data, { autoClose: 10000 });
+         this.setState({ isLoading: false });
+      });
+   }
+
+   indexEverything = () => {
+      this.setState({ selectedLocations: [] });
+      this.submit();
+   }
+
+   submit = () => {
+      if (!this.state.selectedDataSource || this.state.isAdding) return;
+
+      let config = {};
+      this.state.selectedDataSource.configFields.forEach(field => {
+         config[field.name] = field.value;
+      });
+      config['locations_to_index'] = this.state.selectedLocations;
+
       let payload = {
          name: this.state.selectedDataSource.value,
          config: config
       }
-      this.setState({ isAddingLoading: true });
+      this.setState({ isLoading: true });
       api.post(`/data-sources`, payload, {
          headers: {
             uuid: localStorage.getItem('uuid')
@@ -443,15 +572,23 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          });
          this.setState({ selectedDataSource: selectedDataSource });
          this.props.onAdded({ name: this.state.selectedDataSource.value, id: response.data });
-         this.setState({ isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0] });
+         this.reset();
       }).catch(error => {
          toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
-         this.setState({ isAddingLoading: false });
+         this.setState({ isLoading: false });
       });
    }
 
-   onSelectChange = (event) => {
-      this.setState({ selectedDataSource: event })
+   reset = () => {
+      this.setState({ isLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0], isSelectingLocations: false, selectedLocations: [] });
+   }
+
+   onLocationsSelectChange = (event) => {
+      this.setState({ selectedLocations: event });
+   }
+
+   onSourceSelectChange = (event) => {
+      this.setState({ selectedDataSource: event, isSelectingLocations: false, selectedLocations: [] });
    }
 
    removeDataSource = (index: number) => {

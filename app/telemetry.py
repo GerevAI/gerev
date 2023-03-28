@@ -20,6 +20,7 @@ class Posthog:
     BACKEND_SEARCH_EVENT = "backend_search"
     BACKEND_ADDED = "backend_added"
     BACKEND_REMOVED = "backend_removed"
+    BACKEND_LISTED_LOCATIONS = "backend_listed_locations"
     _should_capture = False
     _identified_uuid: Optional[str] = None
 
@@ -90,3 +91,7 @@ class Posthog:
     @classmethod
     def removed_data_source(cls, uuid: str, name: str):
         cls._capture(cls.BACKEND_REMOVED, uuid=uuid, properties={"name": name})
+
+    @classmethod
+    def listed_locations(cls, uuid: str, name: str):
+        cls._capture(cls.BACKEND_LISTED_LOCATIONS, uuid=uuid, properties={"name": name})

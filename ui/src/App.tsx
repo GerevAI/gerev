@@ -54,7 +54,7 @@ Modal.setAppElement('#root');
 
 const discordCode = "gerev-is-pronounced-with-a-hard-g";
 
-const customStyles = {
+const modalCustomStyles = {
   content: {
     top: '50%',
     left: '50%',
@@ -66,6 +66,8 @@ const customStyles = {
     width: '52vw',
     border: 'solid #694f94 0.5px',
     borderRadius: '12px',
+    height: 'fit-content',
+    maxHeight: '86vh',
     padding: '0px'
   },
   overlay: {
@@ -361,7 +363,7 @@ export default class App extends React.Component <{}, AppState>{
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
-          style={customStyles}>
+          style={modalCustomStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
             inIndexing={this.inIndexing()}
             onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict} onRemoved={this.dataSourceRemoved} />

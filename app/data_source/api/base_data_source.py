@@ -1,9 +1,9 @@
 import logging
+import re
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Optional, Callable
-import re
 
 from pydantic import BaseModel
 
@@ -12,10 +12,19 @@ from queues.task_queue import TaskQueue, Task
 from schemas import DataSource
 
 
+class Location(BaseModel):
+    value: str
+    label: str
+
+
 class HTMLInputType(Enum):
     TEXT = "text"
     TEXTAREA = "textarea"
     PASSWORD = "password"
+
+
+class BaseDataSourceConfig(BaseModel):
+    locations_to_index: List[Location] = []
 
 
 class ConfigField(BaseModel):
@@ -67,6 +76,21 @@ class BaseDataSource(ABC):
         words = re.findall('[A-Z][^A-Z]*', pascal_case_source)
         return " ".join(words)
 
+    @staticmethod
+    def has_prerequisites() -> bool:
+        """
+        Data sources that require some prerequisites to be installed before they can be used should override this method
+        """
+        return False
+
+    @staticmethod
+    def list_locations(config: Dict) -> List[Location]:
+        """
+        Returns a list of locations that are available in the data source.
+        Only for data sources that want the user to select only some location to index
+        """
+        return []
+
     @abstractmethod
     def _feed_new_documents(self) -> None:
         """
@@ -75,7 +99,8 @@ class BaseDataSource(ABC):
         raise NotImplementedError
 
     def __init__(self, config: Dict, data_source_id: int, last_index_time: datetime = None) -> None:
-        self._config = config
+        self._raw_config = config
+        self._config: BaseDataSourceConfig = BaseDataSourceConfig(**self._raw_config)
         self._data_source_id = data_source_id
 
         if last_index_time is None:
@@ -112,6 +137,7 @@ class BaseDataSource(ABC):
             time_since_last_task = datetime.now() - self._last_task_time
             if time_since_last_task.total_seconds() < 60 * 60:
                 logging.info("Skipping indexing data source because it was indexed recently")
+                return
 
         try:
             self._save_index_time_in_db()

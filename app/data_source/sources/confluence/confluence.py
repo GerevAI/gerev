@@ -1,13 +1,13 @@
 import logging
+import os
 from datetime import datetime
 from typing import List, Dict
-import os
 
 from atlassian import Confluence
-from pydantic import BaseModel
 from atlassian.errors import ApiError
 from requests import HTTPError
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, Location, BaseDataSourceConfig
 from data_source.api.basic_document import BasicDocument, DocumentType
 from data_source.api.exception import InvalidDataSourceConfig
 from parsers.html import html_to_text
@@ -16,7 +16,7 @@ from queues.index_queue import IndexQueue
 logger = logging.getLogger(__name__)
 
 
-class ConfluenceConfig(BaseModel):
+class ConfluenceConfig(BaseDataSourceConfig):
     url: str
     token: str
 
@@ -31,40 +31,26 @@ class ConfluenceDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def list_spaces(confluence: Confluence, start=0) -> List[Dict]:
+    def list_spaces(confluence: Confluence, start=0) -> List[Location]:
         # Usually the confluence connection fails, so we retry a few times
         retries = 3
         for i in range(retries):
             try:
-                return confluence.get_all_spaces(expand='status', start=start)['results']
+                return [Location(label=space['name'], value=space['key'])
+                        for space in confluence.get_all_spaces(expand='status', start=start)['results']]
             except Exception as e:
                 logging.error(f'Confluence connection failed: {e}')
                 if i == retries - 1:
                     raise e
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
-        try:
-            parsed_config = ConfluenceConfig(**config)
-            confluence = Confluence(url=parsed_config.url, token=parsed_config.token)
-            ConfluenceDataSource.list_spaces(confluence=confluence)
-        except Exception as e:
-            raise InvalidDataSourceConfig from e
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        confluence_config = ConfluenceConfig(**self._config)
-        should_verify_ssl = os.environ.get('CONFLUENCE_VERIFY_SSL') is not None
-        self._confluence = Confluence(url=confluence_config.url, token=confluence_config.token,
-                                      verify_ssl=should_verify_ssl)
-
-    def _list_spaces(self) -> List[Dict]:
+    def list_all_spaces(confluence: Confluence) -> List[Location]:
         logger.info('Listing spaces')
 
         spaces = []
         start = 0
         while True:
-            new_spaces = ConfluenceDataSource.list_spaces(confluence=self._confluence, start=start)
+            new_spaces = ConfluenceDataSource.list_spaces(confluence=confluence, start=start)
             if len(new_spaces) == 0:
                 break
 
@@ -74,31 +60,60 @@ class ConfluenceDataSource(BaseDataSource):
         logger.info(f'Found {len(spaces)} spaces')
         return spaces
 
+    @staticmethod
+    def validate_config(config: Dict) -> None:
+        try:
+            client = ConfluenceDataSource.confluence_client_from_config(config)
+            ConfluenceDataSource.list_spaces(confluence=client)
+        except Exception as e:
+            raise InvalidDataSourceConfig from e
+
+    @staticmethod
+    def confluence_client_from_config(config: Dict) -> Confluence:
+        parsed_config = ConfluenceConfig(**config)
+        should_verify_ssl = os.environ.get('CONFLUENCE_VERIFY_SSL') is not None
+        return Confluence(url=parsed_config.url, token=parsed_config.token, verify_ssl=should_verify_ssl)
+
+    @staticmethod
+    def list_locations(config: Dict) -> List[Location]:
+        confluence = ConfluenceDataSource.confluence_client_from_config(config)
+        return ConfluenceDataSource.list_all_spaces(confluence=confluence)
+
+    @staticmethod
+    def has_prerequisites() -> bool:
+        return True
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._confluence = ConfluenceDataSource.confluence_client_from_config(self._raw_config)
+
+    def _list_spaces(self) -> List[Location]:
+        return ConfluenceDataSource.list_all_spaces(confluence=self._confluence)
+
     def _feed_new_documents(self) -> None:
         logger.info('Feeding new documents with Confluence')
-        spaces = self._list_spaces()
+        spaces = self._config.locations_to_index or self._list_spaces()
         for space in spaces:
             self.add_task_to_queue(self._feed_space_docs, space=space)
 
-    def _feed_space_docs(self, space: Dict) -> List[Dict]:
-        logging.info(f'Getting documents from space {space["name"]} ({space["key"]})')
+    def _feed_space_docs(self, space: Location) -> List[Dict]:
+        logging.info(f'Getting documents from space {space.label} ({space.value})')
         start = 0
         limit = 200  # limit when expanding the version
 
-        space_docs = []
         while True:
-            new_batch = self._confluence.get_all_pages_from_space(space['key'], start=start, limit=limit,
+            new_batch = self._confluence.get_all_pages_from_space(space.value, start=start, limit=limit,
                                                                   expand='version')
+            len_new_batch = len(new_batch)
+            logger.info(f'Got {len_new_batch} documents from space {space.label} (total {start + len_new_batch})')
             for raw_doc in new_batch:
-                raw_doc['space_name'] = space['name']
+                raw_doc['space_name'] = space.label
                 self.add_task_to_queue(self._feed_doc, raw_doc=raw_doc)
 
             if len(new_batch) < limit:
                 break
 
             start += limit
-
-        return space_docs
 
     def _feed_doc(self, raw_doc: Dict):
         last_modified = datetime.strptime(raw_doc['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -137,7 +152,6 @@ class ConfluenceDataSource(BaseDataSource):
                             url=url,
                             type=DocumentType.DOCUMENT)
         IndexQueue.get_instance().put_single(doc=doc)
-
 
 # if __name__ == '__main__':
 #     import os

@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
 from data_source.api.basic_document import DocumentType, BasicDocument
 from queues.index_queue import IndexQueue
 
@@ -27,7 +27,7 @@ class SlackAuthor:
     image_url: str
 
 
-class SlackConfig(BaseModel):
+class SlackConfig(BaseDataSourceConfig):
     token: str
 
 
@@ -52,7 +52,7 @@ class SlackDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        slack_config = SlackConfig(**self._config)
+        slack_config = SlackConfig(**self._raw_config)
         self._slack = WebClient(token=slack_config.token)
         self._authors_cache: Dict[str, SlackAuthor] = {}
 

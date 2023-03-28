@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from requests import Session, HTTPError
 from requests.auth import AuthBase
 
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
 from data_source.api.basic_document import BasicDocument, DocumentType
 from data_source.api.exception import InvalidDataSourceConfig
 from parsers.html import html_to_text
@@ -100,7 +100,7 @@ class BookStack(Session):
             return None
 
 
-class BookStackConfig(BaseModel):
+class BookStackConfig(BaseDataSourceConfig):
     url: str
     token_id: str
     token_secret: str
@@ -143,7 +143,7 @@ class BookstackDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        book_stack_config = BookStackConfig(**self._config)
+        book_stack_config = BookStackConfig(**self._raw_config)
         self._book_stack = BookStack(url=book_stack_config.url, token_id=book_stack_config.token_id,
                                      token_secret=book_stack_config.token_secret)
 
@@ -180,7 +180,7 @@ class BookstackDataSource(BaseDataSource):
 
         plain_text = html_to_text(page_content["html"])
 
-        url = urljoin(self._config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")
+        url = urljoin(self._raw_config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")
 
         document = BasicDocument(title=raw_page["name"],
                                  content=plain_text,

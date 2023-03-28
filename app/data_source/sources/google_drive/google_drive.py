@@ -13,7 +13,7 @@ from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
 from pydantic import BaseModel
 
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
 from data_source.api.basic_document import BasicDocument, DocumentType, FileType
 from data_source.api.exception import KnownException
 from parsers.docx import docx_to_html
@@ -24,7 +24,7 @@ from queues.index_queue import IndexQueue
 logger = logging.getLogger(__name__)
 
 
-class GoogleDriveConfig(BaseModel):
+class GoogleDriveConfig(BaseDataSourceConfig):
     json_str: str
 
 
@@ -60,7 +60,7 @@ class GoogleDriveDataSource(BaseDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         scopes = ['https://www.googleapis.com/auth/drive.readonly']
-        parsed_config = GoogleDriveConfig(**self._config)
+        parsed_config = GoogleDriveConfig(**self._raw_config)
         json_dict = json.loads(parsed_config.json_str)
         self._credentials = ServiceAccountCredentials.from_json_keyfile_dict(json_dict, scopes=scopes)
         self._http_auth = self._credentials.authorize(Http())

@@ -91,7 +91,8 @@ class DynamicLoader:
                 snake_case = re.sub('([a-z0-9])([A-Z])', r'\1_\2',
                                     re.sub('(.)([A-Z][a-z]+)', r'\1_\2', class_name)).lower()
                 clas_name = snake_case.replace('_data_source', '')
-                data_sources[clas_name] = ClassInfo(class_name, class_info['file'])
+                data_sources[clas_name] = ClassInfo(name=class_name,
+                                                    file_path=class_info['file'])
 
         return data_sources
 

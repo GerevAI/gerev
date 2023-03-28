@@ -2,11 +2,12 @@ import datetime
 import logging
 from dataclasses import dataclass
 from typing import Optional, Dict, List
+import os
 
 from pydantic import BaseModel
 from rocketchat_API.rocketchat import RocketChat
 
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
 from data_source.api.basic_document import DocumentType, BasicDocument
 from data_source.api.exception import InvalidDataSourceConfig
 from queues.index_queue import IndexQueue
@@ -33,7 +34,7 @@ class RocketchatAuthor:
     image_url: str
 
 
-class RocketchatConfig(BaseModel):
+class RocketchatConfig(BaseDataSourceConfig):
     url: str
     token_id: str
     token_secret: str
@@ -65,7 +66,7 @@ class RocketchatDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        rocket_chat_config = RocketchatConfig(**self._config)
+        rocket_chat_config = RocketchatConfig(**self._raw_config)
         self._rocket_chat = RocketChat(user_id=rocket_chat_config.token_id, auth_token=rocket_chat_config.token_secret,
                                        server_url=rocket_chat_config.url)
         self._authors_cache: Dict[str, RocketchatAuthor] = {}
@@ -145,7 +146,7 @@ class RocketchatDataSource(BaseDataSource):
         if author is None:
             author_info = self._rocket_chat.users_info(author_id).json().get("user")
             author = RocketchatAuthor(name=author_info.get("name", author_info.get("username")),
-                                      image_url=f"{self._config.get('url')}/avatar/{author_info.get('username')}")
+                                      image_url=f"{self._raw_config.get('url')}/avatar/{author_info.get('username')}")
             self._authors_cache[author_id] = author
 
         return author
@@ -186,7 +187,7 @@ class RocketchatDataSource(BaseDataSource):
             timestamp = message["ts"]
             message_id = message["_id"]
             readable_timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
-            message_url = f"{self._config.get('url')}/{channel.id}?msg={message_id}"
+            message_url = f"{self._raw_config.get('url')}/{channel.id}?msg={message_id}"
             last_msg = BasicDocument(title=channel.name, content=text, author=author.name,
                                      timestamp=readable_timestamp, id=message_id,
                                      data_source_id=self._data_source_id, location=channel.name,

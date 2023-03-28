@@ -22,6 +22,7 @@ from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from queues.index_queue import IndexQueue
 from paths import UI_PATH
+from queues.task_queue import TaskQueue
 from schemas import DataSource
 from schemas.document import Document
 from schemas.paragraph import Paragraph
@@ -69,7 +70,7 @@ def _check_for_new_documents(force=False):
                 continue
 
             logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
-            data_source_instance = DataSourceContext.get_data_source(data_source_id=data_source.id)
+            data_source_instance = DataSourceContext.get_data_source_instance(data_source_id=data_source.id)
             data_source_instance._last_index_time = data_source.last_indexed_at
             data_source_instance.index(force=force)
 
@@ -122,7 +123,7 @@ async def status():
         docs_left_to_index: int
 
     return Status(docs_in_indexing=BackgroundIndexer.get_currently_indexing(),
-                  docs_left_to_index=IndexQueue.get_instance().qsize())
+                  docs_left_to_index=IndexQueue.get_instance().qsize() + TaskQueue.get_instance().qsize())
 
 
 @app.post("/clear-index")
