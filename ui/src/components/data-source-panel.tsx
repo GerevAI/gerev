@@ -29,6 +29,7 @@ export interface DataSourcePanelState {
    isAdding: boolean
    selectedDataSource: SelectOption
    isAddingLoading: boolean
+   removeInProgressIndex: number
    editMode: boolean
 }
 
@@ -83,6 +84,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          isAdding: false,
          isAddingLoading: false,
          selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [] },
+         removeInProgressIndex: -1,
          editMode: false
       }
    }
@@ -142,7 +144,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.length > 0 && <FaRegEdit key="pencil" onClick={this.swithcMode} className='text-white mt-1 float-right inline hover:text-[#9875d4] hover:cursor-pointer' />}
                      </h1>
                      <div className="flex flex-row w-[100%] flex-wrap">
-                        {this.props.connectedDataSources.map((dataSource) => {
+                        {this.props.connectedDataSources.map((dataSource, index) => {
                            return (
                               // connected data source
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
@@ -150,10 +152,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  <h1 className="text-white width-full">{this.props.dataSourceTypesDict[dataSource.name].display_name}</h1>
 
                                  {this.state.editMode ? (
-                                    <IoMdCloseCircle onClick={() => this.removeDataSource(dataSource)} className="transition duration-150 ease-in-out  ml-6 fill-[#7d4ac3] hover:cursor-pointer text-2xl hover:fill-[#d80b0b]" />
-                                 ) : (
-                                    <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />
+                                    this.state.removeInProgressIndex === index ?
+                                       (
+                                          <ClipLoader className="ml-3" color="#7d4ac3" loading={true} size={16} aria-label="Removing..." />
+                                       ) :
+                                       (
+                                          <IoMdCloseCircle onClick={() => this.removeDataSource(index)}
+                                             className="transition duration-150 ease-in-out  ml-6 fill-[#7d4ac3] hover:cursor-pointer text-2xl hover:fill-[#d80b0b]" />
+                                       )
                                  )
+                                    :
+                                    (
+                                       <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />
+                                    )
                                  }
 
                               </div>
@@ -178,7 +189,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
                            })
                         }
-                        <div onClick={() => this.setState({ isAdding: true})} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                        <div onClick={() => this.setState({ isAdding: true })} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
                            <h1 className="text-gray-500">Add</h1>
                            <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                         </div>
@@ -409,7 +420,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             field.value = '';
          });
          this.setState({ selectedDataSource: selectedDataSource });
-         this.props.onAdded({name: this.state.selectedDataSource.value, id: response.data});
+         this.props.onAdded({ name: this.state.selectedDataSource.value, id: response.data });
          this.setState({ isAddingLoading: false, isAdding: false, selectedDataSource: this.state.selectOptions[0] });
       }).catch(error => {
          toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
@@ -421,14 +432,23 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ selectedDataSource: event })
    }
 
-   removeDataSource = (connectedDataSource: ConnectedDataSource) => {
+   removeDataSource = (index: number) => {
       if (this.props.inIndexing) {
          toast.error("Cannot remove data source while indexing is in progress");
          return;
       }
 
+      if (this.state.removeInProgressIndex !== -1) {
+         toast.error("Cannot remove data source while another is being removed");
+         return;
+      }
+
+      let connectedDataSource = this.props.connectedDataSources[index];
+      this.setState({ removeInProgressIndex: index });
+
       api.delete(`/data-sources/${connectedDataSource.id}`).then(response => {
          toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
+         this.setState({ removeInProgressIndex: -1 });
          this.props.onRemoved(connectedDataSource);
       }).catch(error => {
          toast.error("Error removing data source: " + error.response.data, { autoClose: 10000 });
@@ -437,7 +457,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
 
    swithcMode = () => {
-      this.setState({editMode: !this.state.editMode})
+      this.setState({ editMode: !this.state.editMode })
    }
 }
 
