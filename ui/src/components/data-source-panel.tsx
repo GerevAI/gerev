@@ -546,7 +546,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    submit = () => {
-      if (!this.state.selectedDataSource || this.state.isAdding) return;
+      if (!this.state.selectedDataSource || this.state.isLoading) return;
 
       let config = {};
       this.state.selectedDataSource.configFields.forEach(field => {
