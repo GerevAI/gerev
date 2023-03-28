@@ -208,6 +208,7 @@ export default class App extends React.Component <{}, AppState>{
   
   openModal() {
     if (this.state.didPassDiscord) {
+      posthog.capture('open_panel');
       this.setState({isModalOpen: true});
     } else {
       toast.error("You must pass the discord verification first.", {autoClose: 3000});
@@ -219,6 +220,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   closeModal() {
+    posthog.capture('close_panel');
     this.setState({isModalOpen: false});
   }
 
@@ -257,10 +259,12 @@ export default class App extends React.Component <{}, AppState>{
   saveDiscordPassed = () => {
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
+    posthog.capture('passed_discord');
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
   }
 
   dataSourcesAdded = (newlyConnected: ConnectedDataSource) => {
+    posthog.capture('added', {name: newlyConnected.name});
     this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, newlyConnected]});
     // if had no data from server, show toast after 30 seconds
     setTimeout(() => {
@@ -272,6 +276,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   dataSourceRemoved = (removed: ConnectedDataSource) => {
+    posthog.capture('removed', {name: removed.name});
     this.setState({connectedDataSources: this.state.connectedDataSources.filter((ds) => ds.id !== removed.id)});
   }
 
