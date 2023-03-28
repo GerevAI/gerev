@@ -1,7 +1,7 @@
 import * as React from "react";
 import { v4 as uuidv4 } from 'uuid';
 import posthog from 'posthog-js';
-
+import { Tooltip } from 'react-tooltip'
 
 
 import EnterImage from './assets/images/enter.svg';
@@ -23,6 +23,7 @@ import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
 import { ConnectedDataSource, DataSourceType } from "./data-source";
+import {MdOutlineSupportAgent} from "react-icons/md";
 
 export interface AppState {
   query: string
@@ -281,7 +282,15 @@ export default class App extends React.Component <{}, AppState>{
   render() {
     return (
     <div>
+      <Tooltip id="my-tooltip" style={{fontSize: "18px"}}/>
       <ToastContainer className='z-50' theme="colored" />
+      <a href="https://discord.com/channels/1060085859497549844/1086664063767023636" rel="noreferrer" target='_blank'>
+        <MdOutlineSupportAgent data-tooltip-id="my-tooltip" 
+                            data-tooltip-content="🕒 24/7 live support on Discord 👨‍🔧" 
+                            data-tooltip-place="bottom"
+          className="absolute left-0 z-30 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
+        </MdOutlineSupportAgent>
+      </a>
       <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
         className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
       </FiSettings>

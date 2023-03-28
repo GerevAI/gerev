@@ -4,6 +4,7 @@ import './assets/css/index.css';
 import App from './App';
 import { PostHogProvider} from 'posthog-js/react'
 import posthog from 'posthog-js';
+import 'react-tooltip/dist/react-tooltip.css'
 
 posthog.init(
   "phc_unIQdP9MFUa5bQNIKy5ktoRCPWMPWgqTbRvZr4391Pm",
