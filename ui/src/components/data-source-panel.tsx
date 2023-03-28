@@ -71,7 +71,6 @@ const slackManifest = {
 }
 
 
-let addOrRemoveIcon = <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />;
 
 export default class DataSourcePanel extends React.Component<DataSourcePanelProps, DataSourcePanelState> {
 
@@ -135,7 +134,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             </div>
             {
                !this.state.isAdding && (
-                  <div>
+                  <div className="w-full">
                      <h1 className="text-2xl block text-white mb-4">
                         {this.props.connectedDataSources.length > 0 ? 'Active data sources:' : 'No Active Data Sources. Add Now!'}
                         <BsFillPencilFill key="pencil" onClick={this.swithcMode} className='text-white float-right inline hover:text-[#9875d4] hover:cursor-pointer' />
@@ -146,10 +145,10 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               // connected data source
                               <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[data_source].image_base64}></img>
-                                 <h1 className="text-white">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
+                                 <h1 className="text-white width-full">{this.props.dataSourceTypesDict[data_source].display_name}</h1>
 
                                  {this.state.editMode ? (
-                                    <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 text-[#df335e] text-2xl hover:text-[#ff6289]" />
+                                    <IoMdCloseCircle onClick={this.removeDataSource} className="ml-6 fill-[#df335e] text-2xl hover:fill-[#ff85c2]" />
                                  ) : (
                                     <AiFillCheckCircle className="ml-6 text-[#9875d4] text-2xl" />
                                  )
@@ -162,7 +161,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {
                            Object.keys(this.props.dataSourceTypesDict).map((key) => {
                               let dataSource = this.props.dataSourceTypesDict[key];
-                              if (!this.props.connectedDataSources.includes(dataSource.name)) {
+                              if (!this.props.connectedDataSources.includes(dataSource.name) && !this.state.editMode) {
                                  return (
                                     // unconnected data source
                                     <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
