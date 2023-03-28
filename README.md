@@ -36,7 +36,7 @@ Coming Soon...
  - [ ] Zendesk (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
- - [ ] Trello (In progress... :pray:)
+ - [ ] Trello (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
  - [ ] Jira
