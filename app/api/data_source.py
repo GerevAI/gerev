@@ -5,11 +5,13 @@ from typing import List
 from fastapi import APIRouter
 from pydantic import BaseModel
 from starlette.background import BackgroundTasks
+from starlette.requests import Request
 
 from data_source.api.base_data_source import ConfigField
 from data_source.api.context import DataSourceContext
 from db_engine import Session
 from schemas import DataSourceType, DataSource
+from telemetry import Posthog
 
 router = APIRouter(
     prefix='/data-sources',
@@ -64,15 +66,16 @@ class AddDataSource(BaseModel):
 
 
 @router.delete("/{data_source_id}")
-async def delete_data_source(data_source_id: int):
-    DataSourceContext.delete_data_source(data_source_id=data_source_id)
+async def delete_data_source(request: Request, data_source_id: int):
+    deleted_name = DataSourceContext.delete_data_source(data_source_id=data_source_id)
+    Posthog.removed_data_source(uuid=request.headers.get('uuid'), name=deleted_name)
     return {"success": "Data source deleted successfully"}
 
 
 @router.post("")
-async def add_integration(dto: AddDataSource, background_tasks: BackgroundTasks) -> int:
+async def add_integration(request: Request, dto: AddDataSource, background_tasks: BackgroundTasks) -> int:
     data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
-
+    Posthog.added_data_source(uuid=request.headers.get('uuid'), name=dto.name)
     # in main.py we have a background task that runs every 5 minutes and indexes the data source
     # but here we want to index the data source immediately
     background_tasks.add_task(data_source.index)

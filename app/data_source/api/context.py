@@ -47,16 +47,19 @@ class DataSourceContext:
             return data_source
 
     @classmethod
-    def delete_data_source(cls, data_source_id: int):
+    def delete_data_source(cls, data_source_id: int) -> str:
         with Session() as session:
             data_source = session.query(DataSource).filter_by(id=data_source_id).first()
             if data_source is None:
                 raise KnownException(message=f"Data source {data_source_id} does not exist")
 
+            data_source_name = data_source.type.name
             session.delete(data_source)
             session.commit()
 
             del cls._data_sources[data_source_id]
+
+            return data_source_name
 
     @classmethod
     def init(cls):

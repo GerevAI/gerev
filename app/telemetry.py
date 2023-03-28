@@ -18,6 +18,8 @@ class Posthog:
 
     RUN_EVENT = "run"
     BACKEND_SEARCH_EVENT = "backend_search"
+    BACKEND_ADDED = "backend_added"
+    BACKEND_REMOVED = "backend_removed"
     _should_capture = False
     _identified_uuid: Optional[str] = None
 
@@ -57,7 +59,7 @@ class Posthog:
             pass
 
     @classmethod
-    def _capture(cls, event: str, uuid=None):
+    def _capture(cls, event: str, uuid=None, properties=None):
         if cls._identified_uuid is None:
             cls._identify()
 
@@ -65,7 +67,7 @@ class Posthog:
             return
 
         try:
-            posthog.capture(uuid or cls._identified_uuid, event)
+            posthog.capture(uuid or cls._identified_uuid, event, properties)
         except Exception as e:
             pass
 
@@ -80,3 +82,11 @@ class Posthog:
     @classmethod
     def increase_search_count(cls, uuid: str):
         cls._capture(cls.BACKEND_SEARCH_EVENT, uuid=uuid)
+
+    @classmethod
+    def added_data_source(cls, uuid: str, name: str):
+        cls._capture(cls.BACKEND_ADDED, uuid=uuid, properties={"name": name})
+
+    @classmethod
+    def removed_data_source(cls, uuid: str, name: str):
+        cls._capture(cls.BACKEND_REMOVED, uuid=uuid, properties={"name": name})

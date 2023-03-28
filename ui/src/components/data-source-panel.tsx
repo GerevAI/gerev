@@ -412,7 +412,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          config: config
       }
       this.setState({ isAddingLoading: true });
-      api.post(`/data-sources`, payload).then(response => {
+      api.post(`/data-sources`, payload, {
+         headers: {
+            uuid: localStorage.getItem('uuid')
+         }
+      }).then(response => {
          toast.success("Data source added successfully, indexing...");
 
          let selectedDataSource = this.state.selectedDataSource;
@@ -446,7 +450,11 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       let connectedDataSource = this.props.connectedDataSources[index];
       this.setState({ removeInProgressIndex: index });
 
-      api.delete(`/data-sources/${connectedDataSource.id}`).then(response => {
+      api.delete(`/data-sources/${connectedDataSource.id}`, {
+         headers: {
+            uuid: localStorage.getItem('uuid')
+         }
+      }).then(response => {
          toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
          this.setState({ removeInProgressIndex: -1 });
          this.props.onRemoved(connectedDataSource);
