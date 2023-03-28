@@ -1,6 +1,8 @@
 import * as React from "react";
 import Select, { components } from 'react-select';
 import copy from 'copy-to-clipboard';
+import { confirmAlert } from 'react-confirm-alert'; // Import
+import 'react-confirm-alert/src/react-confirm-alert.css'; // Import css
 
 import CopyThis from '../assets/images/copy-this.png';
 import LeftPane from '../assets/images/left-pane-instructions.png';
@@ -123,6 +125,22 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       this.setState({ isAdding: true, selectedDataSource: selectedDataSource })
    }
 
+   confirmDelete = (index: number) => {
+      confirmAlert({
+         title: 'Alert',
+         message: `Are you sure you want to delete ${this.capitilize(this.props.connectedDataSources[index].name)}?`,
+         buttons: [
+            {
+               label: 'Yes, delete it',
+               onClick: () => this.removeDataSource(index)
+            },
+            {
+               label: 'No'
+            }
+         ]
+      });
+   };
+
 
    render() {
       return (
@@ -157,7 +175,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                           <ClipLoader className="ml-3" color="#7d4ac3" loading={true} size={16} aria-label="Removing..." />
                                        ) :
                                        (
-                                          <IoMdCloseCircle onClick={() => this.removeDataSource(index)}
+                                          <IoMdCloseCircle onClick={() => this.confirmDelete(index)}
                                              className="transition duration-150 ease-in-out  ml-6 fill-[#7d4ac3] hover:cursor-pointer text-2xl hover:fill-[#d80b0b]" />
                                        )
                                  )
