@@ -208,7 +208,6 @@ export default class App extends React.Component <{}, AppState>{
   
   openModal() {
     if (this.state.didPassDiscord) {
-      posthog.capture('open_panel');
       this.setState({isModalOpen: true});
     } else {
       toast.error("You must pass the discord verification first.", {autoClose: 3000});
@@ -220,7 +219,6 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   closeModal() {
-    posthog.capture('close_panel');
     this.setState({isModalOpen: false});
   }
 
