@@ -94,7 +94,7 @@ class TrelloDataSource(BaseDataSource):
 
         for raw_page in raw_docs:
             comments = self._fetch_card_comments(raw_page['id'])
-            if len(comments) >= 1:
+            if len(comments):
                 for comment in comments:
                     last_modified = datetime.datetime.strptime(comment['date'], "%Y-%m-%dT%H:%M:%S.%fZ")
                     if last_modified < self._last_index_time:
