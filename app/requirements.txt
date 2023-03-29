@@ -23,3 +23,4 @@ alembic
 rocketchat-API
 mattermostdriver
 persistqueue
+azure-devops
