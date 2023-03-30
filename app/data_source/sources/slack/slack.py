@@ -2,9 +2,10 @@ import datetime
 import logging
 import time
 from dataclasses import dataclass
+from http.client import IncompleteRead
 from typing import Optional, Dict, List
 
-from pydantic import BaseModel
+from retry import retry
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
@@ -68,6 +69,7 @@ class SlackDataSource(BaseDataSource):
             try:
                 result = self._slack.conversations_join(channel=conv.id)
                 if result['ok']:
+                    logger.info(f'Joined channel {conv.name}')
                     joined_conversations.append(conv)
             except Exception as e:
                 logger.warning(f'Could not join channel {conv.name}: {e}')
@@ -96,7 +98,7 @@ class SlackDataSource(BaseDataSource):
         for conv in joined_conversations:
             self.add_task_to_queue(self._feed_conversation, conv=conv)
 
-    def _feed_conversation(self, conv):
+    def _feed_conversation(self, conv: SlackConversation):
         logger.info(f'Feeding conversation {conv.name}')
 
         last_msg: Optional[BasicDocument] = None
@@ -133,7 +135,25 @@ class SlackDataSource(BaseDataSource):
         if last_msg is not None:
             IndexQueue.get_instance().put_single(doc=last_msg)
 
-    def _fetch_conversation_messages(self, conv):
+    @retry(tries=5, delay=1, backoff=2, logger=logger)
+    def _get_conversation_history(self, conv: SlackConversation, cursor: str, last_index_unix: str):
+        try:
+            return self._slack.conversations_history(channel=conv.id, oldest=last_index_unix,
+                                                     limit=1000, cursor=cursor)
+        except SlackApiError as e:
+            logger.warning(f'SlackApi error while fetching messages for conversation {conv.name}: {e}')
+            response = e.response
+            if response['error'] == 'ratelimited':
+                retry_after_seconds = int(response['headers']['Retry-After'])
+                logger.warning(f'Rate-limited: Slack API rate limit exceeded,'
+                               f' retrying after {retry_after_seconds} seconds')
+                time.sleep(retry_after_seconds)
+            raise e
+        except IncompleteRead as e:
+            logger.warning(f'IncompleteRead error while fetching messages for conversation {conv.name}')
+            raise e
+
+    def _fetch_conversation_messages(self, conv: SlackConversation):
         messages = []
         cursor = None
         has_more = True
@@ -142,17 +162,12 @@ class SlackDataSource(BaseDataSource):
 
         while has_more:
             try:
-                response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
-                                                             limit=1000, cursor=cursor)
-            except SlackApiError as e:
-                logger.warning(f'Error fetching messages for conversation {conv.name}: {e}')
-                response = e.response
-                if response['error'] == 'ratelimited':
-                    retry_after_seconds = int(response['headers']['Retry-After'])
-                    logger.warning(f'Ratelimited: Slack API rate limit exceeded,'
-                                   f' retrying after {retry_after_seconds} seconds')
-                    time.sleep(retry_after_seconds)
-                    continue
+                response = self._get_conversation_history(conv=conv, cursor=cursor,
+                                                          last_index_unix=str(last_index_unix))
+            except Exception as e:
+                logger.warning(f'Error fetching all messages for conversation {conv.name},'
+                               f' returning {len(messages)} messages. Error: {e}')
+                return messages
 
             logger.info(f'Fetched {len(response["messages"])} messages for conversation {conv.name}')
             messages.extend(response['messages'])
