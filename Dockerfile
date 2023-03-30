@@ -16,7 +16,6 @@ RUN npm run build
 # Builds the backend as well as gets the built UI from Stage 1
 FROM python:3.9
 ENV CAPTURE_TELEMETRY=1
-ENV DOCKER_DEPLOYMENT=1
 
 WORKDIR /app
 
@@ -28,7 +27,7 @@ COPY ./app/models.py /tmp/models.py
 RUN python3 /tmp/models.py
 
 COPY --from=node-builder /app/ui/build ./ui
-COPY ./run.sh /app/run.sh
+COPY ./run.sh .
 
 VOLUME [ "/opt/storage" ]
 
