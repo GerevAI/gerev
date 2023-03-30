@@ -90,17 +90,17 @@ class StackOverflowDataSource(BaseDataSource):
         logger.info(f'Feeding post {post.title}')
         post_document = BasicDocument(title=post.title, content=post.body_markdown, author=post.owner_display_name,
                                       timestamp=datetime.fromtimestamp(post.creation_date), id=post.post_id,
-                                      data_source_id=post.post_id, location=post.link,
+                                      data_source_id=self._data_source_id, location=post.link,
                                       url=post.link, author_image_url=post.owner_profile_image,
                                       type=DocumentType.MESSAGE)
         IndexQueue.get_instance().put_single(doc=post_document)
 
-def test():
-    import os
-    config = {"api_key": os.environ['SO_API_KEY'], "team_name": os.environ['SO_TEAM_NAME']}
-    so = StackOverflowDataSource(config=config, data_source_id=0)
-    so._feed_new_documents()
-
-
-if __name__ == '__main__':
-    test()
+# def test():
+#     import os
+#     config = {"api_key": os.environ['SO_API_KEY'], "team_name": os.environ['SO_TEAM_NAME']}
+#     so = StackOverflowDataSource(config=config, data_source_id=0)
+#     so._feed_new_documents()
+#
+#
+# if __name__ == '__main__':
+#     test()
