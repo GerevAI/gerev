@@ -27,7 +27,7 @@ COPY ./app /app
 COPY ./app/models.py /tmp/models.py
 RUN python3 /tmp/models.py
 
-COPY --from=node-builder /app/ui/build ./ui
+COPY --from=node-builder /app/ui/build /ui
 COPY ./run.sh .
 
 VOLUME [ "/opt/storage" ]

@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-IS_IN_DOCKER = os.geteuid() == 0
+IS_IN_DOCKER = True #os.geteuid() == 0
 
 STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
 
