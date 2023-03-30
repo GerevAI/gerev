@@ -1,5 +1,6 @@
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Dict, List
 import requests
 
@@ -65,7 +66,7 @@ class StackOverflowDataSource(BaseDataSource):
         response.raise_for_status()
         return response.json()
 
-    def _feed_new_posts(self) -> None:
+    def _feed_new_documents(self) -> None:
         page = 1
         has_more = True
         for doc_type in endpoints:
@@ -82,14 +83,11 @@ class StackOverflowDataSource(BaseDataSource):
     def _feed_post(self, post: StackOverflowPost) -> None:
         logger.info(f'Feeding post {post.title}')
         post_document = BasicDocument(title=post.title, content=post.body_markdown, author=post.owner_display_name,
-                                      timestamp=post.creation_date, id=post.post_id,
+                                      timestamp=datetime.fromtimestamp(post.creation_date), id=post.post_id,
                                       data_source_id=post.post_id, location=post.link,
                                       url=post.link, author_image_url=post.owner_profile_image,
                                       type=DocumentType.MESSAGE)
         IndexQueue.get_instance().put_single(doc=post_document)
-
-    def run(self):
-        self._feed_new_posts()
 
 
 # if __name__ == '__main__':
