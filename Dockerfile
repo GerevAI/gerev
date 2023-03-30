@@ -1,5 +1,7 @@
 FROM python:3.9
 
+ENV DOCKER_DEPLOYMENT=1
+
 RUN pip install torch
 
 COPY ./app/requirements.txt /tmp/requirements.txt

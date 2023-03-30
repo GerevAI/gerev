@@ -19,7 +19,7 @@ class DynamicLoader:
     This class is used to dynamically load classes from files.
     Specifically, it is used to load data sources from the data_source/sources directory.
     """
-    SOURCES_PATH = 'data_source/sources'
+    SOURCES_PATH = os.path.join('data_source', 'sources')
 
     @staticmethod
     def extract_classes(file_path: str):
@@ -39,8 +39,10 @@ class DynamicLoader:
 
     @staticmethod
     def get_class(file_path: str, class_name: str):
+        
         module_name = file_path.replace("/", ".").replace(".py", "")
-        module = importlib.import_module(module_name)
+        loader = importlib.machinery.SourceFileLoader(class_name, file_path)
+        module = loader.load_module()
         try:
             return getattr(module, class_name)
         except AttributeError:
