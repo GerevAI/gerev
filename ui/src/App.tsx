@@ -31,6 +31,8 @@ export interface AppState {
   searchDuration: number
   dataSourceTypes: DataSourceType[]
   dataSourceTypesDict: { [key: string]: DataSourceType }
+  didListedDataSources: boolean
+  didListedConnectedDataSources: boolean
   connectedDataSources: ConnectedDataSource[]
   isLoading: boolean
   isNoResults: boolean
@@ -43,6 +45,7 @@ export interface AppState {
   docsLeftToIndex: number
   docsInIndexing: number
   lastServerDownTimestamp: number
+  showResultsPage: boolean
 }
 
 export interface ServerStatus {
@@ -86,8 +89,10 @@ export default class App extends React.Component <{}, AppState>{
       query: "",
       results: [],
       dataSourceTypes: [],
+      didListedDataSources: false,
       dataSourceTypesDict: {},
       connectedDataSources: [],
+      didListedConnectedDataSources: false,
       isLoading: false,
       isNoResults: false,
       isModalOpen: false,
@@ -100,6 +105,7 @@ export default class App extends React.Component <{}, AppState>{
       docsInIndexing: 0,
       searchDuration: 0,
       lastServerDownTimestamp: 0,
+      showResultsPage: false
     }
 
     this.openModal = this.openModal.bind(this);
@@ -124,6 +130,17 @@ export default class App extends React.Component <{}, AppState>{
       this.listConnectedDataSources();
       this.listDataSourceTypes();
     }
+
+    this.handleQueryInUrl();
+  }
+
+  handleQueryInUrl() {
+    const path = window.location.pathname;
+    const query = new URLSearchParams(window.location.search).get('query');
+    if (path === '/search' && query !== null && query !== "") {
+      this.setState({query: query, showResultsPage: true});
+      this.search(query);
+    }
   }
 
   async listDataSourceTypes() {
@@ -133,7 +150,7 @@ export default class App extends React.Component <{}, AppState>{
       response.data.forEach((dataSourceType) => { 
         dataSourceTypesDict[dataSourceType.name] = dataSourceType;
       });
-      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict });
+      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict, didListedDataSources: true });
     } catch (error) {
     }
   }
@@ -141,7 +158,7 @@ export default class App extends React.Component <{}, AppState>{
   async listConnectedDataSources() {
     try {
       const response = await api.get<ConnectedDataSource[]>('/data-sources/connected');
-      this.setState({ connectedDataSources: response.data });
+      this.setState({ connectedDataSources: response.data, didListedConnectedDataSources: true });
     } catch (error) {
     }
   }
@@ -308,7 +325,7 @@ export default class App extends React.Component <{}, AppState>{
           </div>
         }
         {
-          this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
+          this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -358,7 +375,7 @@ export default class App extends React.Component <{}, AppState>{
 
             </div>
         }
-      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length === 0  ? ' filter blur-sm' : '')}>
+        <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || (this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0)  ? ' filter blur-sm' : '')}>
         <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
@@ -371,7 +388,7 @@ export default class App extends React.Component <{}, AppState>{
 
         {/* front search page*/}
         {
-          this.state.results.length === 0 &&    
+          !this.state.showResultsPage &&    
             <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
@@ -387,16 +404,12 @@ export default class App extends React.Component <{}, AppState>{
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
                   <img alt="enter" className="ml-2" src={EnterImage}></img>
                 </button>
-                { this.state.isNoResults && 
-                  <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
-                  </span>
-                }
             </div>  
         } 
 
         {/* results page */}
         {
-          this.state.results.length > 0 && 
+          this.state.showResultsPage && 
           <div className="relative flex flex-row top-20 left-5 w-full sm:w-11/12">
             <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
@@ -405,17 +418,23 @@ export default class App extends React.Component <{}, AppState>{
             <div className="flex flex-col items-start w-10/12 sm:w-full">
               <SearchBar widthPercentage={40} isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
-              <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
-                {this.state.results.length} Results ({this.state.searchDuration} seconds)
-              </span>
-              <div className='w-[100vw] 2xl:w-8/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
-                {this.state.results.map((result, index) => {
-                    return (
-                      <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
-                      )
-                    }
-                  )}
-              </div>
+              {
+                !this.state.isLoading &&
+                  <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
+                    {this.state.results.length} Results ({this.state.searchDuration} seconds)
+                  </span>
+              }
+              {
+                this.state.dataSourceTypes.length > 0 &&     
+                <div className='w-[100vw] 2xl:w-8/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
+                  {this.state.results.map((result, index) => {
+                      return (
+                        <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
+                        )
+                      }
+                    )}
+                </div>
+              }
             </div>
           </div>
         }
@@ -433,13 +452,16 @@ export default class App extends React.Component <{}, AppState>{
   }
   
   clear = () => {
-    this.setState({query: "", results: []});
+    this.setState({query: ""});
   }
 
-  search = () => {
-    if (this.state.query === "") {
+  search = (query?: string) => {
+    if (!query && this.state.query === "") {
+      console.log("empty query");
       return;
     }
+
+    let searchQuery = query ? query : this.state.query;
 
     this.setState({isLoading: true});
     let start = new Date().getTime();
@@ -449,7 +471,7 @@ export default class App extends React.Component <{}, AppState>{
     try {
         api.get<SearchResultDetails[]>("/search", {
           params: {
-            query: this.state.query
+            query: searchQuery
           },
           headers: {
             uuid: localStorage.getItem('uuid')
@@ -460,9 +482,9 @@ export default class App extends React.Component <{}, AppState>{
             let end = new Date().getTime();
             let duartionSeconds =  (end - start) / 1000;
             this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds,
-              isNoResults: response.data.length === 0
+              showResultsPage: response.data.length > 0,
             });
-            addToSearchHistory(this.state.query);
+            addToSearchHistory(searchQuery);
 
             if(response.data.length === 0) {
               toast.warn("No results found");
