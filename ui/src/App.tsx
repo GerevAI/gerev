@@ -1,7 +1,7 @@
 import * as React from "react";
 import { v4 as uuidv4 } from 'uuid';
 import posthog from 'posthog-js';
-
+import { Tooltip } from 'react-tooltip'
 
 
 import EnterImage from './assets/images/enter.svg';
@@ -22,7 +22,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
-import { DataSourceType } from "./data-source";
+import { ConnectedDataSource, DataSourceType } from "./data-source";
+import {MdOutlineSupportAgent} from "react-icons/md";
 
 export interface AppState {
   query: string
@@ -30,7 +31,7 @@ export interface AppState {
   searchDuration: number
   dataSourceTypes: DataSourceType[]
   dataSourceTypesDict: { [key: string]: DataSourceType }
-  connectedDataSources: string[]
+  connectedDataSources: ConnectedDataSource[]
   isLoading: boolean
   isNoResults: boolean
   isModalOpen: boolean
@@ -53,7 +54,7 @@ Modal.setAppElement('#root');
 
 const discordCode = "gerev-is-pronounced-with-a-hard-g";
 
-const customStyles = {
+const modalCustomStyles = {
   content: {
     top: '50%',
     left: '50%',
@@ -65,6 +66,8 @@ const customStyles = {
     width: '52vw',
     border: 'solid #694f94 0.5px',
     borderRadius: '12px',
+    height: 'fit-content',
+    maxHeight: '86vh',
     padding: '0px'
   },
   overlay: {
@@ -125,7 +128,7 @@ export default class App extends React.Component <{}, AppState>{
 
   async listDataSourceTypes() {
     try {
-      const response = await api.get<DataSourceType[]>('/data-source/list-types');
+      const response = await api.get<DataSourceType[]>('/data-sources/types');
       let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
       response.data.forEach((dataSourceType) => { 
         dataSourceTypesDict[dataSourceType.name] = dataSourceType;
@@ -137,8 +140,8 @@ export default class App extends React.Component <{}, AppState>{
 
   async listConnectedDataSources() {
     try {
-       const response = await api.get('/data-source/list-connected');
-       this.setState({ connectedDataSources: response.data })
+      const response = await api.get<ConnectedDataSource[]>('/data-sources/connected');
+      this.setState({ connectedDataSources: response.data });
     } catch (error) {
     }
   }
@@ -167,7 +170,7 @@ export default class App extends React.Component <{}, AppState>{
       }
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
-                     docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
+                    docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
 
       let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
       setTimeout(() => this.fetchStatsusForever(), timeToSleep);
@@ -183,7 +186,7 @@ export default class App extends React.Component <{}, AppState>{
     })    
   }
 
-  shouldShowIndexingStatus() {
+  inIndexing() {
     return this.state.isPreparingIndexing || this.state.docsInIndexing > 0 || this.state.docsLeftToIndex > 0;
   }
 
@@ -257,11 +260,13 @@ export default class App extends React.Component <{}, AppState>{
   saveDiscordPassed = () => {
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
+    posthog.capture('passed_discord');
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
   }
 
-  dataSourcesAdded = (dataSourceType: string) => {
-    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, dataSourceType]});
+  dataSourcesAdded = (newlyConnected: ConnectedDataSource) => {
+    posthog.capture('added', {name: newlyConnected.name});
+    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, newlyConnected]});
     // if had no data from server, show toast after 30 seconds
     setTimeout(() => {
       if (this.state.isPreparingIndexing) {
@@ -271,15 +276,28 @@ export default class App extends React.Component <{}, AppState>{
     }, 1000 * 120);
   }
 
+  dataSourceRemoved = (removed: ConnectedDataSource) => {
+    posthog.capture('removed', {name: removed.name});
+    this.setState({connectedDataSources: this.state.connectedDataSources.filter((ds) => ds.id !== removed.id)});
+  }
+
   render() {
     return (
     <div>
+      <Tooltip id="my-tooltip" style={{fontSize: "18px"}}/>
       <ToastContainer className='z-50' theme="colored" />
+      <a href="https://discord.com/channels/1060085859497549844/1086664063767023636" rel="noreferrer" target='_blank'>
+        <MdOutlineSupportAgent data-tooltip-id="my-tooltip" 
+                            data-tooltip-content="🕒 24/7 live support on Discord 👨‍🔧" 
+                            data-tooltip-place="bottom"
+          className="absolute left-0 z-30 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
+        </MdOutlineSupportAgent>
+      </a>
       <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
         className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
       </FiSettings>
         {
-          this.shouldShowIndexingStatus() &&
+          this.inIndexing() &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#191919] border-[#4F4F4F] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -345,9 +363,10 @@ export default class App extends React.Component <{}, AppState>{
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
-          style={customStyles}>
+          style={modalCustomStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict}/>
+            inIndexing={this.inIndexing()}
+            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict} onRemoved={this.dataSourceRemoved} />
         </Modal>
 
         {/* front search page*/}

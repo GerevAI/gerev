@@ -18,4 +18,15 @@ export interface DataSourceType {
     display_name: string
     config_fields: ConfigField[]
     image_base64: string
+    has_prerequisites: boolean
+}
+
+export interface ConnectedDataSource {
+    id: number
+    name: string
+}
+
+export interface IndexLocation {
+    value: string
+    label: string
 }

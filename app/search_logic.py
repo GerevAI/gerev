@@ -12,8 +12,8 @@ import nltk
 import torch
 from sentence_transformers import CrossEncoder
 
-from data_source_api.basic_document import DocumentType, FileType
-from data_source_api.utils import get_confluence_user_image
+from data_source.api.basic_document import DocumentType, FileType
+from data_source.api.utils import get_confluence_user_image
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
