@@ -32,12 +32,12 @@ Coming Soon...
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
  - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
+ - [X] Stackoverflow Teams - by [@allen-munsch](https://github.com/allen-munsch) :pray:
  - [ ] Gitlab Issues (In PR :pray:)
  - [ ] Zendesk (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Trello (In Progress... :pray:)
- - [ ] Stackoverflow Teams (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
  - [ ] Jira
