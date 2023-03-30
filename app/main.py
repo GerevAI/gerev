@@ -3,17 +3,15 @@ from datetime import datetime
 import logging
 from dataclasses import dataclass
 from typing import List
-
+import os
 import torch
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi_restful.tasks import repeat_every
-from starlette.responses import Response
+from starlette.responses import Response, FileResponse
 
 from api.data_source import router as data_source_router
 from api.search import router as search_router
-from data_source.api.dynamic_loader import DynamicLoader
 from data_source.api.exception import KnownException
 from data_source.api.context import DataSourceContext
 from db_engine import Session
@@ -57,8 +55,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.include_router(search_router)
-app.include_router(data_source_router)
+app.include_router(search_router, prefix="/api/v1")
+app.include_router(data_source_router, prefix="/api/v1")
 
 
 def _check_for_new_documents(force=False):
@@ -115,7 +113,7 @@ async def shutdown_event():
     Workers.stop()
 
 
-@app.get("/status")
+@app.get("/api/v1/status")
 async def status():
     @dataclass
     class Status:
@@ -140,10 +138,19 @@ async def clear_index():
 async def check_for_new_documents_endpoint():
     _check_for_new_documents(force=True)
 
-try:
-    app.mount('/', StaticFiles(directory=UI_PATH, html=True), name='ui')
-except Exception as e:
-    logger.warning(f"Failed to mount UI (you probably need to build it): {e}")
+
+@app.get("/{path:path}", include_in_schema=False)
+async def serve_ui(request: Request, path: str):
+    try:
+        if path == "" or path.startswith("search"):
+            file_path = os.path.join(UI_PATH, "index.html")
+        else:
+            file_path = os.path.join(UI_PATH, path)
+
+        return FileResponse(file_path, status_code=200)
+    except Exception as e:
+        logger.warning(f"Failed to serve UI (you probably need to build it): {e}")
+        raise HTTPException(status_code=404, detail="File not found")
 
 
 if __name__ == '__main__':
