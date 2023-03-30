@@ -10,11 +10,6 @@ from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
-endpoints = [
-    'posts',
-    'articles',
-]
-
 
 @dataclass
 class StackOverflowPost:
@@ -60,45 +55,50 @@ class StackOverflowDataSource(BaseDataSource):
         self._api_key = so_config.api_key
         self._team_name = so_config.team_name
 
-    @staticmethod
-    def _fetch_posts(api_key: str, team_name: str, page: int, doc_type: str) -> Dict:
-        url = f'https://api.stackoverflowteams.com/2.3/{doc_type}?team={team_name}&filter=!nOedRLbqzB&page={page}'
+    def _fetch_posts(self, api_key: str, team_name: str, page: int, doc_type: str) -> None:
+        team_fragment = f'&team={team_name}'
+        # this is a filter for "body markdown" inclusion, all filters are unique and static
+        # i am not entirely sure if this is per account, or usable by everyone
+        filter_fragment = '&filter=!nOedRLbqzB'
+        page_fragment = f'&page={page}'
+        # it looked like the timestamp was 10 digits, lets only look at stuff that is newer than the last index time
+        from_date_fragment = f'&fromdate={self._last_index_time.timestamp():.10n}'
+        url = f'https://api.stackoverflowteams.com/2.3/{doc_type}?{team_fragment}{filter_fragment}{page_fragment}{from_date_fragment}'
         response = requests.get(url, headers={'X-API-Access-Token': api_key})
+        has_more = response['has_more']
         response.raise_for_status()
-        return response.json()
+        items = response['items']
+        logger.info(f'Fetched {len(items)} {doc_type} from Stack Overflow')
+        for item_dict in items:
+            owner_fields = {}
+            if 'owner' in item_dict:
+                owner_fields = {f"owner_{k}": v for k, v in item_dict.pop('owner').items()}
+            if 'title' not in item_dict:
+                item_dict['title'] = item_dict['link']
+            post = StackOverflowPost(**item_dict, **owner_fields)
+            last_modified = datetime.strptime(post.last_edit_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+            if last_modified < self._last_index_time:
+                return
+            logger.info(f'Feeding {doc_type} {post.title}')
+            post_document = BasicDocument(title=post.title, content=post.body_markdown, author=post.owner_display_name,
+                                          timestamp=datetime.fromtimestamp(post.creation_date), id=post.post_id,
+                                          data_source_id=self._data_source_id, location=post.link,
+                                          url=post.link, author_image_url=post.owner_profile_image,
+                                          type=DocumentType.MESSAGE)
+            IndexQueue.get_instance().put_single(doc=post_document)
+        if has_more:
+            # paginate onto the queue
+            self.add_task_to_queue(self._fetch_posts, self._api_key, self._team_name, page + 1, doc_type)
 
     def _feed_new_documents(self) -> None:
-        page = 1
-        has_more = True
-        for doc_type in endpoints:
-            while has_more:
-                response = self._fetch_posts(self._api_key, self._team_name, page, doc_type)
-                posts = response['items']
-                logger.info(f'Fetched {len(posts)} posts from Stack Overflow')
-                for post_dict in posts:
-                    owner_fields = {}
-                    if 'owner' in post_dict:
-                        owner_fields = {f"owner_{k}": v for k, v in post_dict.pop('owner').items()}
-                    if 'title' not in post_dict:
-                        post_dict['title'] = post_dict['link']
-                    post = StackOverflowPost(**post_dict, **owner_fields)
-                    self.add_task_to_queue(self._feed_post, post=post)
-                has_more = response['has_more']
-                page += 1
+        self.add_task_to_queue(self._fetch_posts, self._api_key, self._team_name, 1, 'articles')
+        self.add_task_to_queue(self._fetch_posts, self._api_key, self._team_name, 1, 'posts')
 
-    def _feed_post(self, post: StackOverflowPost) -> None:
-        logger.info(f'Feeding post {post.title}')
-        post_document = BasicDocument(title=post.title, content=post.body_markdown, author=post.owner_display_name,
-                                      timestamp=datetime.fromtimestamp(post.creation_date), id=post.post_id,
-                                      data_source_id=self._data_source_id, location=post.link,
-                                      url=post.link, author_image_url=post.owner_profile_image,
-                                      type=DocumentType.MESSAGE)
-        IndexQueue.get_instance().put_single(doc=post_document)
 
 # def test():
 #     import os
 #     config = {"api_key": os.environ['SO_API_KEY'], "team_name": os.environ['SO_TEAM_NAME']}
-#     so = StackOverflowDataSource(config=config, data_source_id=0)
+#     so = StackOverflowDataSource(config=config, data_source_id=1)
 #     so._feed_new_documents()
 #
 #
