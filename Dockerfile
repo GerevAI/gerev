@@ -5,8 +5,7 @@ FROM node:12 AS node-builder
 WORKDIR /app/ui
 
 COPY ./ui/package.json .
-RUN npm install --silent
-RUN npm install react-scripts@3.0.1 -g
+RUN npm install --silent --production
 
 COPY ./ui .
 RUN npm run build
@@ -19,8 +18,10 @@ ENV CAPTURE_TELEMETRY=1
 
 WORKDIR /app
 
-COPY ./app /app
+COPY ./app/requirements.txt .
 RUN pip install -r /app/requirements.txt
+
+COPY ./app /app
 
 # Cache the models
 COPY ./app/models.py /tmp/models.py
