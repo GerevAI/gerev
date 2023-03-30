@@ -24,3 +24,4 @@ rocketchat-API
 mattermostdriver
 persistqueue
 retry
+PyPDF2
