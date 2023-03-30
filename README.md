@@ -37,6 +37,7 @@ Coming Soon...
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Trello (In Progress... :pray:)
+ - [ ] Stackoverflow Teams (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
  - [ ] Jira
