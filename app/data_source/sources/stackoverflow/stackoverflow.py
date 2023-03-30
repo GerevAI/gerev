@@ -2,9 +2,10 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List
 import requests
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
-from data_source.api.basic_document import DocumentType, BasicDocument
-from queues.index_queue import IndexQueue
+
+from app.data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
+from app.data_source.api.basic_document import DocumentType, BasicDocument
+from app.queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
