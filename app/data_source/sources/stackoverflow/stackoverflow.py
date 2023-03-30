@@ -1,12 +1,12 @@
 import logging
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional
 import requests
 
-from app.data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
-from app.data_source.api.basic_document import DocumentType, BasicDocument
-from app.queues.index_queue import IndexQueue
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
+from data_source.api.basic_document import DocumentType, BasicDocument
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -20,19 +20,20 @@ endpoints = [
 class StackOverflowPost:
     post_id: int
     post_type: str
-    title: str
     link: str
     body_markdown: str
-    owner_account_id: int
-    owner_reputation: int
-    owner_user_id: int
-    owner_user_type: str
-    owner_profile_image: str
-    owner_display_name: str
-    owner_link: str
     score: int
     last_activity_date: int
     creation_date: int
+    owner_account_id: Optional[int] = None
+    owner_reputation: Optional[int] = None
+    owner_user_id: Optional[int] = None
+    owner_user_type: Optional[str] = None
+    owner_profile_image: Optional[str] = None
+    owner_display_name: Optional[str] = None
+    owner_link: Optional[str] = None
+    title:  Optional[str] = None
+    last_edit_date:  Optional[str] = None
 
 class StackOverflowConfig(BaseDataSourceConfig):
     api_key: str
@@ -51,7 +52,7 @@ class StackOverflowDataSource(BaseDataSource):
     @staticmethod
     def validate_config(config: Dict) -> None:
         so_config = StackOverflowConfig(**config)
-        StackOverflowDataSource._fetch_posts(so_config.api_key, so_config.team_name, 1)
+        StackOverflowDataSource._fetch_posts(so_config.api_key, so_config.team_name, 1, 'posts')
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -71,11 +72,16 @@ class StackOverflowDataSource(BaseDataSource):
         has_more = True
         for doc_type in endpoints:
             while has_more:
-                response = self._fetch_posts(self._api_key, page, doc_type)
-                owner_fields = {f"owner_{k}": v for k, v in response.pop('owner').items()}
-                posts = [StackOverflowPost(**post, **owner_fields) for post in response['items']]
+                response = self._fetch_posts(self._api_key, self._team_name, page, doc_type)
+                posts = response['items']
                 logger.info(f'Fetched {len(posts)} posts from Stack Overflow')
-                for post in posts:
+                for post_dict in posts:
+                    owner_fields = {}
+                    if 'owner' in post_dict:
+                        owner_fields = {f"owner_{k}": v for k, v in post_dict.pop('owner').items()}
+                    if 'title' not in post_dict:
+                        post_dict['title'] = post_dict['link']
+                    post = StackOverflowPost(**post_dict, **owner_fields)
                     self.add_task_to_queue(self._feed_post, post=post)
                 has_more = response['has_more']
                 page += 1
@@ -89,9 +95,12 @@ class StackOverflowDataSource(BaseDataSource):
                                       type=DocumentType.MESSAGE)
         IndexQueue.get_instance().put_single(doc=post_document)
 
+def test():
+    import os
+    config = {"api_key": os.environ['SO_API_KEY'], "team_name": os.environ['SO_TEAM_NAME']}
+    so = StackOverflowDataSource(config=config, data_source_id=0)
+    so._feed_new_documents()
 
-# if __name__ == '__main__':
-#     import os
-#     config = {"api_key": os.environ['SO_API_KEY'], "team_name": os.environ['SO_TEAM_NAME']}
-#     so = StackOverflowDataSource(config)
-#     so.run()
+
+if __name__ == '__main__':
+    test()

@@ -368,6 +368,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <p>Note that the url must begin with either http:// or https://</p>
                                  </span>
                               )}
+                              {this.state.selectedDataSource.value === 'stack_overflow' && (
+                                 <span className="flex flex-col leading-9  text-xl text-white">
+                                    <span>1. {'Visit: https://stackoverflowteams.com/users/pats/'}</span>
+                                    <span>2. {'Click Create a new PAT'}</span>
+                                    <span>3. {'Name the token, and pick the team scope.'}</span>
+                                    <span>4. {'Select an expiration date'}</span>
+                                    <span>5. {'Click Create'}</span>
+                                 </span>
+                              )}
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
