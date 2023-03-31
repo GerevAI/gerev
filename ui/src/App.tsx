@@ -131,10 +131,10 @@ export default class App extends React.Component <{}, AppState>{
       this.listDataSourceTypes();
     }
 
-    this.handleQueryInUrl();
+    this.handleSearch();
   }
 
-  handleQueryInUrl() {
+  handleSearch() {
     const path = window.location.pathname;
     const query = new URLSearchParams(window.location.search).get('query');
     if (path === '/search' && query !== null && query !== "") {
@@ -397,9 +397,9 @@ export default class App extends React.Component <{}, AppState>{
                   </span>
                 </h1>
                 <SearchBar widthPercentage={32} isDisabled={this.state.isServerDown} query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                          onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
+                          onSearch={this.goSearchPage} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
 
-                <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
+                <button onClick={this.goSearchPage} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
                   transition duration-150 ease-in-out hover:shadow-[#6c6c6c] bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
                   <img alt="enter" className="ml-2" src={EnterImage}></img>
@@ -417,7 +417,7 @@ export default class App extends React.Component <{}, AppState>{
             </span>
             <div className="flex flex-col items-start w-10/12 sm:w-full">
               <SearchBar widthPercentage={40} isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
+                        onSearch={this.goSearchPage} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               {
                 !this.state.isLoading &&
                   <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
@@ -453,6 +453,10 @@ export default class App extends React.Component <{}, AppState>{
   
   clear = () => {
     this.setState({query: ""});
+  }
+
+  goSearchPage = () => {
+    window.location.replace(`/search?query=${this.state.query}`);
   }
 
   search = (query?: string) => {
