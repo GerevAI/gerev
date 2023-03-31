@@ -3,11 +3,6 @@
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
    [Join here!](https://discord.gg/NKhTX7JZAF)
-  
-# **New!** 🎉 ChatGPT plugin support!
-**Connect Gerev as a plugin to ChatGPT -> ask questions about your entire organization.**  
-See more awesome plugins [awesome-chatgpt-plugins](https://github.com/GerevAI/awesome-chatgpt-plugins)
-![ChatGPT Integration](./images/integ.jpeg)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
