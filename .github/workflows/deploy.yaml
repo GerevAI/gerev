@@ -69,7 +69,9 @@ jobs:
 
 
       # Temp fix for cache growth
+      # https://docs.docker.com/build/ci/github-actions/cache/#local-cache
       # https://github.com/docker/build-push-action/issues/252
+      # https://github.com/moby/buildkit/issues/1896
       - name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
