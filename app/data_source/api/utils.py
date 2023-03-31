@@ -4,8 +4,34 @@ import concurrent.futures
 from functools import lru_cache
 from io import BytesIO
 from typing import Optional
+import time
+from functools import wraps
 
 import requests
+
+def rate_limit(*, allowed_per_second: int):
+    max_period = 1.0 / allowed_per_second
+    def decorate(func):
+        last_call = [time.perf_counter()]
+        @wraps(func)
+        def limit(*args, **kwargs):
+            with rate_limiter(last_call, max_period):
+                return func(*args, **kwargs)
+        return limit
+    return decorate
+
+
+def rate_limiter(last_call, max_period):
+    class RateLimiter:
+        def __enter__(self):
+            elapsed = time.perf_counter() - last_call[0]
+            hold = max_period - elapsed
+            if hold > 0:
+                time.sleep(hold)
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            last_call[0] = time.perf_counter()
+    return RateLimiter()
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,3 +81,4 @@ def get_confluence_user_image(image_url: str, token: str) -> Optional[str]:
         return f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
     except:
         logger.warning(f"Failed to get confluence user image {image_url}")
+
