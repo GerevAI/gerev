@@ -120,7 +120,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 kwargs['pageToken'] = next_page_token
 
             response = self._drive.files().list(
-                fields='nextPageToken,files(kind,id,name,mimeType,lastModifyingUser,webViewLink,modifiedTime,parents)',
+                fields='nextPageToken,files(kind,id,name,mimeType,lastModifyingUser,webViewLink,modifiedTime,parents,owners)',
                 pageSize=1000,
                 **kwargs
             ).execute()
@@ -173,14 +173,21 @@ class GoogleDriveDataSource(BaseDataSource):
 
         last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
 
+        author = file['lastModifyingUser'].get('displayName')
+        author_image_url = file['lastModifyingUser'].get('photoLink')
+        if not author:
+            first_owner = file['owners'][0]
+            author = first_owner.get('displayName')
+            author_image_url = first_owner.get('photoLink')
+
         doc = BasicDocument(
             id=file_id,
             data_source_id=self._data_source_id,
             type=DocumentType.DOCUMENT,
             title=file['name'],
             content=content,
-            author=file['lastModifyingUser']['displayName'],
-            author_image_url=file['lastModifyingUser'].get('photoLink'),
+            author=author,
+            author_image_url=author_image_url,
             location=parent_name,
             url=file['webViewLink'],
             timestamp=last_modified,
