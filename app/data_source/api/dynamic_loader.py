@@ -39,8 +39,6 @@ class DynamicLoader:
 
     @staticmethod
     def get_class(file_path: str, class_name: str):
-        
-        module_name = file_path.replace("/", ".").replace(".py", "")
         loader = importlib.machinery.SourceFileLoader(class_name, file_path)
         module = loader.load_module()
         try:
