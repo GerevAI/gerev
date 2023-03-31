@@ -1,4 +1,5 @@
 import logging
+import time
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -15,13 +16,13 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class StackOverflowPost:
-    post_id: int
-    post_type: str
     link: str
-    body_markdown: str
     score: int
     last_activity_date: int
     creation_date: int
+    post_id: Optional[int] = None
+    post_type: Optional[str] = None
+    body_markdown: Optional[str] = None
     owner_account_id: Optional[int] = None
     owner_reputation: Optional[int] = None
     owner_user_id: Optional[int] = None
@@ -33,6 +34,8 @@ class StackOverflowPost:
     last_edit_date:  Optional[str] = None
     tags: Optional[List[str]] = None
     view_count: Optional[int] = None
+    article_id: Optional[int] = None
+    article_type: Optional[str] = None
 
 class StackOverflowConfig(BaseDataSourceConfig):
     api_key: str
@@ -50,7 +53,12 @@ def rate_limited_get(url, headers):
     Note that exactly what response an application gets (in terms of HTTP code, text, and so on)
     is undefined when subject to this ban; we consider > 30 request/sec per IP to be very abusive and thus cut the requests off very harshly.
     '''
-    return requests.get(url, headers=headers)
+    resp = requests.get(url, headers=headers)
+    if resp.status_code == 429:
+        logger.warning('Rate limited, sleeping for 5 minutes')
+        time.sleep(300)
+        return rate_limited_get(url, headers)
+    return resp
 
 
 class StackOverflowDataSource(BaseDataSource):
@@ -63,7 +71,7 @@ class StackOverflowDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         so_config = StackOverflowConfig(**config)
         url = f'https://api.stackoverflowteams.com/2.3/questions?&team={so_config.team_name}'
         response = rate_limited_get(url, headers={'X-API-Access-Token': so_config.api_key})
@@ -112,8 +120,9 @@ class StackOverflowDataSource(BaseDataSource):
             self.add_task_to_queue(self._fetch_posts, api_key=self._api_key, team_name=self._team_name, page=page + 1, doc_type=doc_type)
 
     def _feed_new_documents(self) -> None:
-        self.add_task_to_queue(self._fetch_posts, api_key=self._api_key, team_name=self._team_name, page=1, doc_type='articles')
         self.add_task_to_queue(self._fetch_posts, api_key=self._api_key, team_name=self._team_name, page=1, doc_type='posts')
+        # TODO: figure out how to get articles
+        # self.add_task_to_queue(self._fetch_posts, api_key=self._api_key, team_name=self._team_name, page=1, doc_type='articles')
 
 
 # def test():

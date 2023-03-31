@@ -54,7 +54,7 @@ class MattermostDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             parsed_config = MattermostConfig(**config)
             maattermost = Driver(options=asdict(parsed_config))

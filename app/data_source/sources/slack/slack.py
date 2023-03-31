@@ -41,7 +41,7 @@ class SlackDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         slack_config = SlackConfig(**config)
         slack = WebClient(token=slack_config.token)
         slack.auth_test()

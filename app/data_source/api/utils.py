@@ -5,35 +5,33 @@ from functools import lru_cache
 from io import BytesIO
 from typing import Optional
 import time
+import threading
 from functools import wraps
 
 import requests
 
-def rate_limit(*, allowed_per_second: int):
-    max_period = 1.0 / allowed_per_second
-    def decorate(func):
-        last_call = [time.perf_counter()]
-        @wraps(func)
-        def limit(*args, **kwargs):
-            with rate_limiter(last_call, max_period):
-                return func(*args, **kwargs)
-        return limit
-    return decorate
-
-
-def rate_limiter(last_call, max_period):
-    class RateLimiter:
-        def __enter__(self):
-            elapsed = time.perf_counter() - last_call[0]
-            hold = max_period - elapsed
-            if hold > 0:
-                time.sleep(hold)
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            last_call[0] = time.perf_counter()
-    return RateLimiter()
-
 
 logger = logging.getLogger(__name__)
+
+
+def rate_limit(*, allowed_per_second: int):
+    max_period = 1.0 / allowed_per_second
+    last_call = [time.perf_counter()]
+    lock = threading.Lock()
+
+    def decorate(func):
+        @wraps(func)
+        def limit(*args, **kwargs):
+            with lock:
+                elapsed = time.perf_counter() - last_call[0]
+                hold = max_period - elapsed
+                if hold > 0:
+                    time.sleep(hold)
+                result = func(*args, **kwargs)
+                last_call[0] = time.perf_counter()
+            return result
+        return limit
+    return decorate
 
 
 def snake_case_to_pascal_case(snake_case_string: str):

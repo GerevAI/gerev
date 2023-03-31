@@ -61,7 +61,7 @@ class ConfluenceDataSource(BaseDataSource):
         return spaces
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             client = ConfluenceDataSource.confluence_client_from_config(config)
             ConfluenceDataSource.list_spaces(confluence=client)
