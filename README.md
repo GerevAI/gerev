@@ -84,10 +84,18 @@ docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 
 ## Run from source 
 See CONTRIBUTING.md
-  
-  
+
+
 - **gerev is also popular with some big names. 😉**  
 
 ---  
 
 ![first image](./images/bill.png)
+
+Built by the community 💜
+
+<a href = "https://github.com/Tanu-N-Prabhu/Python/graphs/contributors">
+  <img src = "https://contrib.rocks/image?repo=gerevai/gerev"/>
+</a>
+
+Made with [contributors-img](https://contrib.rocks).
