@@ -1,20 +1,30 @@
 import logging
+import re
 from abc import abstractmethod, ABC
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List, Optional
-import re
+from typing import Dict, List, Optional, Callable
 
 from pydantic import BaseModel
 
 from db_engine import Session
+from queues.task_queue import TaskQueue, Task
 from schemas import DataSource
+
+
+class Location(BaseModel):
+    value: str
+    label: str
 
 
 class HTMLInputType(Enum):
     TEXT = "text"
     TEXTAREA = "textarea"
     PASSWORD = "password"
+
+
+class BaseDataSourceConfig(BaseModel):
+    locations_to_index: List[Location] = []
 
 
 class ConfigField(BaseModel):
@@ -66,6 +76,21 @@ class BaseDataSource(ABC):
         words = re.findall('[A-Z][^A-Z]*', pascal_case_source)
         return " ".join(words)
 
+    @staticmethod
+    def has_prerequisites() -> bool:
+        """
+        Data sources that require some prerequisites to be installed before they can be used should override this method
+        """
+        return False
+
+    @staticmethod
+    def list_locations(config: Dict) -> List[Location]:
+        """
+        Returns a list of locations that are available in the data source.
+        Only for data sources that want the user to select only some location to index
+        """
+        return []
+
     @abstractmethod
     def _feed_new_documents(self) -> None:
         """
@@ -74,22 +99,48 @@ class BaseDataSource(ABC):
         raise NotImplementedError
 
     def __init__(self, config: Dict, data_source_id: int, last_index_time: datetime = None) -> None:
-        self._config = config
+        self._raw_config = config
+        self._config: BaseDataSourceConfig = BaseDataSourceConfig(**self._raw_config)
         self._data_source_id = data_source_id
 
         if last_index_time is None:
             last_index_time = datetime(2012, 1, 1)
         self._last_index_time = last_index_time
+        self._last_task_time = None
 
-    def _set_last_index_time(self) -> None:
+    def get_id(self):
+        return self._data_source_id
+
+    def _save_index_time_in_db(self) -> None:
+        """
+        Sets the index time in the database, to be now
+        """
         with Session() as session:
             data_source: DataSource = session.query(DataSource).filter_by(id=self._data_source_id).first()
             data_source.last_indexed_at = datetime.now()
             session.commit()
 
-    def index(self) -> None:
+    def add_task_to_queue(self, function: Callable, **kwargs):
+        task = Task(data_source_id=self._data_source_id,
+                    function_name=function.__name__,
+                    kwargs=kwargs)
+        TaskQueue.get_instance().add_task(task)
+
+    def run_task(self, function_name: str, **kwargs) -> None:
+        self._last_task_time = datetime.now()
+        function = getattr(self, function_name)
+        function(**kwargs)
+
+    def index(self, force: bool = False) -> None:
+        if self._last_task_time is not None and not force:
+            # Don't index if the last task was less than an hour ago
+            time_since_last_task = datetime.now() - self._last_task_time
+            if time_since_last_task.total_seconds() < 60 * 60:
+                logging.info("Skipping indexing data source because it was indexed recently")
+                return
+
         try:
-            self._set_last_index_time()
+            self._save_index_time_in_db()
             self._feed_new_documents()
         except Exception as e:
             logging.exception("Error while indexing data source")

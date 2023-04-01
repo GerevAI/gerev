@@ -1,3 +1,5 @@
 ui/node_modules
 app/venv
 storage
+app/.env
+.env

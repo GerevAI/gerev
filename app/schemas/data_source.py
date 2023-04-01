@@ -1,9 +1,10 @@
 from typing import Optional
 
 from schemas.base import Base
-from sqlalchemy import ForeignKey, Column, Integer
+from sqlalchemy import ForeignKey, Column, Integer, Connection
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime
+from sqlalchemy import event
 
 
 class DataSource(Base):
@@ -15,4 +16,14 @@ class DataSource(Base):
     config: Mapped[Optional[str]] = mapped_column(String(512))
     last_indexed_at: Mapped[Optional[DateTime]] = mapped_column(DateTime())
     created_at: Mapped[Optional[DateTime]] = mapped_column(DateTime())
-    documents = relationship("Document", back_populates="data_source")
+    documents = relationship("Document", back_populates="data_source", cascade='all, delete, delete-orphan')
+
+
+@event.listens_for(DataSource, 'before_delete')
+def receive_before_delete(mapper, connection: Connection, target):
+    # import here to avoid circular imports
+    from indexing.index_documents import Indexer
+    from db_engine import Session
+
+    with Session(bind=connection) as session:
+        Indexer.remove_documents(target.documents, session=session)

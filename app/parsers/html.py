@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 
+
 def html_to_text(html: str) -> str:
     # Becuase documents only contain text, we use a colon to separate subtitles from the text
     html = re.sub(r'(?=<\/h[1234567]>)', ': ', html)

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { v4 as uuidv4 } from 'uuid';
 import posthog from 'posthog-js';
-
+import { Tooltip } from 'react-tooltip'
 
 
 import EnterImage from './assets/images/enter.svg';
@@ -22,7 +22,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
-import { DataSourceType } from "./data-source";
+import { ConnectedDataSource, DataSourceType } from "./data-source";
+import {MdOutlineSupportAgent} from "react-icons/md";
 
 export interface AppState {
   query: string
@@ -30,7 +31,9 @@ export interface AppState {
   searchDuration: number
   dataSourceTypes: DataSourceType[]
   dataSourceTypesDict: { [key: string]: DataSourceType }
-  connectedDataSources: string[]
+  didListedDataSources: boolean
+  didListedConnectedDataSources: boolean
+  connectedDataSources: ConnectedDataSource[]
   isLoading: boolean
   isNoResults: boolean
   isModalOpen: boolean
@@ -42,6 +45,7 @@ export interface AppState {
   docsLeftToIndex: number
   docsInIndexing: number
   lastServerDownTimestamp: number
+  showResultsPage: boolean
 }
 
 export interface ServerStatus {
@@ -53,7 +57,7 @@ Modal.setAppElement('#root');
 
 const discordCode = "gerev-is-pronounced-with-a-hard-g";
 
-const customStyles = {
+const modalCustomStyles = {
   content: {
     top: '50%',
     left: '50%',
@@ -62,9 +66,11 @@ const customStyles = {
     marginRight: '-50%',
     transform: 'translate(-50%, -50%)',
     background: '#221f2e',
-    width: '50vw',
+    width: '52vw',
     border: 'solid #694f94 0.5px',
     borderRadius: '12px',
+    height: 'fit-content',
+    maxHeight: '86vh',
     padding: '0px'
   },
   overlay: {
@@ -83,8 +89,10 @@ export default class App extends React.Component <{}, AppState>{
       query: "",
       results: [],
       dataSourceTypes: [],
+      didListedDataSources: false,
       dataSourceTypesDict: {},
       connectedDataSources: [],
+      didListedConnectedDataSources: false,
       isLoading: false,
       isNoResults: false,
       isModalOpen: false,
@@ -97,6 +105,7 @@ export default class App extends React.Component <{}, AppState>{
       docsInIndexing: 0,
       searchDuration: 0,
       lastServerDownTimestamp: 0,
+      showResultsPage: false
     }
 
     this.openModal = this.openModal.bind(this);
@@ -121,24 +130,35 @@ export default class App extends React.Component <{}, AppState>{
       this.listConnectedDataSources();
       this.listDataSourceTypes();
     }
+
+    this.handleSearch();
+  }
+
+  handleSearch() {
+    const path = window.location.pathname;
+    const query = new URLSearchParams(window.location.search).get('query');
+    if (path === '/search' && query !== null && query !== "") {
+      this.setState({query: query, showResultsPage: true});
+      this.search(query);
+    }
   }
 
   async listDataSourceTypes() {
     try {
-      const response = await api.get<DataSourceType[]>('/data-source/list-types');
+      const response = await api.get<DataSourceType[]>('/data-sources/types');
       let dataSourceTypesDict: { [key: string]: DataSourceType } = {};
       response.data.forEach((dataSourceType) => { 
         dataSourceTypesDict[dataSourceType.name] = dataSourceType;
       });
-      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict });
+      this.setState({ dataSourceTypes: response.data, dataSourceTypesDict: dataSourceTypesDict, didListedDataSources: true });
     } catch (error) {
     }
   }
 
   async listConnectedDataSources() {
     try {
-       const response = await api.get('/data-source/list-connected');
-       this.setState({ connectedDataSources: response.data })
+      const response = await api.get<ConnectedDataSource[]>('/data-sources/connected');
+      this.setState({ connectedDataSources: response.data, didListedConnectedDataSources: true });
     } catch (error) {
     }
   }
@@ -167,7 +187,7 @@ export default class App extends React.Component <{}, AppState>{
       }
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
-                     docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
+                    docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
 
       let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
       setTimeout(() => this.fetchStatsusForever(), timeToSleep);
@@ -183,7 +203,7 @@ export default class App extends React.Component <{}, AppState>{
     })    
   }
 
-  shouldShowIndexingStatus() {
+  inIndexing() {
     return this.state.isPreparingIndexing || this.state.docsInIndexing > 0 || this.state.docsLeftToIndex > 0;
   }
 
@@ -257,11 +277,13 @@ export default class App extends React.Component <{}, AppState>{
   saveDiscordPassed = () => {
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
+    posthog.capture('passed_discord');
     toast.success("Code accepted. Welcome!", {autoClose: 3000});
   }
 
-  dataSourcesAdded = (dataSourceType: string) => {
-    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, dataSourceType]});
+  dataSourcesAdded = (newlyConnected: ConnectedDataSource) => {
+    posthog.capture('added', {name: newlyConnected.name});
+    this.setState({isPreparingIndexing: true, connectedDataSources: [...this.state.connectedDataSources, newlyConnected]});
     // if had no data from server, show toast after 30 seconds
     setTimeout(() => {
       if (this.state.isPreparingIndexing) {
@@ -271,15 +293,28 @@ export default class App extends React.Component <{}, AppState>{
     }, 1000 * 120);
   }
 
+  dataSourceRemoved = (removed: ConnectedDataSource) => {
+    posthog.capture('removed', {name: removed.name});
+    this.setState({connectedDataSources: this.state.connectedDataSources.filter((ds) => ds.id !== removed.id)});
+  }
+
   render() {
     return (
     <div>
+      <Tooltip id="my-tooltip" style={{fontSize: "18px"}}/>
       <ToastContainer className='z-50' theme="colored" />
+      <a href="https://discord.com/channels/1060085859497549844/1086664063767023636" rel="noreferrer" target='_blank'>
+        <MdOutlineSupportAgent data-tooltip-id="my-tooltip" 
+                            data-tooltip-content="🕒 24/7 live support on Discord 👨‍🔧" 
+                            data-tooltip-place="bottom"
+          className="absolute left-0 z-30 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
+        </MdOutlineSupportAgent>
+      </a>
       <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
         className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
       </FiSettings>
         {
-          this.shouldShowIndexingStatus() &&
+          this.inIndexing() &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#191919] border-[#4F4F4F] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -290,7 +325,7 @@ export default class App extends React.Component <{}, AppState>{
           </div>
         }
         {
-          this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
+          this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
               <div className="text-[#E4E4E4] font-medium font-inter text-sm flex flex-row justify-center items-center">
@@ -340,19 +375,20 @@ export default class App extends React.Component <{}, AppState>{
 
             </div>
         }
-      <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || this.state.connectedDataSources.length === 0  ? ' filter blur-sm' : '')}>
+        <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || (this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0)  ? ' filter blur-sm' : '')}>
         <Modal
           isOpen={this.state.isModalOpen}
           onRequestClose={this.closeModal}
           contentLabel="Example Modal"
-          style={customStyles}>
+          style={modalCustomStyles}>
           <DataSourcePanel onClose={this.closeModal} connectedDataSources={this.state.connectedDataSources}
-            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict}/>
+            inIndexing={this.inIndexing()}
+            onAdded={this.dataSourcesAdded} dataSourceTypesDict={this.state.dataSourceTypesDict} onRemoved={this.dataSourceRemoved} />
         </Modal>
 
         {/* front search page*/}
         {
-          this.state.results.length === 0 &&    
+          !this.state.showResultsPage &&    
             <div className='relative flex flex-col items-center top-40 mx-auto w-full'>
                 <h1 className='flex flex-row items-center text-7xl text-center text-white m-10'>                
                   <GiSocks className={('text-7xl text-center mt-4 mr-7' + this.getSocksColor())}></GiSocks>
@@ -361,23 +397,19 @@ export default class App extends React.Component <{}, AppState>{
                   </span>
                 </h1>
                 <SearchBar widthPercentage={32} isDisabled={this.state.isServerDown} query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                          onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
+                          onSearch={this.goSearchPage} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
 
-                <button onClick={this.search} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
+                <button onClick={this.goSearchPage} className="h-9 w-28 mt-8 p-3 flex items-center justify-center hover:shadow-sm
                   transition duration-150 ease-in-out hover:shadow-[#6c6c6c] bg-[#2A2A2A] rounded border-[.5px] border-[#6e6e6e88]">
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
                   <img alt="enter" className="ml-2" src={EnterImage}></img>
                 </button>
-                { this.state.isNoResults && 
-                  <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
-                  </span>
-                }
             </div>  
         } 
 
         {/* results page */}
         {
-          this.state.results.length > 0 && 
+          this.state.showResultsPage && 
           <div className="relative flex flex-row top-20 left-5 w-full sm:w-11/12">
             <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
@@ -385,18 +417,24 @@ export default class App extends React.Component <{}, AppState>{
             </span>
             <div className="flex flex-col items-start w-10/12 sm:w-full">
               <SearchBar widthPercentage={40} isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
-                        onSearch={this.search} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
-              <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
-                {this.state.results.length} Results ({this.state.searchDuration} seconds)
-              </span>
-              <div className='w-6/12 sm:w-8/12 mt-4 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
-                {this.state.results.map((result, index) => {
-                    return (
-                      <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
-                      )
-                    }
-                  )}
-              </div>
+                        onSearch={this.goSearchPage} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
+              {
+                !this.state.isLoading &&
+                  <span className="text-[#D2D2D2] font-poppins font-medium text-base leading-[22px] mt-3">
+                    {this.state.results.length} Results ({this.state.searchDuration} seconds)
+                  </span>
+              }
+              {
+                this.state.dataSourceTypes.length > 0 &&     
+                <div className='w-[100vw] 2xl:w-8/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
+                  {this.state.results.map((result, index) => {
+                      return (
+                        <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />
+                        )
+                      }
+                    )}
+                </div>
+              }
             </div>
           </div>
         }
@@ -414,13 +452,20 @@ export default class App extends React.Component <{}, AppState>{
   }
   
   clear = () => {
-    this.setState({query: "", results: []});
+    this.setState({query: ""});
   }
 
-  search = () => {
-    if (this.state.query === "") {
+  goSearchPage = () => {
+    window.location.replace(`/search?query=${this.state.query}`);
+  }
+
+  search = (query?: string) => {
+    if (!query && this.state.query === "") {
+      console.log("empty query");
       return;
     }
+
+    let searchQuery = query ? query : this.state.query;
 
     this.setState({isLoading: true});
     let start = new Date().getTime();
@@ -430,7 +475,7 @@ export default class App extends React.Component <{}, AppState>{
     try {
         api.get<SearchResultDetails[]>("/search", {
           params: {
-            query: this.state.query
+            query: searchQuery
           },
           headers: {
             uuid: localStorage.getItem('uuid')
@@ -441,13 +486,17 @@ export default class App extends React.Component <{}, AppState>{
             let end = new Date().getTime();
             let duartionSeconds =  (end - start) / 1000;
             this.setState({results: response.data, isLoading: false, searchDuration: duartionSeconds,
-              isNoResults: response.data.length === 0
+              showResultsPage: response.data.length > 0,
             });
-            addToSearchHistory(this.state.query);
+            addToSearchHistory(searchQuery);
+
+            if(response.data.length === 0) {
+              toast.warn("No results found");
+            }
           }
         );
     } catch (error) {
-      console.error(error);
+      toast.error("Error searching: " + error.response.data, { autoClose: 10000 });
     }
   };
   

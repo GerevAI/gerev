@@ -1,8 +1,12 @@
 import logging
 import threading
+from typing import List
 
-from indexing_queue import IndexingQueue
+from queues.index_queue import IndexQueue
 from indexing.index_documents import Indexer
+
+
+logger = logging.getLogger()
 
 
 class BackgroundIndexer:
@@ -31,17 +35,26 @@ class BackgroundIndexer:
 
     @staticmethod
     def run():
-        logger = logging.getLogger()
-        docs_queue_instance = IndexingQueue.get()
+        docs_queue_instance = IndexQueue.get_instance()
         logger.info(f'Background indexer started...')
 
         while not BackgroundIndexer._stop_event.is_set():
-            docs_chunk = docs_queue_instance.consume_all()
-            if not docs_chunk:
+            queue_items = docs_queue_instance.consume_all()
+            if not queue_items:
                 continue
 
-            BackgroundIndexer._currently_indexing_count = len(docs_chunk)
-            logger.info(f'Got chunk of {len(docs_chunk)} documents')
-            Indexer.index_documents(docs_chunk)
-            logger.info(f'Finished indexing chunk of {len(docs_chunk)} documents')
-            BackgroundIndexer._currently_indexing_count = 0
+            BackgroundIndexer._currently_indexing_count = len(queue_items)
+            logger.info(f'Got chunk of {len(queue_items)} documents')
+
+            docs = [doc.doc for doc in queue_items]
+            Indexer.index_documents(docs)
+            BackgroundIndexer._ack_chunk(docs_queue_instance, [doc.queue_item_id for doc in queue_items])
+
+    @staticmethod
+    def _ack_chunk(queue: IndexQueue, ids: List[int]):
+        logger.info(f'Finished indexing chunk of {len(ids)} documents')
+        for item_id in ids:
+            queue.ack(id=item_id)
+
+        logger.info(f'Acked {len(ids)} documents.')
+        BackgroundIndexer._currently_indexing_count = 0

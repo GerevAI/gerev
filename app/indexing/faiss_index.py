@@ -37,6 +37,11 @@ class FaissIndex:
 
         faiss.write_index(self.index, FAISS_INDEX_PATH)
 
+    def remove(self, ids: torch.LongTensor):
+        self.index.remove_ids(torch.tensor(ids))
+
+        faiss.write_index(self.index, FAISS_INDEX_PATH)
+
     def search(self, queries: torch.FloatTensor, top_k: int, *args, **kwargs):
         if queries.ndim == 1:
             queries = queries.unsqueeze(0)

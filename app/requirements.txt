@@ -20,3 +20,8 @@ oauth2client
 mammoth
 python-pptx
 alembic
+rocketchat-API
+mattermostdriver
+persistqueue
+retry
+PyPDF2

@@ -18,6 +18,8 @@ RUN npm run build
 # Stage 2: Set up Python environment
 FROM python:3.9
 
+ENV DOCKER_DEPLOYMENT=1
+
 # Install torch
 RUN pip install torch
 
