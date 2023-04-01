@@ -3,7 +3,7 @@ import os
 
 IS_IN_DOCKER = os.environ.get('DOCKER_DEPLOYMENT', False)
 
-STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
+STORAGE_PATH = Path('/opt/storage/') if IS_IN_DOCKER else Path(f'{Path.home()}/.gerev/storage/')
 
 if not STORAGE_PATH.exists():
     STORAGE_PATH.mkdir(parents=True)
