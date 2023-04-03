@@ -29,7 +29,9 @@ Coming Soon...
  - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
  - [ ] Gitlab Issues (In PR :pray:)
  - [ ] Zendesk (In PR :pray:)
+ - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
+ - [ ] Phabricator (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Trello (In Progress... :pray:)
  - [ ] Microsoft Teams
