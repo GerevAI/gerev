@@ -2,15 +2,16 @@ import datetime
 import logging
 import time
 from dataclasses import dataclass
+from http.client import IncompleteRead
 from typing import Optional, Dict, List
 
-from pydantic import BaseModel
+from retry import retry
 from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
 
-from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source_api.basic_document import DocumentType, BasicDocument
-from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
+from data_source.api.basic_document import DocumentType, BasicDocument
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class SlackAuthor:
     image_url: str
 
 
-class SlackConfig(BaseModel):
+class SlackConfig(BaseDataSourceConfig):
     token: str
 
 
@@ -52,7 +53,7 @@ class SlackDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        slack_config = SlackConfig(**self._config)
+        slack_config = SlackConfig(**self._raw_config)
         self._slack = WebClient(token=slack_config.token)
         self._authors_cache: Dict[str, SlackAuthor] = {}
 
@@ -68,6 +69,7 @@ class SlackDataSource(BaseDataSource):
             try:
                 result = self._slack.conversations_join(channel=conv.id)
                 if result['ok']:
+                    logger.info(f'Joined channel {conv.name}')
                     joined_conversations.append(conv)
             except Exception as e:
                 logger.warning(f'Could not join channel {conv.name}: {e}')
@@ -93,24 +95,19 @@ class SlackDataSource(BaseDataSource):
         joined_conversations = self._join_conversations(conversations)
         logger.info(f'Joined {len(joined_conversations)} conversations')
 
-        parse_with_workers(self._parse_conversations_worker, joined_conversations)
+        for conv in joined_conversations:
+            self.add_task_to_queue(self._feed_conversation, conv=conv)
 
-    def _parse_conversations_worker(self, conversations: List[SlackConversation]) -> None:
-        for conv in conversations:
-            self._feed_conversation(conv)
-
-    def _feed_conversation(self, conv):
+    def _feed_conversation(self, conv: SlackConversation):
         logger.info(f'Feeding conversation {conv.name}')
 
         last_msg: Optional[BasicDocument] = None
-        total_fed = 0
-        documents = []
 
         messages = self._fetch_conversation_messages(conv)
         for message in messages:
             if not self._is_valid_message(message):
                 if last_msg is not None:
-                    documents.append(last_msg)
+                    IndexQueue.get_instance().put_single(doc=last_msg)
                     last_msg = None
                 continue
 
@@ -122,11 +119,8 @@ class SlackDataSource(BaseDataSource):
                     last_msg.content += f"\n{text}"
                     continue
                 else:
-                    documents.append(last_msg)
-                    if len(documents) == SlackDataSource.FEED_BATCH_SIZE:
-                        total_fed += SlackDataSource.FEED_BATCH_SIZE
-                        IndexingQueue.get().feed(docs=documents)
-                        documents = []
+                    IndexQueue.get_instance().put_single(doc=last_msg)
+                    last_msg = None
 
             timestamp = message['ts']
             message_id = message['client_msg_id']
@@ -139,28 +133,41 @@ class SlackDataSource(BaseDataSource):
                                      type=DocumentType.MESSAGE)
 
         if last_msg is not None:
-            documents.append(last_msg)
+            IndexQueue.get_instance().put_single(doc=last_msg)
 
-        IndexingQueue.get().feed(docs=documents)
-        total_fed += len(documents)
-        if total_fed > 0:
-            logger.info(f'Slack worker fed {total_fed} documents')
+    @retry(tries=5, delay=1, backoff=2, logger=logger)
+    def _get_conversation_history(self, conv: SlackConversation, cursor: str, last_index_unix: str):
+        try:
+            return self._slack.conversations_history(channel=conv.id, oldest=last_index_unix,
+                                                     limit=1000, cursor=cursor)
+        except SlackApiError as e:
+            logger.warning(f'SlackApi error while fetching messages for conversation {conv.name}: {e}')
+            response = e.response
+            if response['error'] == 'ratelimited':
+                retry_after_seconds = int(response['headers']['Retry-After'])
+                logger.warning(f'Rate-limited: Slack API rate limit exceeded,'
+                               f' retrying after {retry_after_seconds} seconds')
+                time.sleep(retry_after_seconds)
+            raise e
+        except IncompleteRead as e:
+            logger.warning(f'IncompleteRead error while fetching messages for conversation {conv.name}')
+            raise e
 
-    def _fetch_conversation_messages(self, conv):
+    def _fetch_conversation_messages(self, conv: SlackConversation):
         messages = []
         cursor = None
         has_more = True
         last_index_unix = self._last_index_time.timestamp()
-        logger.info(f'Fetching messages for conversation {conv.name} since {last_index_unix}')
+        logger.info(f'Fetching messages for conversation {conv.name}')
 
         while has_more:
-            response = self._slack.conversations_history(channel=conv.id, oldest=str(last_index_unix),
-                                                         limit=1000, cursor=cursor)
-            if not response['ok'] and response['error'] == 'ratelimited':
-                retry_after_seconds = int(response['headers']['Retry-After'])
-                logger.warning(f'Slack API rate limit exceeded, retrying after {retry_after_seconds} seconds')
-                time.sleep(retry_after_seconds)
-                continue
+            try:
+                response = self._get_conversation_history(conv=conv, cursor=cursor,
+                                                          last_index_unix=str(last_index_unix))
+            except Exception as e:
+                logger.warning(f'Error fetching all messages for conversation {conv.name},'
+                               f' returning {len(messages)} messages. Error: {e}')
+                return messages
 
             logger.info(f'Fetched {len(response["messages"])} messages for conversation {conv.name}')
             messages.extend(response['messages'])

@@ -7,11 +7,10 @@ from urllib.parse import urlparse
 
 from mattermostdriver import Driver
 
-from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.exception import InvalidDataSourceConfig
-from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig, Location
+from data_source.api.basic_document import BasicDocument, DocumentType
+from data_source.api.exception import InvalidDataSourceConfig
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +26,7 @@ class MattermostChannel:
 class MattermostConfig:
     url: str
     token: str
+    locations_to_index: Optional[List[Location]]
     scheme: Optional[str] = "https"
     port: Optional[int] = 443
 
@@ -64,7 +64,7 @@ class MattermostDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        mattermost_config = MattermostConfig(**self._config)
+        mattermost_config = MattermostConfig(**self._raw_config)
         self._mattermost = Driver(options=asdict(mattermost_config))
 
     def _list_channels(self) -> List[MattermostChannel]:
@@ -90,14 +90,12 @@ class MattermostDataSource(BaseDataSource):
 
     def _feed_new_documents(self) -> None:
         self._mattermost.login()
+
         channels = self._list_channels()
-
         logger.info(f'Found {len(channels)} channels')
-        parse_with_workers(self._parse_channel_worker, channels)
 
-    def _parse_channel_worker(self, channels: List[MattermostChannel]):
         for channel in channels:
-            self._feed_channel(channel)
+            self.add_task_to_queue(self._feed_channel, channel=channel)
 
     def _get_mattermost_url(self):
         options = self._mattermost.options
@@ -115,27 +113,22 @@ class MattermostDataSource(BaseDataSource):
     def _feed_channel(self, channel: MattermostChannel):
         if not self._is_valid_channel(channel):
             return
+
         logger.info(f'Feeding channel {channel.name}')
 
         page = 0
-        total_fed = 0
-
-        parsed_posts = []
-
         team_url = self._get_team_url(channel)
-
         while True:
             posts = self._list_posts_in_channel(channel.id, page)
 
             last_message: Optional[BasicDocument] = None
-
             posts["order"].reverse()
             for id in posts["order"]:
                 post = posts["posts"][id]
 
                 if not self._is_valid_message(post):
                     if last_message is not None:
-                        parsed_posts.append(last_message)
+                        IndexQueue.get_instance().put_single(doc=last_message)
                         last_message = None
                     continue
 
@@ -147,11 +140,8 @@ class MattermostDataSource(BaseDataSource):
                         last_message.content += f"\n{content}"
                         continue
                     else:
-                        parsed_posts.append(last_message)
-                        if len(parsed_posts) >= MattermostDataSource.FEED_BATCH_SIZE:
-                            total_fed += len(parsed_posts)
-                            IndexingQueue.get().feed(docs=parsed_posts)
-                            parsed_posts = []
+                        IndexQueue.get_instance().put_single(doc=last_message)
+                        last_message = None
 
                 author_image_url = f"{self._get_mattermost_url()}/api/v4/users/{post['user_id']}/image?_=0"
                 timestamp = datetime.fromtimestamp(post["update_at"] / 1000)
@@ -168,15 +158,9 @@ class MattermostDataSource(BaseDataSource):
                     type=DocumentType.MESSAGE
                 )
 
-            if last_message is not None:
-                parsed_posts.append(last_message)
-
             if posts["prev_post_id"] == "":
                 break
             page += 1
 
-        IndexingQueue.get().feed(docs=parsed_posts)
-        total_fed += len(parsed_posts)
-
-        if len(parsed_posts) > 0:
-            logger.info(f"Worker fed {total_fed} documents")
+        if last_message is not None:
+            IndexQueue.get_instance().put_single(doc=last_message)

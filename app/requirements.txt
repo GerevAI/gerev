@@ -22,3 +22,6 @@ python-pptx
 alembic
 rocketchat-API
 mattermostdriver
+persistqueue
+retry
+PyPDF2

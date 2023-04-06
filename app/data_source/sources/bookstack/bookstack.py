@@ -1,19 +1,19 @@
 import logging
+import os
 from datetime import datetime
+from time import sleep
 from typing import List, Dict
+from urllib.parse import urljoin
 
-from data_source_api.basic_document import BasicDocument, DocumentType
-from data_source_api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
-from data_source_api.exception import InvalidDataSourceConfig
-from data_source_api.utils import parse_with_workers
-from indexing_queue import IndexingQueue
-from parsers.html import html_to_text
 from pydantic import BaseModel
 from requests import Session, HTTPError
 from requests.auth import AuthBase
-from urllib.parse import urljoin
-from time import sleep
 
+from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
+from data_source.api.basic_document import BasicDocument, DocumentType
+from data_source.api.exception import InvalidDataSourceConfig
+from parsers.html import html_to_text
+from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +30,8 @@ class BookStackAuth(AuthBase):
 
 
 class BookStack(Session):
+    VERIFY_SSL = os.environ.get('BOOKSTACK_VERIFY_SSL') is not None
+
     def __init__(self, url: str, token_id: str, token_secret: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.base_url = url
@@ -41,7 +43,7 @@ class BookStack(Session):
             sleep(1)
 
         url = urljoin(self.base_url, url_path)
-        r = super().request(method, url, verify=False, *args, **kwargs)
+        r = super().request(method, url, verify=BookStack.VERIFY_SSL, *args, **kwargs)
 
         if r.status_code != 200:
             if r.status_code == 429:
@@ -51,7 +53,7 @@ class BookStack(Session):
                     sleep(60)
                     self.rate_limit_reach = False
                     logger.info("Done waiting for the API rate limit")
-                return self.request(method, url, verify=False, *args, **kwargs)
+                return self.request(method, url, verify=BookStack.VERIFY_SSL, *args, **kwargs)
             r.raise_for_status()
         return r
 
@@ -98,7 +100,7 @@ class BookStack(Session):
             return None
 
 
-class BookStackConfig(BaseModel):
+class BookStackConfig(BaseDataSourceConfig):
     url: str
     token_id: str
     token_secret: str
@@ -141,7 +143,7 @@ class BookstackDataSource(BaseDataSource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        book_stack_config = BookStackConfig(**self._config)
+        book_stack_config = BookStackConfig(**self._raw_config)
         self._book_stack = BookStack(url=book_stack_config.url, token_id=book_stack_config.token_id,
                                      token_secret=book_stack_config.token_secret)
 
@@ -153,59 +155,44 @@ class BookstackDataSource(BaseDataSource):
         logger.info("Feeding new documents with BookStack")
 
         books = self._list_books()
-        raw_docs = []
         for book in books:
-            raw_docs.extend(self._list_book_pages(book))
+            self.add_task_to_queue(self._feed_book, book=book)
 
-        parse_with_workers(self._parse_documents_worker, raw_docs)
-
-    def _parse_documents_worker(self, raw_docs: List[Dict]):
-        logger.info(f"Worker parsing {len(raw_docs)} documents")
-
-        parsed_docs = []
-        total_fed = 0
-        for raw_page in raw_docs:
-            last_modified = datetime.strptime(raw_page["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if last_modified < self._last_index_time:
-                continue
-
-            page_id = raw_page["id"]
-            page_content = self._book_stack.get_page(page_id)
-            author_name = page_content["created_by"]["name"]
-
-            author_image_url = ""
-            author = self._book_stack.get_user(raw_page["created_by"])
-            if author:
-                author_image_url = author["avatar_url"]
-
-            plain_text = html_to_text(page_content["html"])
-
-            url = urljoin(self._config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")
-
-            parsed_docs.append(BasicDocument(title=raw_page["name"],
-                                             content=plain_text,
-                                             author=author_name,
-                                             author_image_url=author_image_url,
-                                             timestamp=last_modified,
-                                             id=page_id,
-                                             data_source_id=self._data_source_id,
-                                             location=raw_page["book"]["name"],
-                                             url=url,
-                                             type=DocumentType.DOCUMENT))
-            if len(parsed_docs) >= 50:
-                total_fed += len(parsed_docs)
-                IndexingQueue.get().feed(docs=parsed_docs)
-                parsed_docs = []
-
-        IndexingQueue.get().feed(docs=parsed_docs)
-        total_fed += len(parsed_docs)
-        if total_fed > 0:
-            logging.info(f"Worker fed {total_fed} documents")
-
-    def _list_book_pages(self, book: Dict) -> List[Dict]:
+    def _feed_book(self, book: Dict):
         logger.info(f"Getting documents from book {book['name']} ({book['id']})")
-        return self._book_stack.get_all_pages_from_book(book)
+        pages = self._book_stack.get_all_pages_from_book(book)
+        for page in pages:
+            self.add_task_to_queue(self._feed_page, raw_page=page)
 
+    def _feed_page(self, raw_page: Dict):
+        last_modified = datetime.strptime(raw_page["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        if last_modified < self._last_index_time:
+            return
+
+        page_id = raw_page["id"]
+        page_content = self._book_stack.get_page(page_id)
+        author_name = page_content["created_by"]["name"]
+
+        author_image_url = ""
+        author = self._book_stack.get_user(raw_page["created_by"])
+        if author:
+            author_image_url = author["avatar_url"]
+
+        plain_text = html_to_text(page_content["html"])
+
+        url = urljoin(self._raw_config.get('url'), f"/books/{raw_page['book_slug']}/page/{raw_page['slug']}")
+
+        document = BasicDocument(title=raw_page["name"],
+                                 content=plain_text,
+                                 author=author_name,
+                                 author_image_url=author_image_url,
+                                 timestamp=last_modified,
+                                 id=page_id,
+                                 data_source_id=self._data_source_id,
+                                 location=raw_page["book"]["name"],
+                                 url=url,
+                                 type=DocumentType.DOCUMENT)
+        IndexQueue.get_instance().put_single(doc=document)
 
 # if __name__ == "__main__":
 #     import os
