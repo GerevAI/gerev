@@ -1,6 +1,7 @@
 import base64
 import json
 import logging
+import os.path
 from typing import List
 
 from fastapi import APIRouter
@@ -30,7 +31,13 @@ class DataSourceTypeDto(BaseModel):
 
     @staticmethod
     def from_data_source_class(name: str, data_source_class: BaseDataSource) -> 'DataSourceTypeDto':
-        with open(f"static/data_source_icons/{name}.png", "rb") as file:
+        icon_path_template = "static/data_source_icons/{name}.png"
+        data_source_icon = icon_path_template.format(name=name)
+        
+        if not os.path.exists(data_source_icon):
+            data_source_icon = icon_path_template.format(name="default_icon")
+        
+        with open(data_source_icon, "rb") as file:
             encoded_string = base64.b64encode(file.read())
             image_base64 = f"data:image/png;base64,{encoded_string.decode()}"
 
