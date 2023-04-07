@@ -71,12 +71,12 @@ Then run the docker container like so:
 
 ### Nvidia hardware
 ```bash
-docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run --gpus all -d --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ### CPU only (no GPU)
 ```
-docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run -d --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ## Run from source 
