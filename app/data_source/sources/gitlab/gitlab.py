@@ -9,12 +9,12 @@ from data_source.api.basic_document import BasicDocument, DocumentType, Document
 from data_source.api.exception import InvalidDataSourceConfig
 from queues.index_queue import IndexQueue
 
-GITLAB_BASE_URL = "https://gitlab.com/api/v4"
 
 logger = logging.getLogger(__name__)
 
 
 class GitlabConfig(BaseDataSourceConfig):
+    url: str
     access_token: str
 
 
@@ -33,6 +33,8 @@ class GitlabDataSource(BaseDataSource):
     @staticmethod
     def get_config_fields() -> List[ConfigField]:
         return [
+            ConfigField(label="Gitlab URL", name="url", input_type=HTMLInputType.TEXT,
+                        placeholder="https://gitlab.com"),
             ConfigField(label="API Access Token", name="access_token", input_type=HTMLInputType.PASSWORD),
         ]
 
@@ -42,7 +44,7 @@ class GitlabDataSource(BaseDataSource):
             parsed_config = GitlabConfig(**config)
             session = requests.Session()
             session.headers.update({"PRIVATE-TOKEN": parsed_config.access_token})
-            projects_response = session.get(f"{GITLAB_BASE_URL}/projects?membership=true")
+            projects_response = session.get(f"{parsed_config.url}/api/v4/projects?membership=true")
             projects_response.raise_for_status()
         except (KeyError, ValueError) as e:
             raise InvalidDataSourceConfig from e
@@ -75,7 +77,7 @@ class GitlabDataSource(BaseDataSource):
         return items
 
     def _list_all_projects(self) -> List[Dict]:
-        return self._get_all_paginated(f"{GITLAB_BASE_URL}/projects?membership=true")
+        return self._get_all_paginated(f"{self.gitlab_config.url}/api/v4/projects?membership=true")
 
     def _feed_new_documents(self) -> None:
         for project in self._list_all_projects():
@@ -84,7 +86,7 @@ class GitlabDataSource(BaseDataSource):
 
     def _feed_project_issues(self, project: Dict):
         project_id = project["id"]
-        issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues?scope=all"
+        issues_url = f"{self.gitlab_config.url}/api/v4/projects/{project_id}/issues?scope=all"
         all_issues = self._get_all_paginated(issues_url)
 
         for issue in all_issues:
@@ -96,7 +98,8 @@ class GitlabDataSource(BaseDataSource):
             logger.info(f"Issue {issue['id']} is too old, skipping")
             return
 
-        comments_url = f"{GITLAB_BASE_URL}/projects/{issue['project_id']}/issues/{issue['iid']}/notes?sort=asc"
+        comments_url = \
+            f"{self.gitlab_config.url}/api/v4/projects/{issue['project_id']}/issues/{issue['iid']}/notes?sort=asc"
         raw_comments = self._get_all_paginated(comments_url)
         comments = []
         issue_url = issue['web_url']

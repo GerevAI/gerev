@@ -388,27 +388,27 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <div className="flex flex-row flex-wrap items-end mt-4">
                               {/* for each field */}
                               {
-                                 this.state.selectedDataSource.configFields.map((field, index) => {
-                                    if (field.input_type === 'text' || field.input_type === 'password') {
-                                       return (
-                                          <div className="flex flex-col mr-10 mt-4">
-                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                             <input value={field.value} onChange={(event) => { field.value = event.target.value }}
-                                                className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
-                                                placeholder={field.placeholder}></input>
-                                          </div>
-                                       )
-                                    } else if (field.input_type === 'textarea') {
-                                       return (
-                                          <div className="flex flex-col w-full mt-4">
-                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                             <textarea value={field.value} onChange={(event) => { field.value = event.target.value }}
-                                                className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
-                                          </div>
-                                       )
-                                    }
-                                    return null;
-                                 })
+                              this.state.selectedDataSource.configFields.map((field, index) => {
+                              if (field.input_type === 'text' || field.input_type === 'password') {
+                                 return (
+                                    <div className="flex flex-col mr-10 mt-4">
+                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                       <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
+                                          className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                          placeholder={field.placeholder}></input>
+                                    </div>
+                                 )
+                              } else if (field.input_type === 'textarea') {
+                                 return (
+                                    <div className="flex flex-col w-full mt-4">
+                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                       <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
+                                          className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                    </div>
+                                 )
+                              }
+                              return null;
+                              })
                               }
                               {/* Selecting locations */}
                               {
@@ -501,6 +501,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
             }
          </div>
       );
+   }
+
+   updateInput = (index, value) => {
+      let selectedDataSource = this.state.selectedDataSource;
+      selectedDataSource.configFields[index].value = value;
+      this.setState({ selectedDataSource: selectedDataSource });
    }
 
    proceed = () => {
