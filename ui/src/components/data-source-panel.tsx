@@ -368,6 +368,17 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <p>Note that the url must begin with either http:// or https://</p>
                                  </span>
                               )}
+
+                              {this.state.selectedDataSource.value === 'trello' && (
+                                 <span className="flex flex-col leading-9 text-xl text-white">
+                                    <span>1. {'Navigate to https://developer.atlassian.com/cloud/trello/guides/rest-api/api-introduction/ and follow the steps here'}</span>
+                                    <span>2. {'Once you are on your Power Ups page Click "New"'}</span>
+                                    <span>3. {'Fill out the form and click create'}</span>
+                                    <span>4. {'Click Generate a New API Key on the page you were redirected to'}</span>
+                                    <span>5. {'Copy the API Key and paste it here'}</span>
+                                    <span>6. {'Click "Token" in the paragraph next to the API Key, Authorize your app, and paste the API Token provided here'}</span>
+                                 </span>
+                              )}
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
