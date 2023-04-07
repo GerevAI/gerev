@@ -1,7 +1,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
+from typing import Union, List
 
 
 class DocumentType(Enum):
@@ -9,6 +9,14 @@ class DocumentType(Enum):
     MESSAGE = "message"
     COMMENT = "comment"
     PERSON = "person"
+    ISSUE = "issue"
+    GIT_PR = "git_pr"
+
+
+class DocumentStatus(Enum):
+    OPEN = "open"
+    IN_PROGRESS = "in_progress"
+    CLOSED = "closed"
 
 
 class FileType(Enum):
@@ -33,8 +41,8 @@ class FileType(Enum):
 
 @dataclass
 class BasicDocument:
-    id: Union[int, str]
-    data_source_id: int
+    id: Union[int, str]  # row id in database
+    data_source_id: int  # data source id in database
     type: DocumentType
     title: str
     content: str
@@ -44,6 +52,8 @@ class BasicDocument:
     location: str
     url: str
     file_type: FileType = None
+    status: DocumentStatus = None
+    children: List['BasicDocument'] = None
 
     @property
     def id_in_data_source(self):

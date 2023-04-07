@@ -126,7 +126,7 @@ class SlackDataSource(BaseDataSource):
             message_id = message['client_msg_id']
             readable_timestamp = datetime.datetime.fromtimestamp(float(timestamp))
             message_url = f"https://slack.com/app_redirect?channel={conv.id}&message_ts={timestamp}"
-            last_msg = BasicDocument(title=conv.name, content=text, author=author.name,
+            last_msg = BasicDocument(title=author.name, content=text, author=author.name,
                                      timestamp=readable_timestamp, id=message_id,
                                      data_source_id=self._data_source_id, location=conv.name,
                                      url=message_url, author_image_url=author.image_url,

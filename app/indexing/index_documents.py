@@ -1,20 +1,49 @@
 import logging
 import re
-from typing import List
+from enum import Enum
+from typing import List, Optional
 
 from data_source.api.basic_document import BasicDocument
+from db_engine import Session
+from indexing.bm25_index import Bm25Index
+from indexing.faiss_index import FaissIndex
+from models import bi_encoder
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
-from models import bi_encoder
-from indexing.faiss_index import FaissIndex
-from indexing.bm25_index import Bm25Index
-from db_engine import Session
-
 
 logger = logging.getLogger(__name__)
 
 
+def get_enum_value_or_none(enum: Optional[Enum]) -> Optional[str]:
+    if enum is None:
+        return None
+
+    return enum.value
+
+
 class Indexer:
+
+    @staticmethod
+    def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
+        paragraphs = Indexer._split_into_paragraphs(document.content)
+        return Document(
+            data_source_id=document.data_source_id,
+            id_in_data_source=document.id_in_data_source,
+            type=document.type.value,
+            file_type=get_enum_value_or_none(document.file_type),
+            status=get_enum_value_or_none(document.status),
+            title=document.title,
+            author=document.author,
+            author_image_url=document.author_image_url,
+            location=document.location,
+            url=document.url,
+            timestamp=document.timestamp,
+            paragraphs=[
+                Paragraph(content=content)
+                for content in paragraphs
+            ],
+            parent=parent
+        )
 
     @staticmethod
     def index_documents(documents: List[BasicDocument]):
@@ -23,7 +52,8 @@ class Indexer:
         ids_in_data_source = [document.id_in_data_source for document in documents]
 
         with Session() as session:
-            documents_to_delete = session.query(Document).filter(Document.id_in_data_source.in_(ids_in_data_source)).all()
+            documents_to_delete = session.query(Document).filter(
+                Document.id_in_data_source.in_(ids_in_data_source)).all()
             if documents_to_delete:
                 logging.info(f'removing documents that were updated and need to be re-indexed.')
                 Indexer.remove_documents(documents_to_delete, session)
@@ -39,24 +69,12 @@ class Indexer:
                 # Split the content into paragraphs that fit inside the database
                 paragraphs = Indexer._split_into_paragraphs(document.content)
                 # Create a new document in the database
-                db_document = Document(
-                    data_source_id=document.data_source_id,
-                    id_in_data_source=document.id_in_data_source,
-                    type=document.type.value,
-                    file_type=document.file_type.value if document.file_type is not None else None,
-                    title=document.title,
-                    author=document.author,
-                    author_image_url=document.author_image_url,
-                    location=document.location,
-                    url=document.url,
-                    timestamp=document.timestamp,
-                    paragraphs=[
-                        Paragraph(content=content)
-                        for content in paragraphs
-                    ]
-                )
-
+                db_document = Indexer.basic_to_document(document)
+                children = []
+                if document.children:
+                    children = [Indexer.basic_to_document(child, db_document) for child in document.children]
                 db_documents.append(db_document)
+                db_documents.extend(children)
 
             # Save the documents to the database
             session.add_all(db_documents)
@@ -75,6 +93,9 @@ class Indexer:
         logger.info(f"Updating BM25 index...")
         Bm25Index.get().update()
 
+        if len(paragraph_contents) == 0:
+            return
+
         # Encode the paragraphs
         show_progress_bar = not IS_IN_DOCKER
         logger.info(f"Encoding with bi-encoder...")
@@ -91,6 +112,8 @@ class Indexer:
         """
         split into paragraphs and batch small paragraphs together into the same paragraph
         """
+        if text is None:
+            return []
         paragraphs = []
         current_paragraph = ''
         for paragraph in re.split(r'\n\s*\n', text):
@@ -115,7 +138,7 @@ class Indexer:
         return result
 
     @staticmethod
-    def remove_documents(documents: List[Document], session = None):
+    def remove_documents(documents: List[Document], session=None):
         logger.info(f"Removing {len(documents)} documents")
 
         # Get the paragraphs from the documents

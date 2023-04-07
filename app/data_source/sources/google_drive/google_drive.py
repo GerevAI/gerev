@@ -180,11 +180,14 @@ class GoogleDriveDataSource(BaseDataSource):
             author = first_owner.get('displayName')
             author_image_url = first_owner.get('photoLink')
 
+        # title is file name without extension
+        title = file['name'].split('.')[0]
+
         doc = BasicDocument(
             id=file_id,
             data_source_id=self._data_source_id,
             type=DocumentType.DOCUMENT,
-            title=file['name'],
+            title=title,
             content=content,
             author=author,
             author_image_url=author_image_url,

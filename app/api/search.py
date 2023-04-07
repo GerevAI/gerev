@@ -10,7 +10,7 @@ router = APIRouter(
 
 
 @router.get("")
-async def search(request: Request, query: str, top_k: int = 5):
+async def search(request: Request, query: str, top_k: int = 10):
     uuid_header = request.headers.get('uuid')
     Posthog.increase_search_count(uuid=uuid_header)
     return search_documents(query, top_k)
