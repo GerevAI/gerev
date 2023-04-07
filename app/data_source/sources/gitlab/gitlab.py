@@ -126,7 +126,7 @@ class GitlabDataSource(BaseDataSource):
             data_source_id=self._data_source_id,
             type=DocumentType.ISSUE,
             title=issue['title'],
-            content=issue["description"] if not None else "",
+            content=issue.get("description") or "",
             author=issue['author']['name'],
             author_image_url=issue['author']['avatar_url'],
             location=issue['references']['full'].replace("/", " / "),
