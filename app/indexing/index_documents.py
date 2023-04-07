@@ -1,17 +1,24 @@
 import logging
 import re
-from typing import List
+from enum import Enum
+from typing import List, Optional
 
 from data_source.api.basic_document import BasicDocument
+from db_engine import Session
+from indexing.bm25_index import Bm25Index
+from indexing.faiss_index import FaissIndex
+from models import bi_encoder
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
-from models import bi_encoder
-from indexing.faiss_index import FaissIndex
-from indexing.bm25_index import Bm25Index
-from db_engine import Session
-
 
 logger = logging.getLogger(__name__)
+
+
+def get_enum_value_or_none(enum: Optional[Enum]) -> Optional[str]:
+    if enum is None:
+        return None
+
+    return enum.value
 
 
 class Indexer:
@@ -23,7 +30,8 @@ class Indexer:
         ids_in_data_source = [document.id_in_data_source for document in documents]
 
         with Session() as session:
-            documents_to_delete = session.query(Document).filter(Document.id_in_data_source.in_(ids_in_data_source)).all()
+            documents_to_delete = session.query(Document).filter(
+                Document.id_in_data_source.in_(ids_in_data_source)).all()
             if documents_to_delete:
                 logging.info(f'removing documents that were updated and need to be re-indexed.')
                 Indexer.remove_documents(documents_to_delete, session)
@@ -43,7 +51,8 @@ class Indexer:
                     data_source_id=document.data_source_id,
                     id_in_data_source=document.id_in_data_source,
                     type=document.type.value,
-                    file_type=document.file_type.value if document.file_type is not None else None,
+                    file_type=get_enum_value_or_none(document.file_type),
+                    status=get_enum_value_or_none(document.status),
                     title=document.title,
                     author=document.author,
                     author_image_url=document.author_image_url,
@@ -120,7 +129,7 @@ class Indexer:
         return result
 
     @staticmethod
-    def remove_documents(documents: List[Document], session = None):
+    def remove_documents(documents: List[Document], session=None):
         logger.info(f"Removing {len(documents)} documents")
 
         # Get the paragraphs from the documents

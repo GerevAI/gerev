@@ -368,6 +368,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     <p>Note that the url must begin with either http:// or https://</p>
                                  </span>
                               )}
+                              {
+                                 this.state.selectedDataSource.value === 'gitlab' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to your Gitlab -> top-right profile picture -> Preferences'}</span>
+                                       <span>2. {'Access Tokens -> Name it'}</span>
+                                       <span>3. {"Remove expiration date, check read_api checkbox create and copy the token"}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">
