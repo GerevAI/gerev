@@ -30,37 +30,6 @@ def gitlab_status_to_doc_status(status: str) -> Optional[DocumentStatus]:
 
 class GitlabDataSource(BaseDataSource):
 
-    def _feed_project_issues(self, project: Dict):
-        project_id = project["id"]
-        project_url = project["web_url"]
-
-        issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues"
-
-        issues_response = self._session.get(issues_url)
-        issues_response.raise_for_status()
-        issues_json = issues_response.json()
-
-        for issue in issues_json:
-            last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-            if last_modified < self._last_index_time:
-                logger.info(f"Issue {issue['id']} is too old, skipping")
-                continue
-
-            doc = BasicDocument(
-                id=issue["id"],
-                data_source_id=self._data_source_id,
-                type=DocumentType.ISSUE,
-                title=issue['title'],
-                content=issue["description"] if not None else "",
-                author=issue['author']['name'],
-                author_image_url=issue['author']['avatar_url'],
-                location=issue['references']['full'].replace("/", " / "),
-                url=issue['web_url'],
-                timestamp=last_modified,
-                status=gitlab_status_to_doc_status(issue["state"])
-            )
-            IndexQueue.get_instance().put_single(doc=doc)
-
     @staticmethod
     def get_config_fields() -> List[ConfigField]:
         return [
@@ -84,29 +53,83 @@ class GitlabDataSource(BaseDataSource):
         self._session = requests.Session()
         self._session.headers.update({"PRIVATE-TOKEN": self.gitlab_config.access_token})
 
-    def _list_all_projects(self) -> List[Dict]:
-        projects = []
+    def _get_all_paginated(self, url: str) -> List[Dict]:
+        items = []
         page = 1
         per_page = 100
 
         while True:
             try:
-                projects_response = self._session.get(f"{GITLAB_BASE_URL}/projects?membership=true"
-                                                      f"&per_page={per_page}&page={page}")
-                projects_response.raise_for_status()
-                new_projects: List[Dict] = projects_response.json()
-                projects.extend(new_projects)
+                response = self._session.get(url + f"&per_page={per_page}&page={page}")
+                response.raise_for_status()
+                new_items: List[Dict] = response.json()
+                items.extend(new_items)
 
-                if len(new_projects) < per_page:
+                if len(new_items) < per_page:
                     break
 
                 page += 1
             except:
-                logging.exception("Error while fetching projects")
+                logging.exception("Error while fetching items paginated for url: " + url)
 
-        return projects
+        return items
+
+    def _list_all_projects(self) -> List[Dict]:
+        return self._get_all_paginated(f"{GITLAB_BASE_URL}/projects?membership=true")
 
     def _feed_new_documents(self) -> None:
         for project in self._list_all_projects():
             logger.info(f"Feeding project {project['name']}")
             self.add_task_to_queue(self._feed_project_issues, project=project)
+
+    def _feed_project_issues(self, project: Dict):
+        project_id = project["id"]
+        issues_url = f"{GITLAB_BASE_URL}/projects/{project_id}/issues?scope=all"
+        all_issues = self._get_all_paginated(issues_url)
+
+        for issue in all_issues:
+            self.add_task_to_queue(self.feed_issue, issue=issue)
+
+    def feed_issue(self, issue: Dict):
+        last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        if last_modified < self._last_index_time:
+            logger.info(f"Issue {issue['id']} is too old, skipping")
+            return
+
+        comments_url = f"{GITLAB_BASE_URL}/projects/{issue['project_id']}/issues/{issue['iid']}/notes?sort=asc"
+        raw_comments = self._get_all_paginated(comments_url)
+        comments = []
+        issue_url = issue['web_url']
+
+        for raw_comment in raw_comments:
+            if raw_comment["system"]:
+                continue
+
+            comments.append(BasicDocument(
+                id=raw_comment["id"],
+                data_source_id=self._data_source_id,
+                type=DocumentType.COMMENT,
+                title=raw_comment["author"]["name"],
+                content=raw_comment["body"],
+                author=raw_comment["author"]["name"],
+                author_image_url=raw_comment["author"]["avatar_url"],
+                location=issue['references']['full'].replace("/", " / "),
+                url=issue_url,
+                timestamp=datetime.strptime(raw_comment["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+            ))
+
+        doc = BasicDocument(
+            id=issue["id"],
+            data_source_id=self._data_source_id,
+            type=DocumentType.ISSUE,
+            title=issue['title'],
+            content=issue["description"] if not None else "",
+            author=issue['author']['name'],
+            author_image_url=issue['author']['avatar_url'],
+            location=issue['references']['full'].replace("/", " / "),
+            url=issue['web_url'],
+            timestamp=last_modified,
+            status=gitlab_status_to_doc_status(issue["state"]),
+            children=comments
+        )
+        IndexQueue.get_instance().put_single(doc=doc)

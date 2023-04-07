@@ -221,6 +221,12 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <h1 className="text-gray-500">Add</h1>
                            <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                         </div>
+                        <div className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                           <a className="flex flex-row justify-center items-center text-gray-500" href="https://form.typeform.com/to/JwtKLrLz" target="_blank" 
+                              rel="noreferrer">Beta Data Sources
+                              <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
+                           </a>
+                        </div>
                      </div>
                   </div>
                )

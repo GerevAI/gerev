@@ -1,10 +1,13 @@
+from dataclasses import dataclass
 from typing import Optional
 
+from sqlalchemy import String, DateTime, ForeignKey, Column, Integer
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
+
 from schemas.base import Base
-from sqlalchemy import String, DateTime, ForeignKey, Column, Integer, Boolean
-from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
+@dataclass
 class Document(Base):
     __tablename__ = 'document'
 
@@ -23,3 +26,7 @@ class Document(Base):
     timestamp: Mapped[Optional[DateTime]] = mapped_column(DateTime())
     paragraphs = relationship("Paragraph", back_populates="document", cascade='all, delete, delete-orphan',
                               foreign_keys="Paragraph.document_id")
+
+    parent_id = Column(Integer, ForeignKey('document.id'))
+    children = relationship("Document", foreign_keys=[parent_id], backref=backref("parent", remote_side=[id]),
+                            cascade='all, delete, delete-orphan', single_parent=True)

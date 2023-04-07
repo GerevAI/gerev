@@ -1,7 +1,7 @@
 from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
-from typing import Union
+from typing import Union, List
 
 
 class DocumentType(Enum):
@@ -53,6 +53,7 @@ class BasicDocument:
     url: str
     file_type: FileType = None
     status: DocumentStatus = None
+    children: List['BasicDocument'] = None
 
     @property
     def id_in_data_source(self):

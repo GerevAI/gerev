@@ -12,7 +12,7 @@ import nltk
 import torch
 from sentence_transformers import CrossEncoder
 
-from data_source.api.basic_document import DocumentType, FileType
+from data_source.api.basic_document import DocumentType, FileType, DocumentStatus
 from data_source.api.utils import get_confluence_user_image
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
@@ -47,8 +47,10 @@ class SearchResult:
     data_source: str
     time: datetime
     file_type: FileType
+    status: DocumentStatus
     author_image_url: Optional[str]
     author_image_data: Optional[str]
+    child: Optional['SearchResult'] = None
 
 
 @dataclass
@@ -58,6 +60,7 @@ class Candidate:
     document: Document = None
     answer_start: int = -1
     answer_end: int = -1
+    parent: 'Candidate' = None
 
     def _text_anchor(self, url, text) -> str:
         if '#' not in url:
@@ -76,6 +79,14 @@ class Candidate:
 
     @threaded_method
     def to_search_result(self) -> SearchResult:
+        parent_result = None
+
+        if self.parent is not None:
+            parent_result = self.parent.to_search_result()
+            parent_result.score = max(parent_result.score, self.score)
+        elif self.document.parent_id is not None:
+            parent_result = Candidate(content="", score=self.score, document=self.document.parent).to_search_result()
+
         answer = TextPart(self.content[self.answer_start: self.answer_end], True)
         content = [answer]
 
@@ -89,18 +100,25 @@ class Candidate:
             config = json.loads(self.document.data_source.config)
             data_uri = get_confluence_user_image(self.document.author_image_url, config['token'])
 
-        return SearchResult(score=(self.score + 12) / 24 * 100,
-                            content=content,
-                            author=self.document.author,
-                            author_image_url=self.document.author_image_url,
-                            author_image_data=data_uri,
-                            title=self.document.title,
-                            url=self._text_anchor(self.document.url, answer.content),
-                            time=self.document.timestamp,
-                            location=self.document.location,
-                            data_source=self.document.data_source.type.name,
-                            type=self.document.type,
-                            file_type=self.document.file_type)
+        result = SearchResult(score=(self.score + 12) / 24 * 100,
+                              content=content,
+                              author=self.document.author,
+                              author_image_url=self.document.author_image_url,
+                              author_image_data=data_uri,
+                              title=self.document.title,
+                              url=self._text_anchor(self.document.url, answer.content),
+                              time=self.document.timestamp,
+                              location=self.document.location,
+                              data_source=self.document.data_source.type.name,
+                              type=self.document.type,
+                              file_type=self.document.file_type,
+                              status=self.document.status)
+
+        if parent_result is not None:
+            parent_result.child = result
+            return parent_result
+        else:
+            return result
 
 
 def _cross_encode(
@@ -185,6 +203,15 @@ def search_documents(query: str, top_k: int) -> List[SearchResult]:
 
         logger.info(f'Parsing {len(candidates)} candidates to search results...')
 
+        for possible_child in candidates:
+            if possible_child.document.parent_id is not None:
+                for possible_parent in candidates:
+                    if possible_parent.document.id == possible_child.document.parent_id:
+                        possible_child.parent = possible_parent
+                        candidates.remove(possible_parent)
+                        break
+
         with ThreadPoolExecutor(max_workers=10) as executor:
             result = list(executor.map(lambda c: c.to_search_result(), candidates))
+            result.sort(key=lambda r: r.score, reverse=True)
             return result

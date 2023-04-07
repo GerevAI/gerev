@@ -24,6 +24,28 @@ def get_enum_value_or_none(enum: Optional[Enum]) -> Optional[str]:
 class Indexer:
 
     @staticmethod
+    def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
+        paragraphs = Indexer._split_into_paragraphs(document.content)
+        return Document(
+            data_source_id=document.data_source_id,
+            id_in_data_source=document.id_in_data_source,
+            type=document.type.value,
+            file_type=get_enum_value_or_none(document.file_type),
+            status=get_enum_value_or_none(document.status),
+            title=document.title,
+            author=document.author,
+            author_image_url=document.author_image_url,
+            location=document.location,
+            url=document.url,
+            timestamp=document.timestamp,
+            paragraphs=[
+                Paragraph(content=content)
+                for content in paragraphs
+            ],
+            parent=parent
+        )
+
+    @staticmethod
     def index_documents(documents: List[BasicDocument]):
         logger.info(f"Indexing {len(documents)} documents")
 
@@ -47,25 +69,12 @@ class Indexer:
                 # Split the content into paragraphs that fit inside the database
                 paragraphs = Indexer._split_into_paragraphs(document.content)
                 # Create a new document in the database
-                db_document = Document(
-                    data_source_id=document.data_source_id,
-                    id_in_data_source=document.id_in_data_source,
-                    type=document.type.value,
-                    file_type=get_enum_value_or_none(document.file_type),
-                    status=get_enum_value_or_none(document.status),
-                    title=document.title,
-                    author=document.author,
-                    author_image_url=document.author_image_url,
-                    location=document.location,
-                    url=document.url,
-                    timestamp=document.timestamp,
-                    paragraphs=[
-                        Paragraph(content=content)
-                        for content in paragraphs
-                    ]
-                )
-
+                db_document = Indexer.basic_to_document(document)
+                children = []
+                if document.children:
+                    children = [Indexer.basic_to_document(child, db_document) for child in document.children]
                 db_documents.append(db_document)
+                db_documents.extend(children)
 
             # Save the documents to the database
             session.add_all(db_documents)
