@@ -30,7 +30,7 @@ RUN python3 /tmp/models.py
 COPY --from=node-builder /app/ui/build /ui
 COPY ./run.sh .
 
-VOLUME [ "/opt/storage" ]
+RUN mkdir /opt/storage
 
 EXPOSE 80
 CMD ./run.sh
