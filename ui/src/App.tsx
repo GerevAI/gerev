@@ -40,17 +40,21 @@ export interface AppState {
   isServerDown: boolean
   isStartedFetching: boolean
   isPreparingIndexing: boolean
+  isIndexing: boolean
   didPassDiscord: boolean
   discordCodeInput: string
   docsLeftToIndex: number
   docsInIndexing: number
-  lastServerDownTimestamp: number
+  docsIndexed: number
+  timeSinceLastIndexing: number
+  serverDownCount: number
   showResultsPage: boolean
 }
 
 export interface ServerStatus {
   docs_in_indexing: number
   docs_left_to_index: number
+  docs_indexed: number
 }
 
 Modal.setAppElement('#root');
@@ -103,8 +107,11 @@ export default class App extends React.Component <{}, AppState>{
       didPassDiscord: false,
       docsLeftToIndex: 0,
       docsInIndexing: 0,
+      docsIndexed: 0,
+      isIndexing: false,
+      serverDownCount: 0,
+      timeSinceLastIndexing: 0,
       searchDuration: 0,
-      lastServerDownTimestamp: 0,
       showResultsPage: false
     }
 
@@ -164,11 +171,9 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   async fetchStatsusForever() {
-    let successSleepSeconds = 1;
     let timeBetweenFailToast = 5;
     let failSleepSeconds = 1;
-
-    api.get<ServerStatus>('/status').then((res) => {
+    api.get<ServerStatus>('/status', {timeout: 3000}).then((res) => {
       if (this.state.isServerDown) {
         toast.dismiss();
         if (!document.hidden) {
@@ -178,33 +183,37 @@ export default class App extends React.Component <{}, AppState>{
       }
 
       let isPreparingIndexing = this.state.isPreparingIndexing;
-      if (this.state.isPreparingIndexing && (res.data.docs_in_indexing > 0 || res.data.docs_left_to_index > 0)) {
+      let isIndexing = this.state.isIndexing;
+      let lastIndexingTime = this.state.timeSinceLastIndexing;
+      if (res.data.docs_in_indexing > 0 || res.data.docs_left_to_index > 0 || (res.data.docs_indexed > this.state.docsIndexed && this.state.docsIndexed > 0)) {
+        isIndexing = true;
+        lastIndexingTime = Date.now();
         isPreparingIndexing = false;
-      }
-
-      if(this.state.docsInIndexing > 0 && (res.data.docs_in_indexing === 0 && res.data.docs_left_to_index === 0)) {
+      } else if (isIndexing && Date.now() - lastIndexingTime > (1000 * 60 * 1)) {
+        isIndexing = false;
         toast.success("Indexing finished.", {autoClose: 2000});
       }
 
       this.setState({isServerDown: false, docsLeftToIndex: res.data.docs_left_to_index,
-                    docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing});
+                    docsInIndexing: res.data.docs_in_indexing, isPreparingIndexing: isPreparingIndexing,
+                    docsIndexed: res.data.docs_indexed, isIndexing: isIndexing, timeSinceLastIndexing: lastIndexingTime});
 
-      let timeToSleep = isPreparingIndexing ? 1000 : successSleepSeconds * 1000;
+      let timeToSleep = 1000;
       setTimeout(() => this.fetchStatsusForever(), timeToSleep);
     }).catch((err) => {
-      this.setState({isServerDown: true});
+      this.setState({serverDownCount: this.state.serverDownCount + 1});
 
-      if (Date.now() - this.state.lastServerDownTimestamp > 6000 && !document.hidden) {  // if it's 6 seconds since last server down, show a toast
+      if (this.state.serverDownCount > 5 && !document.hidden) {  // if it's 6 seconds since last server down, show a toast
         toast.dismiss();
-        toast.error(`Server is down, retrying in ${timeBetweenFailToast} seconds...`, {autoClose: (timeBetweenFailToast-1) * 1000});
-        this.setState({lastServerDownTimestamp: Date.now()});
+        toast.error(`Server is not responding (retrying...)`, {autoClose: (timeBetweenFailToast-1) * 1000});
+        this.setState({isServerDown: true, serverDownCount: 0});
       }
       setTimeout(() => this.fetchStatsusForever(), failSleepSeconds * 1000);
     })    
   }
 
   inIndexing() {
-    return this.state.isPreparingIndexing || this.state.docsInIndexing > 0 || this.state.docsLeftToIndex > 0;
+    return this.state.isPreparingIndexing || this.state.isIndexing;
   }
 
   getIndexingStatusText() {
@@ -213,17 +222,36 @@ export default class App extends React.Component <{}, AppState>{
     }
 
     if (this.state.docsInIndexing > 0) {
-      let text = "Indexing " + this.state.docsInIndexing + " documents... it might take a while.";
+      let text = "Indexing " + this.state.docsInIndexing + " documents...";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex + "~ left in queue)";
+        text += " (" + this.state.docsLeftToIndex + " left in queue";
+        if (this.state.docsIndexed > 0) {
+          text += ", " + this.state.docsIndexed + " documents are indexed & searchable)";
+        } else {
+          text += ")";
+        }
+
+      } else {
+        if (this.state.docsIndexed > 0) {
+          text += " (" + this.state.docsIndexed + " documents are indexed & searchable)";
+        }
       }
 
       return text;
     }
 
     if (this.state.docsLeftToIndex > 0) {
-      return "Preparing to index...";
+      let text = "Preparing to index";
+      if (this.state.docsIndexed > 0) {
+        text += " (" + this.state.docsIndexed + " documents are indexed & searchable)";
+      } else {
+        text += "...";
+      }
+      return text;
     }
+
+    return `Indexing... (${this.state.docsIndexed} documents are indexed & searchable)`;
+    
   }
   
   openModal() {

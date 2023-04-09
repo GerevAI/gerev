@@ -87,8 +87,14 @@ export const SearchResult = (props: SearchResultProps) => {
                                 <span className='flex flex-row items-center justify-center ml-2 mt-[5px]'>
                                     Commented {getDaysAgo(props.resultDetails.time)}
                                 </span>
-                            )
-                                
+                            )     
+                        }
+                        {
+                            props.resultDetails.type === ResultType.Message && (
+                                <span className='flex flex-row items-center justify-center ml-2 mt-[5px]'>
+                                    Sent {getDaysAgo(props.resultDetails.time)}
+                                </span>
+                            )     
                         }
                         {props.resultDetails.type === ResultType.Issue &&
                             <span className='flex flex-row items-center ml-2 px-[7px] py-[1px] font-poppins font-medium text-[15px] bg-[#392E58] text-[#8F76C6] rounded-lg'>
@@ -120,12 +126,15 @@ export const SearchResult = (props: SearchResultProps) => {
                                 {props.resultDetails.type === ResultType.Message && '#'}
                                 {props.resultDetails.location} </span>
                         </span>
-                        <span className="ml-1 flex flex-row items-center">
-                            <Img alt="author" className="inline-block ml-[6px] mr-2 h-4 rounded-xl"
-                                src={[props.resultDetails.author_image_url, props.resultDetails.author_image_data, DefaultUserImage]}></Img>
-                            <span className='capitalize'>{props.resultDetails.author} </span>
-                        </span>
-                        {props.resultDetails.child === null && DateSpan(props)}
+                        {
+                        props.resultDetails.type !== ResultType.Message &&
+                            <span className="ml-1 flex flex-row items-center">
+                                <Img alt="author" className="inline-block ml-[6px] mr-2 h-4 rounded-xl"
+                                    src={[props.resultDetails.author_image_url, props.resultDetails.author_image_data, DefaultUserImage]}></Img>
+                                <span className='capitalize'>{props.resultDetails.author} </span>
+                            </span>
+                        }
+                        {props.resultDetails.child === null && props.resultDetails.type !== ResultType.Message && DateSpan(props)}
                         <span className="flex flex-row items-center">
                             &thinsp; |&thinsp;
                             <img alt="file-type" className="inline ml-2 mx-1  h-[12px] w-[12px] grayscale-[0.55]"
