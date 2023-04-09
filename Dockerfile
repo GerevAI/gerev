@@ -30,7 +30,7 @@ RUN python3 /tmp/models.py
 COPY --from=node-builder /app/ui/build /ui
 COPY ./run.sh .
 
-RUN mkdir /opt/storage
+ENV DOCKER_DEPLOYMENT=1
 
 EXPOSE 80
 CMD ./run.sh
