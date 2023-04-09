@@ -40,8 +40,8 @@ Coming Soon...
  
 :pray:  - by the community 
 
-## Add your own data source <30min :clock1:
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
+## Add your own data source NOW 🚀
+See the full guide at [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 
 ## Natural Language
