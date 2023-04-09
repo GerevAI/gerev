@@ -6,7 +6,7 @@ IS_IN_DOCKER = os.environ.get('DOCKER_DEPLOYMENT', False)
 if os.name == 'nt':
     STORAGE_PATH = Path(".gerev\\storage")
 else:
-    STORAGE_PATH = Path('/tmp/storage/') if IS_IN_DOCKER else Path(f'/home/{os.getlogin()}/.gerev/storage/')
+    STORAGE_PATH = Path('/tmp/storage/')
 
 if not STORAGE_PATH.exists():
     STORAGE_PATH.mkdir(parents=True)
