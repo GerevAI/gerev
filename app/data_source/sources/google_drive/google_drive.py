@@ -85,11 +85,11 @@ class GoogleDriveDataSource(BaseDataSource):
         return True
 
     @lru_cache(maxsize=512)
-    def _get_parent_name(self, parent_id) -> dict:
+    def _get_parent_name(self, parent_id) -> str:
         # The drive api returns just 'Drive' for the names of shared drives, so just skip it.
         try:
             result = self._drive.files().get(fileId=parent_id, fields='name,parents', supportsAllDrives=True).execute()
-            if 'parents' in result and result['parents']:
+            if result.get('parents'):
                 parent_name = self._get_parent_name(result['parents'][0])
                 return parent_name + '/' + result['name'] if parent_name else result['name']
             else:
@@ -98,7 +98,7 @@ class GoogleDriveDataSource(BaseDataSource):
             logging.exception(f"Error while getting folder name of id {id}")
 
     def _get_parents_string(self, file):
-        return self._get_parent_name(file['parents'][0]) if file['parents'] else ''
+        return self._get_parent_name(file['parents'][0]) if file.get('parents') else ''
 
     def _feed_new_documents(self) -> None:
         for drive in self._get_all_drives():
@@ -180,11 +180,14 @@ class GoogleDriveDataSource(BaseDataSource):
             author = first_owner.get('displayName')
             author_image_url = first_owner.get('photoLink')
 
+        # title is file name without extension
+        title = file['name'].split('.')[0]
+
         doc = BasicDocument(
             id=file_id,
             data_source_id=self._data_source_id,
             type=DocumentType.DOCUMENT,
-            title=file['name'],
+            title=title,
             content=content,
             author=author,
             author_image_url=author_image_url,

@@ -114,14 +114,16 @@ async def shutdown_event():
 
 
 @app.get("/api/v1/status")
-async def status():
+def status():
     @dataclass
     class Status:
         docs_in_indexing: int
         docs_left_to_index: int
+        docs_indexed: int
 
     return Status(docs_in_indexing=BackgroundIndexer.get_currently_indexing(),
-                  docs_left_to_index=IndexQueue.get_instance().qsize() + TaskQueue.get_instance().qsize())
+                  docs_left_to_index=IndexQueue.get_instance().qsize() + TaskQueue.get_instance().qsize(),
+                  docs_indexed=BackgroundIndexer.get_indexed_count())
 
 
 @app.post("/clear-index")

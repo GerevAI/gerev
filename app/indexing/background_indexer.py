@@ -13,10 +13,15 @@ class BackgroundIndexer:
     _thread = None
     _stop_event = threading.Event()
     _currently_indexing_count = 0
+    _total_indexed_count = 0
 
     @classmethod
-    def get_currently_indexing(cls):
+    def get_currently_indexing(cls) -> int:
         return cls._currently_indexing_count
+
+    @classmethod
+    def get_indexed_count(cls) -> int:
+        return cls._total_indexed_count
 
     @classmethod
     def start(cls):
@@ -39,16 +44,20 @@ class BackgroundIndexer:
         logger.info(f'Background indexer started...')
 
         while not BackgroundIndexer._stop_event.is_set():
-            queue_items = docs_queue_instance.consume_all()
-            if not queue_items:
-                continue
+            try:
+                queue_items = docs_queue_instance.consume_all()
+                if not queue_items:
+                    continue
 
-            BackgroundIndexer._currently_indexing_count = len(queue_items)
-            logger.info(f'Got chunk of {len(queue_items)} documents')
+                BackgroundIndexer._currently_indexing_count = len(queue_items)
+                logger.info(f'Got chunk of {len(queue_items)} documents')
 
-            docs = [doc.doc for doc in queue_items]
-            Indexer.index_documents(docs)
-            BackgroundIndexer._ack_chunk(docs_queue_instance, [doc.queue_item_id for doc in queue_items])
+                docs = [doc.doc for doc in queue_items]
+                Indexer.index_documents(docs)
+                BackgroundIndexer._ack_chunk(docs_queue_instance, [doc.queue_item_id for doc in queue_items])
+            except Exception as e:
+                logger.exception(e)
+                logger.error('Error while indexing documents...')
 
     @staticmethod
     def _ack_chunk(queue: IndexQueue, ids: List[int]):
@@ -57,4 +66,5 @@ class BackgroundIndexer:
             queue.ack(id=item_id)
 
         logger.info(f'Acked {len(ids)} documents.')
+        BackgroundIndexer._total_indexed_count += len(ids)
         BackgroundIndexer._currently_indexing_count = 0

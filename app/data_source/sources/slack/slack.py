@@ -49,7 +49,7 @@ class SlackDataSource(BaseDataSource):
 
     @staticmethod
     def _is_valid_message(message: Dict) -> bool:
-        return 'client_msg_id' in message
+        return 'client_msg_id' in message or 'bot_id' in message
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,15 +62,15 @@ class SlackDataSource(BaseDataSource):
         return [SlackConversation(id=conv['id'], name=conv['name'])
                 for conv in conversations['channels']]
 
-    def _join_conversations(self, conversations: List[SlackConversation]) -> List[SlackConversation]:
+    def _feed_conversations(self, conversations: List[SlackConversation]) -> List[SlackConversation]:
         joined_conversations = []
 
         for conv in conversations:
             try:
                 result = self._slack.conversations_join(channel=conv.id)
                 if result['ok']:
-                    logger.info(f'Joined channel {conv.name}')
-                    joined_conversations.append(conv)
+                    logger.info(f'Joined channel {conv.name}, adding a fetching task...')
+                    self.add_task_to_queue(self._feed_conversation, conv=conv)
             except Exception as e:
                 logger.warning(f'Could not join channel {conv.name}: {e}')
 
@@ -92,11 +92,7 @@ class SlackDataSource(BaseDataSource):
         conversations = self._list_conversations()
         logger.info(f'Found {len(conversations)} conversations')
 
-        joined_conversations = self._join_conversations(conversations)
-        logger.info(f'Joined {len(joined_conversations)} conversations')
-
-        for conv in joined_conversations:
-            self.add_task_to_queue(self._feed_conversation, conv=conv)
+        self._feed_conversations(conversations)
 
     def _feed_conversation(self, conv: SlackConversation):
         logger.info(f'Feeding conversation {conv.name}')
@@ -112,8 +108,14 @@ class SlackDataSource(BaseDataSource):
                 continue
 
             text = message['text']
-            author_id = message['user']
-            author = self._get_author_details(author_id)
+            if author_id := message.get('user'):
+                author = self._get_author_details(author_id)
+            elif message.get('bot_id'):
+                author = SlackAuthor(name=message.get('username'), image_url=message.get('icons', {}).get('image_48'))
+            else:
+                logger.warning(f'Unknown message author: {message}')
+                continue
+
             if last_msg is not None:
                 if last_msg.author == author.name:
                     last_msg.content += f"\n{text}"
@@ -123,10 +125,10 @@ class SlackDataSource(BaseDataSource):
                     last_msg = None
 
             timestamp = message['ts']
-            message_id = message['client_msg_id']
+            message_id = message.get('client_msg_id') or timestamp
             readable_timestamp = datetime.datetime.fromtimestamp(float(timestamp))
             message_url = f"https://slack.com/app_redirect?channel={conv.id}&message_ts={timestamp}"
-            last_msg = BasicDocument(title=conv.name, content=text, author=author.name,
+            last_msg = BasicDocument(title=author.name, content=text, author=author.name,
                                      timestamp=readable_timestamp, id=message_id,
                                      data_source_id=self._data_source_id, location=conv.name,
                                      url=message_url, author_image_url=author.image_url,

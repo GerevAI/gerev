@@ -3,11 +3,6 @@
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
    [Join here!](https://discord.gg/NKhTX7JZAF)
-  
-# **New!** 🎉 ChatGPT plugin support!
-**Connect Gerev as a plugin to ChatGPT -> ask questions about your entire organization.**  
-See more awesome plugins [awesome-chatgpt-plugins](https://github.com/GerevAI/awesome-chatgpt-plugins)
-![ChatGPT Integration](./images/integ.jpeg)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
@@ -27,19 +22,21 @@ Coming Soon...
 ## Integrations
  - [x] Slack
  - [x] Confluence
- - [x] Google Drive (Docs, .docx, .pptx)
+ - [x] Google Drive (Docs, .docx, .pptx) - by [@bary12](https://github.com/bary12) :pray: 
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
  - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
- - [ ] Gitlab Issues (In PR :pray:)
+ - [X] Gitlab Issues - by [@eran1232](https://github.com/eran1232) :pray:
+ - [ ] Jira (In Progress...)
  - [ ] Zendesk (In PR :pray:)
+ - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
+ - [ ] Phabricator (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Trello (In Progress... :pray:)
  - [ ] Microsoft Teams
  - [ ] Sharepoint
- - [ ] Jira
  
 :pray:  - by the community 
 
@@ -74,13 +71,14 @@ Then run the docker container like so:
 
 ### Nvidia hardware
 ```bash
-docker run --gpus all -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run --gpus all --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
 
 ### CPU only (no GPU)
 ```
-docker run -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
+docker run --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 ```
+add `-d` if you want to detach the container.
 
 ## Run from source 
 See CONTRIBUTING.md
