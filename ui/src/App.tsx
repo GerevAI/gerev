@@ -164,7 +164,7 @@ export default class App extends React.Component <{}, AppState>{
   }
 
   async fetchStatsusForever() {
-    let successSleepSeconds = 5;
+    let successSleepSeconds = 1;
     let timeBetweenFailToast = 5;
     let failSleepSeconds = 1;
 
