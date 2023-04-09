@@ -40,6 +40,9 @@ Coming Soon...
  
 :pray:  - by the community 
 
+## Add your own data source <30min :clock1:
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for more info.
+
 
 ## Natural Language
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
