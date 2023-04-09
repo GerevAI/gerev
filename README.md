@@ -41,7 +41,7 @@ Coming Soon...
 :pray:  - by the community 
 
 ## Add your own data source NOW 🚀
-See the full guide at [CONTRIBUTING.md](./CONTRIBUTING.md).
+See the full guide at [ADDING-A-DATA-SOURCE.md](./ADDING-A-DATA-SOURCE.md).
 
 
 ## Natural Language
