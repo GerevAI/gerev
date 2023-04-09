@@ -269,4 +269,8 @@ go to `gerev/ui/src/components/data-source-panel.tsx` and add your data source t
 Add your data-source logo.png to app/static/data_sources_icons.
 
 
-:rocket: Done!
+Done! :rocket:
+
+## Have any questions?
+
+Join our 1000+ community members [Here!](https://discord.gg/6qZ2QZj)
