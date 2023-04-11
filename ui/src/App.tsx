@@ -105,7 +105,7 @@ export default class App extends React.Component <{}, AppState>{
       isStartedFetching: false,
       isPreparingIndexing: false,
       discordCodeInput: "",
-      didPassDiscord: false,
+      didPassDiscord: true,
       docsLeftToIndex: 0,
       docsInIndexing: 0,
       docsIndexed: 0,
