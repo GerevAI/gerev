@@ -118,7 +118,7 @@ class GitlabDataSource(BaseDataSource):
                 author_image_url=raw_comment["author"]["avatar_url"],
                 location=issue['references']['full'].replace("/", " / "),
                 url=issue_url,
-                timestamp=datetime.strptime(raw_comment["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp=datetime.strptime(raw_comment["updated_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
             ))
 
         status = gitlab_status_to_doc_status(issue["state"])

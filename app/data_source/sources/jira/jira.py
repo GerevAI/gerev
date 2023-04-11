@@ -1,5 +1,6 @@
 import logging
 import os
+import urllib
 from datetime import datetime
 from typing import List, Dict
 
@@ -94,7 +95,8 @@ class JiraDataSource(BaseDataSource):
     def _feed_issue(self, raw_issue: Dict, project_name: str):
         issue_id = raw_issue['id']
         last_modified = datetime.strptime(raw_issue['fields']['updated'], "%Y-%m-%dT%H:%M:%S.%f%z")
-        issue_url = self._raw_config['url'] + '/browse/' + raw_issue['key']
+        base_url = self._raw_config['url']
+        issue_url = urllib.parse.urljoin(base_url, f"/browse/{raw_issue['key']}")
         comments = []
         raw_comments = self._jira.issue_get_comments(issue_id)
         for raw_comment in raw_comments['comments']:
