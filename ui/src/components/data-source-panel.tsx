@@ -580,37 +580,37 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       toast.error("Don't add your data sources, its a demo!", { autoClose: 4000 });
       return;
 
-      if (!this.state.selectedDataSource || this.state.isLoading) return;
+      // if (!this.state.selectedDataSource || this.state.isLoading) return;
 
-      let config = {};
-      this.state.selectedDataSource.configFields.forEach(field => {
-         config[field.name] = field.value;
-      });
-      config['locations_to_index'] = this.state.selectedLocations;
+      // let config = {};
+      // this.state.selectedDataSource.configFields.forEach(field => {
+      //    config[field.name] = field.value;
+      // });
+      // config['locations_to_index'] = this.state.selectedLocations;
 
-      let payload = {
-         name: this.state.selectedDataSource.value,
-         config: config
-      }
-      this.setState({ isLoading: true });
-      api.post(`/data-sources`, payload, {
-         headers: {
-            uuid: localStorage.getItem('uuid')
-         }
-      }).then(response => {
-         toast.success("Data source added successfully, indexing...");
+      // let payload = {
+      //    name: this.state.selectedDataSource.value,
+      //    config: config
+      // }
+      // this.setState({ isLoading: true });
+      // api.post(`/data-sources`, payload, {
+      //    headers: {
+      //       uuid: localStorage.getItem('uuid')
+      //    }
+      // }).then(response => {
+      //    toast.success("Data source added successfully, indexing...");
 
-         let selectedDataSource = this.state.selectedDataSource;
-         selectedDataSource.configFields.forEach(field => {
-            field.value = '';
-         });
-         this.setState({ selectedDataSource: selectedDataSource });
-         this.props.onAdded({ name: this.state.selectedDataSource.value, id: response.data });
-         this.reset();
-      }).catch(error => {
-         toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
-         this.setState({ isLoading: false });
-      });
+      //    let selectedDataSource = this.state.selectedDataSource;
+      //    selectedDataSource.configFields.forEach(field => {
+      //       field.value = '';
+      //    });
+      //    this.setState({ selectedDataSource: selectedDataSource });
+      //    this.props.onAdded({ name: this.state.selectedDataSource.value, id: response.data });
+      //    this.reset();
+      // }).catch(error => {
+      //    toast.error("Error adding data source: " + error.response.data, { autoClose: 10000 });
+      //    this.setState({ isLoading: false });
+      // });
    }
 
    reset = () => {
@@ -629,30 +629,30 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
       toast.error("Don't remove data sources, its a demo!", { autoClose: 4000 });
       return;
 
-      if (this.props.inIndexing) {
-         toast.error("Cannot remove data source while indexing is in progress");
-         return;
-      }
+      // if (this.props.inIndexing) {
+      //    toast.error("Cannot remove data source while indexing is in progress");
+      //    return;
+      // }
 
-      if (this.state.removeInProgressIndex !== -1) {
-         toast.error("Cannot remove data source while another is being removed");
-         return;
-      }
+      // if (this.state.removeInProgressIndex !== -1) {
+      //    toast.error("Cannot remove data source while another is being removed");
+      //    return;
+      // }
 
-      let connectedDataSource = this.props.connectedDataSources[index];
-      this.setState({ removeInProgressIndex: index });
+      // let connectedDataSource = this.props.connectedDataSources[index];
+      // this.setState({ removeInProgressIndex: index });
 
-      api.delete(`/data-sources/${connectedDataSource.id}`, {
-         headers: {
-            uuid: localStorage.getItem('uuid')
-         }
-      }).then(response => {
-         toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
-         this.setState({ removeInProgressIndex: -1 });
-         this.props.onRemoved(connectedDataSource);
-      }).catch(error => {
-         toast.error("Error removing data source: " + error.response.data, { autoClose: 10000 });
-      });
+      // api.delete(`/data-sources/${connectedDataSource.id}`, {
+      //    headers: {
+      //       uuid: localStorage.getItem('uuid')
+      //    }
+      // }).then(response => {
+      //    toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
+      //    this.setState({ removeInProgressIndex: -1 });
+      //    this.props.onRemoved(connectedDataSource);
+      // }).catch(error => {
+      //    toast.error("Error removing data source: " + error.response.data, { autoClose: 10000 });
+      // });
    }
 
 
