@@ -93,7 +93,11 @@ class GitlabDataSource(BaseDataSource):
             self.add_task_to_queue(self.feed_issue, issue=issue)
 
     def feed_issue(self, issue: Dict):
-        last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
+
+        if last_modified.tzinfo is not None and self._last_index_time.tzinfo is None:
+            self._last_index_time = self._last_index_time.replace(tzinfo=last_modified.tzinfo)
+
         if last_modified < self._last_index_time:
             logger.info(f"Issue {issue['id']} is too old, skipping")
             return
