@@ -11,7 +11,6 @@ from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
 from httplib2 import Http
 from oauth2client.service_account import ServiceAccountCredentials
-from pydantic import BaseModel
 
 from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType, BaseDataSourceConfig
 from data_source.api.basic_document import BasicDocument, DocumentType, FileType

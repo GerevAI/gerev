@@ -47,7 +47,8 @@ class SearchResult:
     data_source: str
     time: datetime
     file_type: FileType
-    status: DocumentStatus
+    status: str
+    is_active: bool
     author_image_url: Optional[str]
     author_image_data: Optional[str]
     child: Optional['SearchResult'] = None
@@ -112,7 +113,8 @@ class Candidate:
                               data_source=self.document.data_source.type.name,
                               type=self.document.type,
                               file_type=self.document.file_type,
-                              status=self.document.status)
+                              status=self.document.status,
+                              is_active=self.document.is_active)
 
         if parent_result is not None:
             parent_result.child = result

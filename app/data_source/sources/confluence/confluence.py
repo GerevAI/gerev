@@ -30,6 +30,10 @@ class ConfluenceDataSource(BaseDataSource):
             ConfigField(label="Personal Access Token", name="token", input_type=HTMLInputType.PASSWORD)
         ]
 
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "Confluence Self-Hosted"
+
     @staticmethod
     def list_spaces(confluence: Confluence, start=0) -> List[Location]:
         # Usually the confluence connection fails, so we retry a few times

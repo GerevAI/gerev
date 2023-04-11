@@ -6,6 +6,7 @@ from typing import Dict, List
 from data_source.api.base_data_source import BaseDataSource
 from data_source.api.dynamic_loader import DynamicLoader, ClassInfo
 from data_source.api.exception import KnownException
+from data_source.api.utils import get_utc_time_now
 from db_engine import Session
 from schemas import DataSourceType, DataSource
 
@@ -59,7 +60,7 @@ class DataSourceContext:
             data_source_class.validate_config(config)
             config_str = json.dumps(config)
 
-            data_source_row = DataSource(type_id=data_source_type.id, config=config_str, created_at=datetime.now())
+            data_source_row = DataSource(type_id=data_source_type.id, config=config_str, created_at=get_utc_time_now())
             session.add(data_source_row)
             session.commit()
 

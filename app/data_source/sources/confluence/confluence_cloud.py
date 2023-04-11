@@ -24,6 +24,10 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
             ConfigField(label="Username", name="username", placeholder="example.user@email.com")
         ]
 
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "Confluence Cloud"
+
     @staticmethod
     def validate_config(config: Dict) -> None:
         try:
@@ -35,9 +39,8 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
     @staticmethod
     def confluence_client_from_config(config: Dict) -> Confluence:
         parsed_config = ConfluenceCloudConfig(**config)
-        should_verify_ssl = os.environ.get('CONFLUENCE_CLOUD_VERIFY_SSL') is not None
         return Confluence(url=parsed_config.url, username=parsed_config.username,
-                          password=parsed_config.token, verify_ssl=should_verify_ssl, cloud=True)
+                          password=parsed_config.token, cloud=True)
 
     @staticmethod
     def list_locations(config: Dict) -> List[Location]:

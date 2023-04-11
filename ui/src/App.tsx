@@ -189,7 +189,7 @@ export default class App extends React.Component <{}, AppState>{
         isIndexing = true;
         lastIndexingTime = Date.now();
         isPreparingIndexing = false;
-      } else if (isIndexing && Date.now() - lastIndexingTime > (1000 * 60 * 1)) {
+      } else if (isIndexing && Date.now() - lastIndexingTime > (1000 * 10 * 1)) {
         isIndexing = false;
         toast.success("Indexing finished.", {autoClose: 2000});
       }
@@ -224,7 +224,7 @@ export default class App extends React.Component <{}, AppState>{
     if (this.state.docsInIndexing > 0) {
       let text = "Indexing " + this.state.docsInIndexing + " documents...";
       if (this.state.docsLeftToIndex > 0) {
-        text += " (" + this.state.docsLeftToIndex + " left in queue";
+        text += " (" + this.state.docsLeftToIndex + " in queue";
         if (this.state.docsIndexed > 0) {
           text += ", " + this.state.docsIndexed + " documents are indexed & searchable)";
         } else {
@@ -241,11 +241,11 @@ export default class App extends React.Component <{}, AppState>{
     }
 
     if (this.state.docsLeftToIndex > 0) {
-      let text = "Preparing to index";
+      let text = `Fetching docs... (${this.state.docsLeftToIndex} docs in queue`;
       if (this.state.docsIndexed > 0) {
-        text += " (" + this.state.docsIndexed + " documents are indexed & searchable)";
+        text += ", " + this.state.docsIndexed + " documents are indexed & searchable)";
       } else {
-        text += "...";
+        text += ")";
       }
       return text;
     }
@@ -443,7 +443,7 @@ export default class App extends React.Component <{}, AppState>{
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
             </span>
-            <div className="flex flex-col items-start w-10/12 sm:w-full">
+            <div className="flex flex-col items-start w-full sm:w-10/12">
               <SearchBar widthPercentage={40} isDisabled={this.state.isServerDown}  query={this.state.query} isLoading={this.state.isLoading} showReset={this.state.results.length > 0}
                         onSearch={this.goSearchPage} onQueryChange={this.handleQueryChange} onClear={this.clear} showSuggestions={true} />
               {
@@ -454,7 +454,7 @@ export default class App extends React.Component <{}, AppState>{
               }
               {
                 this.state.dataSourceTypes.length > 0 &&     
-                <div className='w-[100vw] 2xl:w-8/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
+                <div className='w-[100vw] 2xl:w-10/12 divide-y divide-[#3B3B3B] divide-y-[0.7px]'>
                   {this.state.results.map((result, index) => {
                       return (
                         <SearchResult key={index} resultDetails={result} dataSourceType={this.state.dataSourceTypesDict[result.data_source]} />

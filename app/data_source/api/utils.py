@@ -4,7 +4,7 @@ import concurrent.futures
 from functools import lru_cache
 from io import BytesIO
 from typing import Optional
-
+from datetime import datetime, timezone
 import requests
 
 logger = logging.getLogger(__name__)
@@ -55,3 +55,7 @@ def get_confluence_user_image(image_url: str, token: str) -> Optional[str]:
         return f"data:image/jpeg;base64,{base64.b64encode(image_bytes.getvalue()).decode()}"
     except:
         logger.warning(f"Failed to get confluence user image {image_url}")
+
+
+def get_utc_time_now() -> datetime:
+    return datetime.now(tz=timezone.utc)

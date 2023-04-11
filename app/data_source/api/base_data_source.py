@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Callable
 
 from pydantic import BaseModel
 
+from data_source.api.utils import get_utc_time_now
 from db_engine import Session
 from queues.task_queue import TaskQueue, Task
 from schemas import DataSource
@@ -117,7 +118,7 @@ class BaseDataSource(ABC):
         """
         with Session() as session:
             data_source: DataSource = session.query(DataSource).filter_by(id=self._data_source_id).first()
-            data_source.last_indexed_at = datetime.now()
+            data_source.last_indexed_at = get_utc_time_now()
             session.commit()
 
     def add_task_to_queue(self, function: Callable, **kwargs):
@@ -127,14 +128,14 @@ class BaseDataSource(ABC):
         TaskQueue.get_instance().add_task(task)
 
     def run_task(self, function_name: str, **kwargs) -> None:
-        self._last_task_time = datetime.now()
+        self._last_task_time = get_utc_time_now()
         function = getattr(self, function_name)
         function(**kwargs)
 
     def index(self, force: bool = False) -> None:
         if self._last_task_time is not None and not force:
             # Don't index if the last task was less than an hour ago
-            time_since_last_task = datetime.now() - self._last_task_time
+            time_since_last_task = get_utc_time_now() - self._last_task_time
             if time_since_last_task.total_seconds() < 60 * 60:
                 logging.info("Skipping indexing data source because it was indexed recently")
                 return
