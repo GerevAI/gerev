@@ -29,7 +29,7 @@ class JiraDataSource(BaseDataSource):
     @staticmethod
     def get_config_fields() -> List[ConfigField]:
         return [
-            ConfigField(label="Jira URL", name="url", placeholder="https://example.jira.com"),
+            ConfigField(label="Jira URL", name="url", placeholder="https://self-hosted-jira.com"),
             ConfigField(label="Personal Access Token", name="token", input_type=HTMLInputType.PASSWORD)
         ]
 
