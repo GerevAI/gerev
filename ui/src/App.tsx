@@ -49,6 +49,7 @@ export interface AppState {
   timeSinceLastIndexing: number
   serverDownCount: number
   showResultsPage: boolean
+  suggestions: string[]
 }
 
 export interface ServerStatus {
@@ -112,7 +113,13 @@ export default class App extends React.Component <{}, AppState>{
       serverDownCount: 0,
       timeSinceLastIndexing: 0,
       searchDuration: 0,
-      showResultsPage: false
+      showResultsPage: false,
+      suggestions: [
+        "whats special about trigger.dev?",
+        "W23 email companies",
+        "who are the founders of resend w23?",
+        "what does michael say about trigger.dev?",
+      ]
     }
 
     this.openModal = this.openModal.bind(this);
@@ -432,14 +439,45 @@ export default class App extends React.Component <{}, AppState>{
                   <span className="font-bold text-[15px] text-[#B3B3B3]">Search</span>
                   <img alt="enter" className="ml-2" src={EnterImage}></img>
                 </button>
-            </div>  
-        } 
+
+                {/* show suggestion questions, a clickable list of example questions  */}
+                {
+                  this.state.suggestions.length > 0 &&
+                  <div className="flex flex-col bg-[#f6f6ee] items-center justify-center mt-14 w-[35%]">
+                    <span className="flex flex-row justify-start items-center w-full bg-[#f66501]">
+                      <img className="h-6 mx-2 border-[1px] border-white" src="https://seeklogo.com/images/Y/y-combinator-logo-1B85DD66DF-seeklogo.com.png" alt="warning"></img>
+                      <span className="text-black font-source-sans-pro font-semibold text-[22px]">
+                        Leaked YC Intranet
+                      </span>
+                      <span className="ml-3 mt-[2px]">
+                        <span className="text-[#ffffff]">click-2-search</span>
+                      </span>
+                    </span>
+                    <div className="flex flex-row flex-wrap items-center justify-center mt-2 pb-3">
+                      {
+                        this.state.suggestions.map((suggestion, index) => {
+                          return (
+                            <div key={index} className="px-4 py-2 mt-2 mx-1 rounded bg-[#f66501] hover:cursor-pointer hover:bg-[#ff9853] flex flex-row items-center justify-center">
+                              <button onClick={() => this.handleSuggestionClick(suggestion)} 
+                                  className="flex flex-row items-center justify-start w-[100%]">
+                                <span className="font-source-sans-pro font-semibold text-[18px] text-white">{suggestion}</span>
+                              </button>
+                            </div>
+                          )
+                        })
+                      }
+                    </div>
+                  </div>  
+                } 
+              </div>
+        }
 
         {/* results page */}
         {
           this.state.showResultsPage && 
           <div className="relative flex flex-row top-20 left-5 w-full sm:w-11/12">
-            <span className='flex flex-row items-start text-3xl text-center text-white m-10 mx-7 mt-0'>
+            <span onClick={this.goToHomePage}
+             className='flex flex-row items-start hover:cursor-pointer text-3xl text-center text-white h-fit m-10 mx-7 mt-0'>
               <GiSocks className='text-4xl text-[#A78BF6] mx-3 my-1'></GiSocks>
               <span className="text-transparent	block font-source-sans-pro md:leading-normal bg-clip-text bg-gradient-to-l from-[#FFFFFF_24.72%] to-[#B8ADFF_74.45%]">gerev.ai</span>
             </span>
@@ -470,10 +508,16 @@ export default class App extends React.Component <{}, AppState>{
 
       </div>
       </div>
-
+        
       
     );  
   }
+
+  handleSuggestionClick = (suggestion: string) => {
+    this.setState({query: suggestion, showResultsPage: true});
+    this.search(suggestion);
+  }
+    
 
   handleQueryChange = (query: string) => {
     this.setState({query: query});
@@ -481,6 +525,10 @@ export default class App extends React.Component <{}, AppState>{
   
   clear = () => {
     this.setState({query: ""});
+  }
+
+  goToHomePage = () => {
+    window.location.replace("/");
   }
 
   goSearchPage = () => {
