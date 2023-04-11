@@ -73,6 +73,5 @@ jobs:
           push: ${{ env.PUSH == 'true' }}
           tags: |
             gerev/gerev:${{ env.VERSION }}
-            gerev/gerev:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
