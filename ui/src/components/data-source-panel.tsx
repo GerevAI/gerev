@@ -292,11 +292,21 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  )
                               }
                               {
-                                 this.state.selectedDataSource.value === 'confluence_cloud' && (
+                                 this.state.selectedDataSource.value === 'jira' && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
-                                       <span>1. {'Go to your Confluence -> top-right profile picture -> Manage account'}</span>
-                                       <span>2. {'go security tab (at top) -> Create and manage API tokens -> Create API token'}</span>
-                                       <span>3. {"Name it, create and copy the token"}</span>
+                                       <span>1. {'Go to your Jira -> top-right profile picture -> Settings'}</span>
+                                       <span>2. {'Personal Access Tokens -> Create token -> Name it'}</span>
+                                       <span>3. {"Uncheck 'Automatic expiry', create and copy the token"}</span>
+                                    </span>
+                                 )
+                              }
+                              {
+                                 (this.state.selectedDataSource.value === 'jira_cloud' || this.state.selectedDataSource.value === 'confluence_cloud') && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. Go here: <a className="text-[#d6acff] hover:underline" rel="noreferrer" href={'https://id.atlassian.com/manage-profile/security/api-tokens'}
+                                                target='_blank'>Atlassian Account</a></span>
+                                       <span>2. {'Create API token -> Name it -> Create'}</span>
+                                       <span>3. {"Copy the token"}</span>
                                     </span>
                                  )
                               }
@@ -543,7 +553,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          config[field.name] = field.value;
       });
 
-      toast.info("Looking for confluence spaces (this may take a while)", { autoClose: 6000 });
+      toast.info("Looking for locations... (this may take a few seconds)", { autoClose: 6000 });
 
       this.setState({ isLoading: true });
       api.post<IndexLocation[]>(`/data-sources/${this.state.selectedDataSource.value}/list-locations`, config, {

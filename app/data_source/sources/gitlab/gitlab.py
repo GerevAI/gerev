@@ -121,6 +121,8 @@ class GitlabDataSource(BaseDataSource):
                 timestamp=datetime.strptime(raw_comment["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
             ))
 
+        status = gitlab_status_to_doc_status(issue["state"])
+        is_active = status == DocumentStatus.OPEN
         doc = BasicDocument(
             id=issue["id"],
             data_source_id=self._data_source_id,
@@ -132,7 +134,8 @@ class GitlabDataSource(BaseDataSource):
             location=issue['references']['full'].replace("/", " / "),
             url=issue['web_url'],
             timestamp=last_modified,
-            status=gitlab_status_to_doc_status(issue["state"]),
+            status=issue["state"],
+            is_active=is_active,
             children=comments
         )
         IndexQueue.get_instance().put_single(doc=doc)
