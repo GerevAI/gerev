@@ -84,7 +84,7 @@ docker run --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 add `-d` if you want to detach the container.
 
 ## Run from source 
-See CONTRIBUTING.md
+See [ADDING-A-DATA-SOURCE.md](./ADDING-A-DATA-SOURCE.md) in the Setup development environment section.
   
   
 - **gerev is also popular with some big names. 😉**  
