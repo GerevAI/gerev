@@ -577,6 +577,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    submit = () => {
+      toast.error("Don't add your data sources, its a demo!", { autoClose: 4000 });
+      return;
+
       if (!this.state.selectedDataSource || this.state.isLoading) return;
 
       let config = {};
@@ -623,6 +626,9 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
    removeDataSource = (index: number) => {
+      toast.error("Don't remove data sources, its a demo!", { autoClose: 4000 });
+      return;
+
       if (this.props.inIndexing) {
          toast.error("Cannot remove data source while indexing is in progress");
          return;

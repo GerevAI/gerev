@@ -2,7 +2,7 @@ import * as React from "react";
 import { v4 as uuidv4 } from 'uuid';
 import posthog from 'posthog-js';
 import { Tooltip } from 'react-tooltip'
-
+import GitHubButton from 'react-github-btn'
 
 import EnterImage from './assets/images/enter.svg';
 import WarningImage from './assets/images/warning.svg';
@@ -347,6 +347,11 @@ export default class App extends React.Component <{}, AppState>{
       <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
         className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
       </FiSettings>
+      <span className="absolute right-0 left-0 m-auto w-fit mt-4 shadow-xl shadow-[#8880ff]">
+        <GitHubButton href="https://github.com/gerevai/gerev" data-color-scheme="no-preference: dark; light: dark; dark: dark;" data-size="large" data-show-count="true" aria-label="Star buttons/github-buttons on GitHub">
+          Star us! ⭐
+        </GitHubButton>
+      </span>
         {
           this.inIndexing() &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
