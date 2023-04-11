@@ -22,13 +22,13 @@ Coming Soon...
 ## Integrations
  - [x] Slack
  - [x] Confluence
+ - [X] Jira
  - [x] Google Drive (Docs, .docx, .pptx) - by [@bary12](https://github.com/bary12) :pray: 
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
  - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Gitlab Issues - by [@eran1232](https://github.com/eran1232) :pray:
- - [ ] Jira (In Progress...)
  - [ ] Zendesk (In PR :pray:)
  - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
