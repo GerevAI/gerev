@@ -71,7 +71,6 @@ class JiraDataSource(BaseDataSource):
         projects = self._config.locations_to_index or JiraDataSource.list_projects(jira=self._jira)
         for project in projects:
             self.add_task_to_queue(self._feed_project_issues, project=project)
-            return
 
     def _feed_project_issues(self, project: Location):
         logging.info(f'Getting issues from project {project.label} ({project.value})')
