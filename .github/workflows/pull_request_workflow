@@ -1,0 +1,17 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  code_review:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: ChatGPT CodeReviewer
+      uses: anc95/ChatGPT-CodeReview@v1.0.4
