@@ -1,7 +1,8 @@
+[⚡🔎 Live online demo!](https://demo.gerev.ai)  
+
+But also
 ## Join Discord for early access code!
 
-[⚡🔎 Live online demo!](https://demo.gerev.ai)  
----
 ![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
    [Join here!](https://discord.gg/NKhTX7JZAF)
