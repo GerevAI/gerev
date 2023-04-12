@@ -35,8 +35,13 @@ Coming Soon...
  - [ ] Phabricator (In PR :pray:)
  - [ ] Notion (In Progress... :pray:)
  - [ ] Trello (In Progress... :pray:)
- - [ ] Microsoft Teams
+ - [ ] Asana
  - [ ] Sharepoint
+ - [ ] Box
+ - [ ] Dropbox
+ - [ ] Github Enterprise
+ - [ ] Microsoft Teams
+
  
 :pray:  - by the community 
 
