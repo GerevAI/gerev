@@ -1,6 +1,6 @@
 import logging
 import os
-from datetime import datetime
+import dateutil.parser
 from typing import List, Dict
 
 from atlassian import Confluence
@@ -105,9 +105,13 @@ class ConfluenceDataSource(BaseDataSource):
         start = 0
         limit = 200  # limit when expanding the version
 
+        last_index_time = self._last_index_time.strftime("%Y-%m-%d %H:%M")
+        cql_query = f'type = page AND Space = "{space.value}" AND lastModified >= "{last_index_time}" ' \
+                    f'ORDER BY lastModified DESC'
+        logger.info(f'Querying confluence with CQL: {cql_query}')
         while True:
-            new_batch = self._confluence.get_all_pages_from_space(space.value, start=start, limit=limit,
-                                                                  expand='version')
+            new_batch = self._confluence.cql(cql_query, start=start, limit=limit,
+                                             expand='version')['results']
             len_new_batch = len(new_batch)
             logger.info(f'Got {len_new_batch} documents from space {space.label} (total {start + len_new_batch})')
             for raw_doc in new_batch:
@@ -120,12 +124,8 @@ class ConfluenceDataSource(BaseDataSource):
             start += limit
 
     def _feed_doc(self, raw_doc: Dict):
-        last_modified = datetime.strptime(raw_doc['version']['when'], "%Y-%m-%dT%H:%M:%S.%fZ")
-
-        if last_modified < self._last_index_time:
-            return
-
-        doc_id = raw_doc['id']
+        last_modified = dateutil.parser.parse(raw_doc['lastModified'])
+        doc_id = raw_doc['content']['id']
         try:
             fetched_raw_page = self._confluence.get_page_by_id(doc_id, expand='body.storage,history')
         except HTTPError as e:
@@ -161,4 +161,5 @@ class ConfluenceDataSource(BaseDataSource):
 #     import os
 #     config = {"url": os.environ['CONFLUENCE_URL'], "token": os.environ['CONFLUENCE_TOKEN']}
 #     confluence = ConfluenceDataSource(config=config, data_source_id=0)
-#     confluence._feed_new_documents()
+#     spaces = ConfluenceDataSource.list_all_spaces(confluence=confluence._confluence)
+#     confluence._feed_space_docs(space=spaces[0])

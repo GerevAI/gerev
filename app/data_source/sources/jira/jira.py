@@ -1,9 +1,10 @@
 import logging
 import os
 import urllib
-from datetime import datetime
 from typing import List, Dict
+import dateutil.parser
 
+import dateutil
 from atlassian import Jira
 from atlassian.errors import ApiError
 
@@ -80,6 +81,7 @@ class JiraDataSource(BaseDataSource):
         limit = 100
         last_index_time = self._last_index_time.strftime("%Y-%m-%d %H:%M")
         jql_query = f'project = "{project.value}" AND updated >= "{last_index_time}" ORDER BY updated DESC'
+        logger.info(f'Querying jira with JQL: {jql_query}')
         while True:
             new_batch = self._jira.jql_get_list_of_tickets(jql_query, start=start, limit=limit, validate_query=True)
             len_new_batch = len(new_batch)
@@ -94,7 +96,8 @@ class JiraDataSource(BaseDataSource):
 
     def _feed_issue(self, raw_issue: Dict, project_name: str):
         issue_id = raw_issue['id']
-        last_modified = datetime.strptime(raw_issue['fields']['updated'], "%Y-%m-%dT%H:%M:%S.%f%z")
+        last_modified = dateutil.parser.parse(raw_issue['fields']['updated'])
+
         base_url = self._raw_config['url']
         issue_url = urllib.parse.urljoin(base_url, f"/browse/{raw_issue['key']}")
         comments = []
@@ -110,7 +113,7 @@ class JiraDataSource(BaseDataSource):
                 author_image_url=raw_comment["author"]["avatarUrls"]["48x48"],
                 location=raw_issue['key'],
                 url=issue_url,
-                timestamp=datetime.strptime(raw_comment["updated"], "%Y-%m-%dT%H:%M:%S.%f%z")
+                timestamp=dateutil.parser.parse(raw_comment["updated"])
             ))
 
         author = None

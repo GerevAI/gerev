@@ -13,6 +13,9 @@ from queues.task_queue import TaskQueue, Task
 from schemas import DataSource
 
 
+logger = logging.getLogger(__name__)
+
+
 class Location(BaseModel):
     value: str
     label: str
@@ -145,3 +148,9 @@ class BaseDataSource(ABC):
             self._feed_new_documents()
         except Exception as e:
             logging.exception("Error while indexing data source")
+
+    def _is_prior_to_last_index_time(self, doc_time: datetime) -> bool:
+        if doc_time.tzinfo is not None and self._last_index_time.tzinfo is None:
+            self._last_index_time = self._last_index_time.replace(tzinfo=doc_time.tzinfo)
+
+        return doc_time < self._last_index_time

@@ -1,4 +1,3 @@
-import os
 from typing import List, Dict
 
 from atlassian import Confluence
@@ -50,3 +49,12 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._confluence = ConfluenceCloudDataSource.confluence_client_from_config(self._raw_config)
+
+
+# if __name__ == '__main__':
+#     import os
+#
+#     config = {"url": os.environ.get('CONFLUENCE_CLOUD_URL'), "token": os.environ.get('CONFLUENCE_CLOUD_TOKEN'),
+#               "username": os.environ.get('CONFLUENCE_CLOUD_USER')}
+#     confluence = ConfluenceCloudDataSource(data_source_id=1, config=config)
+#     confluence._feed_new_documents()
