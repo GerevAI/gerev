@@ -23,7 +23,7 @@ import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
 import { ConnectedDataSource, DataSourceType } from "./data-source";
-import {MdOutlineSupportAgent} from "react-icons/md";
+import { IoMdArrowDropdown } from "react-icons/io";
 
 export interface AppState {
   query: string
@@ -49,6 +49,7 @@ export interface AppState {
   timeSinceLastIndexing: number
   serverDownCount: number
   showResultsPage: boolean
+  languageOpen: boolean
 }
 
 export interface ServerStatus {
@@ -85,6 +86,8 @@ const modalCustomStyles = {
   }
 };
 
+const languages = ["🇫🇷 FR", "🇩🇪 DE", "🇪🇸 ES", "🇮🇹 IT", "🇨🇳 CN", "🌏 GLOBAL"]; 
+
 export default class App extends React.Component <{}, AppState>{
 
   constructor() {
@@ -104,7 +107,7 @@ export default class App extends React.Component <{}, AppState>{
       isStartedFetching: false,
       isPreparingIndexing: false,
       discordCodeInput: "",
-      didPassDiscord: false,
+      didPassDiscord: true,
       docsLeftToIndex: 0,
       docsInIndexing: 0,
       docsIndexed: 0,
@@ -112,7 +115,8 @@ export default class App extends React.Component <{}, AppState>{
       serverDownCount: 0,
       timeSinceLastIndexing: 0,
       searchDuration: 0,
-      showResultsPage: false
+      showResultsPage: false,
+      languageOpen: false
     }
 
     this.openModal = this.openModal.bind(this);
@@ -332,15 +336,41 @@ export default class App extends React.Component <{}, AppState>{
       <Tooltip id="my-tooltip" style={{fontSize: "18px"}}/>
       <ToastContainer className='z-50' theme="colored" />
       <a href="https://discord.com/channels/1060085859497549844/1086664063767023636" rel="noreferrer" target='_blank'>
-        <MdOutlineSupportAgent data-tooltip-id="my-tooltip" 
-                            data-tooltip-content="🕒 24/7 live support on Discord 👨‍🔧" 
+        <img data-tooltip-id="my-tooltip" src={DiscordImage}
+                            data-tooltip-content="Click for 24/7 live support 👨‍🔧🕒" 
                             data-tooltip-place="bottom"
-          className="absolute left-0 z-30 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
-        </MdOutlineSupportAgent>
+          className="absolute left-0 z-30 h-7 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
+        </img>
       </a>
-      <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
-        className="absolute right-0 z-30 float-right mr-6 mt-6 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
-      </FiSettings>
+      <span className={"absolute right-0 z-30 float-right mr-6 mt-6 flex flex-row " + (this.state.languageOpen ? "items-start" : "items-center")}>
+        <span className="flex flex-col mr-4 bg-[#4f476cb9] border-2 rounded-xl border-[#443f57]">
+          <span onClick={() => {this.setState({languageOpen: !this.state.languageOpen})}} className="flex justify-between flex-row items-center px-2 rounded-xl
+              hover:cursor-pointer hover:drop-shadow-2xl transition-all duration-100 hover:bg-[#7b70a4b9] hover:border-[#787099]">
+            {/* <a className="text-xl text-white mr-2">EN</a> */}
+            {/* <img src={UsaImage} className="h-8 text-[42px] grayscale-[0.5]"/> */}
+            <span className="text-[20px] text-white">🇺🇸 {this.state.languageOpen ? "EN" : ""}</span>
+            <IoMdArrowDropdown className={"ml-1 fill-white text-[22px] transition-all duration-300 " +
+             (this.state.languageOpen ? "rotate-180" : "")}></IoMdArrowDropdown>
+          </span>
+          {this.state.languageOpen && 
+          <div className="flex flex-col text-white">
+            {
+              languages.map((lang) => {
+                return (
+                  <a href="https://gerev.typeform.com/languages" target="_blank" 
+                  rel="noreferrer" className="text-[20px] px-2 py-1 rounded-xl hover:cursor-pointer hover:drop-shadow-2xl transition-all duration-100
+                  hover:bg-[#7b70a4b9] hover:border-[#787099] text-start">{lang}</a>
+                )
+              })
+            }
+          </div>  
+          }
+        </span>
+
+        <FiSettings onClick={this.openModal} stroke={"#8983e0"} 
+          className="mr-2 text-[42px] hover:cursor-pointer hover:rotate-90 transition-all duration-300 hover:drop-shadow-2xl">
+        </FiSettings>
+      </span>
         {
           this.inIndexing() &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
