@@ -60,8 +60,6 @@ export interface ServerStatus {
 
 Modal.setAppElement('#root');
 
-const discordCode = "gerev-is-pronounced-with-a-hard-g";
-
 const modalCustomStyles = {
   content: {
     top: '50%',
@@ -331,7 +329,7 @@ export default class App extends React.Component <{}, AppState>{
       <a href="https://discord.gg/NKhTX7JZAF" rel="noreferrer" target='_blank'>
         <img data-tooltip-id="my-tooltip" src={DiscordImage}
                             data-tooltip-content="Click for 24/7🕒 live support 👨‍🔧💬" 
-                            data-tooltip-place="bottom"
+                            data-tooltip-place="bottom" alt="discord"
           className="absolute left-0 z-30 h-7 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
         </img>
       </a>
