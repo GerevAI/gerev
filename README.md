@@ -32,8 +32,8 @@ Coming Soon...
  - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Phabricator (In PR :pray:)
+ - [ ] Trello (In PR... :pray:)
  - [ ] Notion (In Progress... :pray:)
- - [ ] Trello (In Progress... :pray:)
  - [ ] Asana
  - [ ] Sharepoint
  - [ ] Box
