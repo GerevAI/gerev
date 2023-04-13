@@ -1,6 +1,6 @@
 [⚡🔎 Live online demo!](https://demo.gerev.ai)  
 ## Join Discord for early access code!
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)
+![Discord Shield][https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield](https://cloud.docker.com/repository/docker/gerev/gerev)
 [![DockerHub Pulls][docker-pull-img]][docker-pull]
 
 [docker-pull]: https://cloud.docker.com/repository/docker/gerev/gerev
