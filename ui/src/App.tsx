@@ -23,7 +23,7 @@ import { ClipLoader } from "react-spinners";
 import { FiSettings } from "react-icons/fi";
 import {AiFillWarning} from "react-icons/ai";
 import { ConnectedDataSource, DataSourceType } from "./data-source";
-import { IoMdArrowDropdown } from "react-icons/io";
+import { IoMdArrowDropdown, IoMdClose } from "react-icons/io";
 
 export interface AppState {
   query: string
@@ -107,7 +107,7 @@ export default class App extends React.Component <{}, AppState>{
       isStartedFetching: false,
       isPreparingIndexing: false,
       discordCodeInput: "",
-      didPassDiscord: true,
+      didPassDiscord: false,
       docsLeftToIndex: 0,
       docsInIndexing: 0,
       docsIndexed: 0,
@@ -263,7 +263,6 @@ export default class App extends React.Component <{}, AppState>{
     if (this.state.didPassDiscord) {
       this.setState({isModalOpen: true});
     } else {
-      toast.error("You must pass the discord verification first.", {autoClose: 3000});
     }
   }
 
@@ -291,27 +290,20 @@ export default class App extends React.Component <{}, AppState>{
     return " text-[#A78BF6]"
   }
 
-  verifyDiscordCode = () => {
-    if (this.state.discordCodeInput.trim() === discordCode) {
-      this.saveDiscordPassed();
-    } else {
-      toast.error("Invalid code. Join Discord!", {autoClose: 2000});
-    }
+  hideDiscord = () => {
+    this.setState({didPassDiscord: true});
   }
 
-  onDiscordCodeChange = (event) => {
-    if (event.target.value === discordCode) {
-      this.saveDiscordPassed();
-    } else {
-      this.setState({discordCodeInput: event.target.value});
-    }
-  }
-
-  saveDiscordPassed = () => {
+  saveDiscordPassed = (joined: boolean) => {
     localStorage.setItem('discord_key', 'true');
     this.setState({didPassDiscord: true});
-    posthog.capture('passed_discord');
-    toast.success("Code accepted. Welcome!", {autoClose: 3000});
+    if(joined) {
+      posthog.capture('passed_discord', {name: "joined"});
+      toast.success("Welcome to the community!", {autoClose: 2000});
+    } else {
+      posthog.capture('passed_discord', {name: "skipped"});
+      toast.success("Welcome! use top-left discord icon to join the community.", {autoClose: 8000});
+    }
   }
 
   dataSourcesAdded = (newlyConnected: ConnectedDataSource) => {
@@ -403,8 +395,11 @@ export default class App extends React.Component <{}, AppState>{
           {
           !this.state.didPassDiscord && 
             <div className='absolute z-30 flex flex-col items-center top-40 mx-auto w-full'>
-              <div className="flex flex-col items-start w-[660px] h-[440px] bg-[#36393F] rounded-xl">
+              <div className="flex flex-col items-start w-[660px] h-[305px] bg-[#36393F] rounded-xl">
                 <div className="flex flex-col justify-center items-start  p-3">
+                <div className="ml-[614px] text-2xl text-white gap-4">
+                  <IoMdClose onClick={this.hideDiscord} className='hover:text-[#9875d4] hover:cursor-pointer' />
+                </div>
                   <span className="flex flex-row text-white text-3xl font-bold m-5 mt-5 mb-6 font-sans items-center">
                     <span>Are you on Discord?</span>
                     <img src={DiscordImage} alt="discord" className="relative inline h-10 ml-4 opacity-80 animate-pulse"></img>
@@ -412,23 +407,22 @@ export default class App extends React.Component <{}, AppState>{
                     <div className="flex flex-row w-[97%] bg-[#faa61a1a] p-3 ml-1 border-[2px] border-[#FAA61A] rounded-[5px]">
                       <img className="ml-2 h-10" src={WarningImage} alt="warning"></img>
                       <button className="ml-4 text-white text-xl font-source-sans-pro font-semibold inline">
-                        <span className="block text-left">gerev.ai is currently only available to our Discord community members.
-                          <a href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                        <span className="block text-left">Join Gerev's 1000+ discord community members, get early access to exclusive features.
+                          <a href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" 
+                            className="inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
                             <span className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
                           </a>
                         </span>
                       </button>
                     </div>
-                    <div className="flex flex-col items-start justify-center ml-2 mt-9 w-[100%]">
-                      <span className="text-[#B9BBBE] font-source-sans-pro font-black text-[22px]">ENTER DISCORD AUTH CODE</span>
-                      <input onPaste={this.onDiscordCodeChange} value={this.state.discordCodeInput} onChange={this.onDiscordCodeChange} className="bg-[#18191C] h-14 font-source-sans-pro font-black text-xl text-[#DCDDDE] rounded w-[94%] px-4 mt-4" placeholder="123456"></input>
-                    </div>
                 </div>      
                 <div className="flex flex-row justify-between p-4 w-[100%]  mt-7 rounded-b-xl h-[100px] bg-[#2F3136]">
-                  <a href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" className="flex hover:bg-[#404ab3] justify-center items-center font-inter bg-[#5865F2] rounded h-12 p-2 text-white w-40 inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
+                  <button onClick={() => {this.saveDiscordPassed(false)}} className="font-inter bg-[#4f545d] hover:bg-[#3a3e45] rounded h-12 p-2 text-white w-40">Hide forever</button>
+
+                  <a onClick={() => {this.saveDiscordPassed(true)}} href="https://discord.gg/aMRRcmhAdW" target="_blank" rel="noreferrer" className="flex hover:bg-[#404ab3] justify-center items-center font-inter bg-[#5865F2] rounded h-12 p-2 text-white w-40 
+                    inline-flex transition duration-150 ease-in-out group ml-1 hover:cursor-pointer">Join Discord
                     <span className="font-inter tracking-normal font-semibold group-hover:translate-x-0.5 transition-transform duration-150 ease-in-out ml-1">-&gt;</span>
                   </a>
-                  <button onClick={this.verifyDiscordCode} className="font-inter bg-[#5865F2] hover:bg-[#404ab3] rounded h-12 p-2 text-white w-40">Verify</button>
                 </div>
               </div>
 
