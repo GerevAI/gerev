@@ -184,6 +184,7 @@ export default class App extends React.Component <{}, AppState>{
           toast.success("Server online.", {autoClose: 2000});
         }
         this.listConnectedDataSources();
+        this.listDataSourceTypes();
       }
 
       let isPreparingIndexing = this.state.isPreparingIndexing;
@@ -335,9 +336,9 @@ export default class App extends React.Component <{}, AppState>{
     <div>
       <Tooltip id="my-tooltip" style={{fontSize: "18px"}}/>
       <ToastContainer className='z-50' theme="colored" />
-      <a href="https://discord.com/channels/1060085859497549844/1086664063767023636" rel="noreferrer" target='_blank'>
+      <a href="https://discord.gg/NKhTX7JZAF" rel="noreferrer" target='_blank'>
         <img data-tooltip-id="my-tooltip" src={DiscordImage}
-                            data-tooltip-content="Click for 24/7 live support 👨‍🔧🕒" 
+                            data-tooltip-content="Click for 24/7🕒 live support 👨‍🔧💬" 
                             data-tooltip-place="bottom"
           className="absolute left-0 z-30 h-7 hover:fill-[#a7a1fe] fill-[#8983e0] float-left ml-6 mt-6 text-[42px] hover:cursor-pointer transition-all duration-300 hover:drop-shadow-2xl">
         </img>
@@ -382,7 +383,7 @@ export default class App extends React.Component <{}, AppState>{
             </div>
           </div>
         }
-        {
+        {/* Go add some data sources ->*/
           this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0 && this.state.didPassDiscord &&
           <div className="absolute mx-auto left-0 right-0 w-fit z-20 top-6">
             <div className="text-xs bg-[#100101] border-[#a61616] border-[.8px] rounded-full inline-block px-3 py-1">
@@ -432,7 +433,7 @@ export default class App extends React.Component <{}, AppState>{
               </div>
 
             </div>
-        }
+          }
         <div className={"w-[98vw] z-10 filter" + (this.state.isModalOpen || (this.state.didListedConnectedDataSources && this.state.connectedDataSources.length === 0)  ? ' filter blur-sm' : '')}>
         <Modal
           isOpen={this.state.isModalOpen}
