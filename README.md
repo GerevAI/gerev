@@ -1,7 +1,13 @@
 [⚡🔎 Live online demo!](https://demo.gerev.ai)  
 ## Join Discord for early access code!
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
-   [Join here!](https://discord.gg/NKhTX7JZAF)
+![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)
+[![DockerHub Pulls][docker-pull-img]][docker-pull]
+
+
+[docker-pull]: https://cloud.docker.com/repository/docker/gerev/gerev
+[docker-pull-img]: https://img.shields.io/docker/pulls/gerev/gerev.svg
+
+[Join here!](https://discord.gg/NKhTX7JZAF)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
@@ -32,8 +38,8 @@ Coming Soon...
  - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Phabricator (In PR :pray:)
+ - [ ] Trello (In PR... :pray:)
  - [ ] Notion (In Progress... :pray:)
- - [ ] Trello (In Progress... :pray:)
  - [ ] Asana
  - [ ] Sharepoint
  - [ ] Box
