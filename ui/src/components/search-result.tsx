@@ -10,9 +10,9 @@ import DefaultUserImage from '../assets/images/user.webp';
 import Calendar from '../assets/images/calendar.svg';
 
 import { DataSourceType } from '../data-source';
-import { BsFillCheckCircleFill } from 'react-icons/bs';
 import { RiGitRepositoryLine } from 'react-icons/ri';
 import { GoAlert } from 'react-icons/go';
+import { MdVerified } from 'react-icons/md';
 
 export interface TextPart {
     content: string
@@ -34,12 +34,6 @@ export enum FileType {
     GoogleDoc = "doc",
 }
 
-export enum Status {
-    Open = "open",
-    Closed = "closed",
-    InProgress = "in_progress"
-}
-
 export interface SearchResultDetails {
     type: ResultType
     data_source: string
@@ -53,7 +47,8 @@ export interface SearchResultDetails {
     location: string
     platform: string
     file_type: FileType
-    status: Status
+    status: string
+    is_active: boolean
     url: string
     child: SearchResultDetails
 }
@@ -66,11 +61,15 @@ export interface SearchResultProps {
 
 export const SearchResult = (props: SearchResultProps) => {
     return (
-        <div className="mb-4 pt-2">
+        <div className={"mb-4 pt-2 " + (props.resultDetails.type !== ResultType.Comment ? "pt-3" : "")}>
             {props.resultDetails.type !== ResultType.Comment &&
                 <span className="relative text-sm float-right text-white right-2 top-2">{props.resultDetails.score.toFixed(2)}%</span>}
-            <div className="flex flex-row items-start">
-                {getBigIcon(props)}
+            <div className="flex flex-row items-stretch">
+                <span className='flex flex-col items-center mt-2 mr-2'>
+                    {getBigIcon(props)}
+                    {props.resultDetails.child && <span className={'w-[1px] mt-2 h-[85%] bg-[#66548D]'}></span>}
+
+                </span>
                 <p className='w-11/12 p-2 pt-0 ml-1 text-[#A3A3A3] text-sm font-poppins'>
                     <div className='flex flex-row items-center justify-start'>
                         {props.resultDetails.type === ResultType.Issue &&
@@ -78,7 +77,7 @@ export const SearchResult = (props: SearchResultProps) => {
                                 ISSUE
                             </span>
                         }
-                        <a className="text-[24px] text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer"
+                        <a className="text-[24px] overflow-hidden overflow-ellipsis whitespace-nowrap text-[#A78BF6] text-xl font-poppins font-medium hover:underline hover:cursor-pointer"
                             href={props.resultDetails.url} rel="noreferrer" target='_blank'>
                             {props.resultDetails.title}
                         </a>
@@ -87,16 +86,26 @@ export const SearchResult = (props: SearchResultProps) => {
                                 <span className='flex flex-row items-center justify-center ml-2 mt-[5px]'>
                                     Commented {getDaysAgo(props.resultDetails.time)}
                                 </span>
-                            )
-                                
+                            )     
+                        }
+                        {
+                            props.resultDetails.type === ResultType.Message && (
+                                <span className='flex flex-row items-center justify-center ml-2 mt-[5px]'>
+                                    Sent {getDaysAgo(props.resultDetails.time)}
+                                </span>
+                            )     
                         }
                         {props.resultDetails.type === ResultType.Issue &&
-                            <span className='flex flex-row items-center ml-2 px-[7px] py-[1px] font-poppins font-medium text-[15px] bg-[#392E58] text-[#8F76C6] rounded-lg'>
-                                {props.resultDetails.status === Status.Open ?
-                                    <GoAlert className='h-[14px] fill-[#ff9f2b]'></GoAlert> :
-                                    <BsFillCheckCircleFill className='h-[14px] fill-[#41b11b]'></BsFillCheckCircleFill>
+                            <span className={(isClosedStatus(props) ? 'bg-[#283328]' : 'bg-[#392E58]') + 
+                            ' flex flex-row items-center ml-2 px-[7px] py-[1px] font-poppins font-medium text-[15px] text-[#8F76C6] rounded-lg'}>
+                                {isClosedStatus(props) && 
+                                <span className='flex flex-row items-center'>
+                                    <MdVerified className='h-[16px] fill-[#79bd68]'></MdVerified>
+                                    <span className='ml-1 overflow-hidden overflow-ellipsis whitespace-nowrap text-[#79bd68]'>{capitilize(props.resultDetails.status)}</span>
+                                </span>
                                 }
-                                <span className='ml-1'>{props.resultDetails.status === Status.Open ? 'Open' : 'Closed'}</span>
+                                {isOpenStatus(props) && <GoAlert className='h-[14px] fill-[#ff9f2b]'></GoAlert>}
+                                {!isClosedStatus(props) && <span className='ml-1 overflow-hidden overflow-ellipsis whitespace-nowrap'>{capitilize(props.resultDetails.status)}</span>}
                             </span>
                         }
                         {props.resultDetails.type === ResultType.Docment && props.resultDetails.file_type !== null &&
@@ -120,12 +129,15 @@ export const SearchResult = (props: SearchResultProps) => {
                                 {props.resultDetails.type === ResultType.Message && '#'}
                                 {props.resultDetails.location} </span>
                         </span>
-                        <span className="ml-1 flex flex-row items-center">
-                            <Img alt="author" className="inline-block ml-[6px] mr-2 h-4 rounded-xl"
-                                src={[props.resultDetails.author_image_url, props.resultDetails.author_image_data, DefaultUserImage]}></Img>
-                            <span className='capitalize'>{props.resultDetails.author} </span>
-                        </span>
-                        {props.resultDetails.child === null && DateSpan(props)}
+                        {
+                        props.resultDetails.type !== ResultType.Message &&
+                            <span className="ml-1 flex flex-row items-center">
+                                <Img alt="author" className="inline-block ml-[6px] mr-2 h-4 rounded-xl"
+                                    src={[props.resultDetails.author_image_url, props.resultDetails.author_image_data, DefaultUserImage]}></Img>
+                                <span className='capitalize'>{props.resultDetails.author} </span>
+                            </span>
+                        }
+                        {props.resultDetails.child === null && props.resultDetails.type !== ResultType.Message && DateSpan(props)}
                         <span className="flex flex-row items-center">
                             &thinsp; |&thinsp;
                             <img alt="file-type" className="inline ml-2 mx-1  h-[12px] w-[12px] grayscale-[0.55]"
@@ -145,18 +157,28 @@ export const SearchResult = (props: SearchResultProps) => {
                             })}
                         </span>
                     }
-                    {props.resultDetails.child &&
-                        <div className='relative left-[-60px]'>
-                            <span className={'left-5 -top-3 h-8 w-[1px] bg-[#66548D] absolute'}></span>
-                            <div className='top-[15px] relative'>
-                                <SearchResult resultDetails={props.resultDetails.child} dataSourceType={props.dataSourceType}></SearchResult>
-                            </div>
-                        </div>
-                    }
-                </p >
-            </div >
-        </div >
+                </p>
+            </div>
+            {props.resultDetails.child && <SearchResult resultDetails={props.resultDetails.child} dataSourceType={props.dataSourceType}></SearchResult>        
+            }
+        </div>
     );
+}
+
+function capitilize(str: string) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function isClosedStatus(props: SearchResultProps) {
+    let closedStatuses = ['closed', 'resolved', 'done', 'completed', 'fixed', 'merged', 'finished', 'verified', 'approved', 'merged'];
+    return (props.resultDetails.is_active !== null && props.resultDetails.is_active === false) || 
+            closedStatuses.includes(props.resultDetails.status.toLowerCase());
+}
+
+function isOpenStatus(props: SearchResultProps) {
+    let openStatuses = ['open', 'new', 'in progress', 'in review', 'in testing', 'in development', 'in qa', 'in staging'];
+    return (props.resultDetails.is_active !== null && props.resultDetails.is_active === true) || 
+            openStatuses.includes(props.resultDetails.status.toLowerCase());
 }
 
 function DateSpan(props: SearchResultProps) {
@@ -182,8 +204,12 @@ function getDaysAgo(time: string) {
         return 'today';
     } else  if (days === 1) {
         return '1 day ago';
-    } else {
+    } else if (days < 365) {
         return days + ' days ago';
+    } else if (days < 730) {
+        return '1yr ago';
+    } else {
+        return Math.floor(days / 365) + 'yrs ago';
     }
 }
 
@@ -237,7 +263,7 @@ function getBigIcon(props: SearchResultProps) {
             </div>
         )
     } else {
-        return <img alt="file-type" className={"mt-2 mr-2 h-[40px] w-[40px] drop-shadow-[0_0_25px_rgba(212,179,255,0.15)] " + containingClasses}
-            src={containingImage}></img>
+        return <Img height={"40px"} width={"40px"} alt="file-type" className={"drop-shadow-[0_0_25px_rgba(212,179,255,0.15)] " + containingClasses}
+                src={[containingImage, DefaultUserImage]}></Img>
     }
 }

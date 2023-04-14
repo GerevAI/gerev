@@ -92,7 +92,7 @@ async def list_locations(request: Request, data_source_name: str, config: dict) 
 @router.post("")
 async def connect_data_source(request: Request, dto: AddDataSourceDto, background_tasks: BackgroundTasks) -> int:
     logger.info(f"Adding data source {dto.name} with config {json.dumps(dto.config)}")
-    data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
+    data_source = await DataSourceContext.create_data_source(name=dto.name, config=dto.config)
     Posthog.added_data_source(uuid=request.headers.get('uuid'), name=dto.name)
     # in main.py we have a background task that runs every 5 minutes and indexes the data source
     # but here we want to index the data source immediately

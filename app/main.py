@@ -1,5 +1,3 @@
-import json
-from datetime import datetime
 import logging
 from dataclasses import dataclass
 from typing import List
@@ -14,6 +12,7 @@ from api.data_source import router as data_source_router
 from api.search import router as search_router
 from data_source.api.exception import KnownException
 from data_source.api.context import DataSourceContext
+from data_source.api.utils import get_utc_time_now
 from db_engine import Session
 from indexing.background_indexer import BackgroundIndexer
 from indexing.bm25_index import Bm25Index
@@ -64,7 +63,7 @@ def _check_for_new_documents(force=False):
         data_sources: List[DataSource] = session.query(DataSource).all()
         for data_source in data_sources:
             # data source should be checked once every hour
-            if (datetime.now() - data_source.last_indexed_at).total_seconds() <= 60 * 60 and not force:
+            if (get_utc_time_now() - data_source.last_indexed_at).total_seconds() <= 60 * 60 and not force:
                 continue
 
             logger.info(f"Checking for new docs in {data_source.type.name} (id: {data_source.id})")
@@ -109,19 +108,21 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    BackgroundIndexer.stop()
     Workers.stop()
+    BackgroundIndexer.stop()
 
 
 @app.get("/api/v1/status")
-async def status():
+def status():
     @dataclass
     class Status:
         docs_in_indexing: int
         docs_left_to_index: int
+        docs_indexed: int
 
     return Status(docs_in_indexing=BackgroundIndexer.get_currently_indexing(),
-                  docs_left_to_index=IndexQueue.get_instance().qsize() + TaskQueue.get_instance().qsize())
+                  docs_left_to_index=IndexQueue.get_instance().qsize() + TaskQueue.get_instance().qsize(),
+                  docs_indexed=BackgroundIndexer.get_indexed_count())
 
 
 @app.post("/clear-index")

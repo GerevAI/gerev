@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from sqlalchemy import String, DateTime, ForeignKey, Column, Integer
+from sqlalchemy import String, DateTime, ForeignKey, Column, Integer, Boolean
 from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 from schemas.base import Base
@@ -17,7 +17,8 @@ class Document(Base):
     data_source = relationship("DataSource", back_populates="documents")
     type: Mapped[Optional[str]] = mapped_column(String(32))
     file_type: Mapped[Optional[str]] = mapped_column(String(32))
-    status: Mapped[Optional[bool]] = mapped_column(String(32))
+    status: Mapped[Optional[str]] = mapped_column(String(32))
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean())
     title: Mapped[Optional[str]] = mapped_column(String(128))
     author: Mapped[Optional[str]] = mapped_column(String(64))
     author_image_url: Mapped[Optional[str]] = mapped_column(String(512))

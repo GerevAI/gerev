@@ -55,16 +55,16 @@ Find a way to generate some API key for your data source.
 we'd recommend asking Google *"how to generate personal access token for \<your data source name>".*
 
 
-It usually involves going to profile settings, creating a new access token, and copying it.
+Generating token usually involves going to your profile settings, creating a new access token, and copying it.
 
 
-Write down the steps you took to generate the API key somewhere, you'll need them later.
+Got your token? Write down the process steps, you'll need it later.
 
 <br>
 
 ---
 
-<br>
+
 
 ## Let's go
 This guide will walk you through the process of creating a data source for the imagniary website called `Magic`.
@@ -101,7 +101,7 @@ from datetime import datetime
 from typing import List, Dict
 
 from pydantic import BaseModel
-from data_source.api.base_data_source import BaseDataSource, ConfigField, HTMLInputType
+from data_source.api.base_data_source import BaseDataSource, BaseDataSourceConfig, ConfigField
 from data_source.api.basic_document import BasicDocument, DocumentType
 from queues.index_queue import IndexQueue
 ```
@@ -110,7 +110,7 @@ from queues.index_queue import IndexQueue
 ## 3. Create a configuration class
 Create a class that inherits from `BaseDataSourceConfig` for your data source configuration.
 
- Add the needed configuration fields.
+ Add your data-source's fields.
 
 ```python
 class MagicConfig(BaseDataSourceConfig):
@@ -121,8 +121,9 @@ class MagicConfig(BaseDataSourceConfig):
 
 <br>
 
-## 4. Implement your data source class
+## 4. Create a data source class
 Create a new class that inherits from `BaseDataSource` and implement the 3 abstract methods:
+
 4.1. `get_config_fields`
 
 4.2. `validate_config`
@@ -141,7 +142,7 @@ class MagicDataSource(BaseDataSource):
         pass
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         """
         Validate the configuration and raise an exception if it's invalid,
         You should try to actually connect to the data source and verify that it's working
@@ -163,8 +164,7 @@ class MagicDataSource(BaseDataSource):
 ```
 
 ### 4.1. `get_config_fields`
-This method should return a list of `ConfigField`s  that describe the configuration fields required for your data source:
-
+Return a list of `ConfigField`s  that describes the data-source's configuration fields required (same fields as in `MagicConfig` but with UI fields).
 ```python
 @staticmethod
 def get_config_fields() -> List[ConfigField]:
@@ -178,14 +178,17 @@ def get_config_fields() -> List[ConfigField]:
         ]
 ```
 
-### 5.2. `validate_config`
+### 4.2. `validate_config`
 This method should validate the provided configuration and raise an InvalidDataSourceConfig exception if it's invalid.
 
-it should also try to actually connect to the data source and verify that it's working:
+it MUST connect to the data source and verify that it's working.
+
+Some data-sources have a `auth_check` method, you can use it to verify the connection.
+Otherwise you can try to list something from the data source.
 
 ```python
 @staticmethod
-def validate_config(config: Dict) -> None:
+async def validate_config(config: Dict) -> None:
         """
         Validate the configuration and raise an exception if it's invalid,
         You should try to actually connect to the data source and verify that it's working
@@ -200,11 +203,74 @@ def validate_config(config: Dict) -> None:
             raise InvalidDataSourceConfig from e
 ```
 
-### 5.3. _feed_new_documents
-This method should add new documents to the index queue. The implementation depends on the specific data source you're working with:
+### 4.3. _feed_new_documents
+This method should add new documents to the index queue. The implementation depends on the specific data source you're working with.
 
+Flow should look like:
+
+1. List spaces/channels/whatever from the data source.
+2. Run tasks to fetch documents from each space/channel/whatever.
+    * tasks are a built-in Gerev pipeline to run async functions with workers for maximum performance.
+3. Parse each document into a `BasicDocument` object.
+4. Feed the `BasicDocument` object to the index queue.
 ```python
 def _feed_new_documents(self) -> None:
-    # Fetch new documents from your data source, and add them to the index queue
-    # You can use the IndexQueue.get_instance().put_single(doc=doc) method to add a document to the queue
+    channels = self._magic_client.list_channels()
+    for channel in channels:
+        self._add_task(self._feed_channel, channel)
+
+def _fetch_channel(self, channel: Channel) -> None:
+    messages = self._magic_client.list_messages(channel)
+    for message in messages:
+        doc = BasicDocument(
+            id=message["id"],
+            data_source_id=self._data_source_id,
+            type=DocumentType.MESSAGE,
+            title=message['title'],
+            content=message.get("description"),
+            author=message['author']['name'],
+            author_image_url=message['author']['avatar_url'],
+            location=message['references']['full'],
+            url=message['web_url'],
+            timestamp=message['created_at'],
+        )
+        IndexQueue.get_instance().put_single(document)
 ```
+5. Before adding to queue, check whether document is newer than self._last_indexed_at, if not, skip it.
+```python
+last_modified = datetime.strptime(message["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+if last_modified < self._last_index_time:
+    logger.info(f"Message {message['id']} is too old, skipping")
+    continue
+```
+
+## 5. UI instructions
+
+You should add your data source instructions to the UI.
+
+### 5.1. data-source-panel.tsx
+go to `gerev/ui/src/components/data-source-panel.tsx` and add your data source to the html.
+
+```typescript
+{
+ this.state.selectedDataSource.value === 'Magic' && (
+    <span className="flex flex-col leading-9  text-xl text-white">
+       <span>1. {'Go to Magic -> top-right profile picture -> Edit profile'}</span>
+       <span>2. {'Scroll down to API tokens -> Create token -> Name it'}</span>
+       <span>3. {"Set 'Expiry Date' 01/01/2100, create, copy token id + token secret"}</span>
+    </span>
+ )
+}
+```
+
+
+## 6. Logo 
+
+Add your data-source logo.png to app/static/data_sources_icons.
+
+
+Done! :rocket:
+
+## Have any questions?
+
+Join our 1000+ community members [Here!](https://discord.gg/6qZ2QZj)

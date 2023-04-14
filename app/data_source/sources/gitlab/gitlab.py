@@ -1,8 +1,8 @@
 import logging
-from datetime import datetime
 
 import requests
 from typing import Dict, List, Optional
+import dateutil.parser
 
 from data_source.api.base_data_source import BaseDataSource, BaseDataSourceConfig, ConfigField, HTMLInputType
 from data_source.api.basic_document import BasicDocument, DocumentType, DocumentStatus
@@ -39,7 +39,7 @@ class GitlabDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             parsed_config = GitlabConfig(**config)
             session = requests.Session()
@@ -93,8 +93,8 @@ class GitlabDataSource(BaseDataSource):
             self.add_task_to_queue(self.feed_issue, issue=issue)
 
     def feed_issue(self, issue: Dict):
-        last_modified = datetime.strptime(issue["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
-        if last_modified < self._last_index_time:
+        updated_at = dateutil.parser.parse(issue["updated_at"])
+        if self._is_prior_to_last_index_time(doc_time=updated_at):
             logger.info(f"Issue {issue['id']} is too old, skipping")
             return
 
@@ -118,9 +118,11 @@ class GitlabDataSource(BaseDataSource):
                 author_image_url=raw_comment["author"]["avatar_url"],
                 location=issue['references']['full'].replace("/", " / "),
                 url=issue_url,
-                timestamp=datetime.strptime(raw_comment["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                timestamp=dateutil.parser.parse(raw_comment["updated_at"])
             ))
 
+        status = gitlab_status_to_doc_status(issue["state"])
+        is_active = status == DocumentStatus.OPEN
         doc = BasicDocument(
             id=issue["id"],
             data_source_id=self._data_source_id,
@@ -131,8 +133,9 @@ class GitlabDataSource(BaseDataSource):
             author_image_url=issue['author']['avatar_url'],
             location=issue['references']['full'].replace("/", " / "),
             url=issue['web_url'],
-            timestamp=last_modified,
-            status=gitlab_status_to_doc_status(issue["state"]),
+            timestamp=updated_at,
+            status=issue["state"],
+            is_active=is_active,
             children=comments
         )
         IndexQueue.get_instance().put_single(doc=doc)

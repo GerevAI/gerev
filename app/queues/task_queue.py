@@ -12,6 +12,7 @@ class Task:
     data_source_id: int
     function_name: str
     kwargs: dict
+    attempts: int = 3
 
 
 @dataclass

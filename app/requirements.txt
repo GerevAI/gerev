@@ -25,3 +25,5 @@ mattermostdriver
 persistqueue
 retry
 PyPDF2
+pytz
+aiosqlite

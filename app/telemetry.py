@@ -21,7 +21,6 @@ class Posthog:
     BACKEND_ADDED = "backend_added"
     BACKEND_REMOVED = "backend_removed"
     BACKEND_LISTED_LOCATIONS = "backend_listed_locations"
-    _should_capture = False
     _identified_uuid: Optional[str] = None
 
     @classmethod
@@ -40,11 +39,6 @@ class Posthog:
 
     @classmethod
     def _identify(cls):
-        if not os.environ.get('CAPTURE_TELEMETRY'):
-            return
-
-        cls._should_capture = True
-
         user_uuid = cls._read_uuid_file()
         if user_uuid is None:
             new_uuid = str(uuid4())
@@ -63,9 +57,6 @@ class Posthog:
     def _capture(cls, event: str, uuid=None, properties=None):
         if cls._identified_uuid is None:
             cls._identify()
-
-        if not cls._should_capture:
-            return
 
         try:
             posthog.capture(uuid or cls._identified_uuid, event, properties)

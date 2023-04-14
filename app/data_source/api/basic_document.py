@@ -51,8 +51,9 @@ class BasicDocument:
     author_image_url: str
     location: str
     url: str
+    status: str = None
+    is_active: bool = None
     file_type: FileType = None
-    status: DocumentStatus = None
     children: List['BasicDocument'] = None
 
     @property

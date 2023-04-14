@@ -1,4 +1,3 @@
-import os
 from typing import List, Dict
 
 from atlassian import Confluence
@@ -24,8 +23,12 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
             ConfigField(label="Username", name="username", placeholder="example.user@email.com")
         ]
 
+    @classmethod
+    def get_display_name(cls) -> str:
+        return "Confluence Cloud"
+
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             client = ConfluenceCloudDataSource.confluence_client_from_config(config)
             ConfluenceCloudDataSource.list_spaces(confluence=client)
@@ -35,9 +38,8 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
     @staticmethod
     def confluence_client_from_config(config: Dict) -> Confluence:
         parsed_config = ConfluenceCloudConfig(**config)
-        should_verify_ssl = os.environ.get('CONFLUENCE_CLOUD_VERIFY_SSL') is not None
         return Confluence(url=parsed_config.url, username=parsed_config.username,
-                          password=parsed_config.token, verify_ssl=should_verify_ssl, cloud=True)
+                          password=parsed_config.token, cloud=True)
 
     @staticmethod
     def list_locations(config: Dict) -> List[Location]:
@@ -47,3 +49,12 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._confluence = ConfluenceCloudDataSource.confluence_client_from_config(self._raw_config)
+
+
+# if __name__ == '__main__':
+#     import os
+#
+#     config = {"url": os.environ.get('CONFLUENCE_CLOUD_URL'), "token": os.environ.get('CONFLUENCE_CLOUD_TOKEN'),
+#               "username": os.environ.get('CONFLUENCE_CLOUD_USER')}
+#     confluence = ConfluenceCloudDataSource(data_source_id=1, config=config)
+#     confluence._feed_new_documents()

@@ -1,8 +1,13 @@
+[⚡🔎 Live online demo!](https://demo.gerev.ai)  
 ## Join Discord for early access code!
+![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)
+[![DockerHub Pulls][docker-pull-img]][docker-pull]
 
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)  
 
-   [Join here!](https://discord.gg/NKhTX7JZAF)
+[docker-pull]: https://hub.docker.com/r/gerev/gerev
+[docker-pull-img]: https://img.shields.io/docker/pulls/gerev/gerev.svg
+
+[Join here!](https://discord.gg/NKhTX7JZAF)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
@@ -22,23 +27,31 @@ Coming Soon...
 ## Integrations
  - [x] Slack
  - [x] Confluence
+ - [X] Jira
  - [x] Google Drive (Docs, .docx, .pptx) - by [@bary12](https://github.com/bary12) :pray: 
  - [X] Confluence Cloud - by [@bryan-pakulski](https://github.com/bryan-pakulski) :pray: 
  - [X] Bookstack - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Mattermost - by [@itaykal](https://github.com/Itaykal) :pray:
  - [X] RocketChat - by [@flifloo](https://github.com/flifloo) :pray:
  - [X] Gitlab Issues - by [@eran1232](https://github.com/eran1232) :pray:
- - [ ] Jira (In Progress...)
  - [ ] Zendesk (In PR :pray:)
  - [ ] Stackoverflow Teams (In PR :pray:)
  - [ ] Azure DevOps (In PR :pray:)
  - [ ] Phabricator (In PR :pray:)
+ - [ ] Trello (In PR... :pray:)
  - [ ] Notion (In Progress... :pray:)
- - [ ] Trello (In Progress... :pray:)
- - [ ] Microsoft Teams
+ - [ ] Asana
  - [ ] Sharepoint
+ - [ ] Box
+ - [ ] Dropbox
+ - [ ] Github Enterprise
+ - [ ] Microsoft Teams
+
  
 :pray:  - by the community 
+
+## Add your own data source NOW 🚀
+See the full guide at [ADDING-A-DATA-SOURCE.md](./ADDING-A-DATA-SOURCE.md).
 
 
 ## Natural Language
@@ -81,7 +94,7 @@ docker run --name=gerev -p 80:80 -v ~/.gerev/storage:/opt/storage gerev/gerev
 add `-d` if you want to detach the container.
 
 ## Run from source 
-See CONTRIBUTING.md
+See [ADDING-A-DATA-SOURCE.md](./ADDING-A-DATA-SOURCE.md) in the Setup development environment section.
   
   
 - **gerev is also popular with some big names. 😉**  
