@@ -1,19 +1,26 @@
 import json
 import logging
+from dataclasses import dataclass
 from typing import Dict, List
 
 from pydantic import ValidationError
+from sqlalchemy import select
 
 from data_source.api.base_data_source import BaseDataSource
 from data_source.api.dynamic_loader import DynamicLoader, ClassInfo
 from data_source.api.exception import KnownException
 from data_source.api.utils import get_utc_time_now
 from db_engine import Session, async_session
-from schemas import DataSourceType, DataSource
-from sqlalchemy import select
-
+from schemas import DataSourceType, DataSource, Document
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CachedDataSource:
+    indexed_docs: int
+    failed_tasks: int
+    instance: BaseDataSource
 
 
 class DataSourceContext:
@@ -23,7 +30,7 @@ class DataSourceContext:
     It loads data sources from the database and caches them.
     """
     _initialized = False
-    _data_source_instances: Dict[int, BaseDataSource] = {}
+    _data_source_cache: Dict[int, CachedDataSource] = {}
     _data_source_classes: Dict[str, BaseDataSource] = {}
 
     @classmethod
@@ -32,7 +39,7 @@ class DataSourceContext:
             cls.init()
             cls._initialized = True
 
-        return cls._data_source_instances[data_source_id]
+        return cls._data_source_cache[data_source_id].instance
 
     @classmethod
     def get_data_source_class(cls, data_source_name: str) -> BaseDataSource:
@@ -70,7 +77,8 @@ class DataSourceContext:
             await session.commit()
 
             data_source = data_source_class(config=config, data_source_id=data_source_row.id)
-            cls._data_source_instances[data_source_row.id] = data_source
+            cls._data_source_cache[data_source_row.id] = CachedDataSource(indexed_docs=0, failed_tasks=0,
+                                                                          instance=data_source)
 
             return data_source
 
@@ -85,7 +93,7 @@ class DataSourceContext:
             session.delete(data_source)
             session.commit()
 
-            del cls._data_source_instances[data_source_id]
+            del cls._data_source_cache[data_source_id]
 
             return data_source_name
 
@@ -96,9 +104,12 @@ class DataSourceContext:
 
     @classmethod
     def _load_connected_sources_from_db(cls):
+        logger.info("Loading data sources from database")
+
         with Session() as session:
             data_sources: List[DataSource] = session.query(DataSource).all()
             for data_source in data_sources:
+                logger.info(f"Loading data source {data_source.id} ({data_source.type.name})")
                 data_source_cls = DynamicLoader.get_data_source_class(data_source.type.name)
                 config = json.loads(data_source.config)
                 try:
@@ -107,7 +118,12 @@ class DataSourceContext:
                 except ValidationError as e:
                     logger.error(f"Error loading data source {data_source.id}: {e}")
                     return
-                cls._data_source_instances[data_source.id] = data_source_instance
+
+                cached_data_source = CachedDataSource(indexed_docs=len(data_source.documents),
+                                                      failed_tasks=0,
+                                                      instance=data_source_instance)
+                cls._data_source_cache[data_source.id] = cached_data_source
+                logger.info(f"Loaded data source {data_source.id} ({data_source.type.name})")
 
         cls._initialized = True
 

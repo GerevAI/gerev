@@ -108,8 +108,8 @@ async def startup_event():
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    BackgroundIndexer.stop()
     Workers.stop()
+    BackgroundIndexer.stop()
 
 
 @app.get("/api/v1/status")
