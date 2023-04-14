@@ -15,3 +15,26 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.markdown {
+  max-width: 100%;
+  word-break: break-word;
+  color: rgb(200,200,200)
+}
+.markdown h1 {
+  text-align: center;
+  color: white;
+  font-size: 2rem;
+  font-weight: bold;
+}
+.markdown h2 {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.markdown h3 {
+  color: white;
+}
+.markdown img {
+  border-radius: 0.5rem;
+  margin: 3rem 0;
+}

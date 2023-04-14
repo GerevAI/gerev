@@ -18,6 +18,12 @@ import { toast } from 'react-toastify';
 import { api } from "../api";
 import { ConfigField, ConnectedDataSource, DataSourceType, IndexLocation } from "../data-source";
 
+import ReactMarkdown from 'react-markdown'
+import '../assets/css/index.css'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+
 
 export interface SelectOption {
    value: string;
@@ -37,6 +43,7 @@ export interface DataSourcePanelState {
    isSelectingLocations: boolean
    removeInProgressIndex: number
    editMode: boolean
+   readMe: string
 }
 
 export interface DataSourcePanelProps {
@@ -94,6 +101,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          selectedLocations: [],
          selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [], hasAdditionalSteps: false },
          removeInProgressIndex: -1,
+         readMe: "",
          editMode: false
       }
    }
@@ -222,7 +230,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                         </div>
                         <div className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                           <a className="flex flex-row justify-center items-center text-gray-500" href="https://form.typeform.com/to/JwtKLrLz" target="_blank" 
+                           <a className="flex flex-row justify-center items-center text-gray-500" href="https://form.typeform.com/to/JwtKLrLz" target="_blank"
                               rel="noreferrer">Beta Data Sources
                               <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                            </a>
@@ -351,6 +359,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
+                                    {this.markdown('https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive/google-drive.md', 'https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive')}
                                     Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
@@ -388,27 +397,27 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <div className="flex flex-row flex-wrap items-end mt-4">
                               {/* for each field */}
                               {
-                              this.state.selectedDataSource.configFields.map((field, index) => {
-                              if (field.input_type === 'text' || field.input_type === 'password') {
-                                 return (
-                                    <div className="flex flex-col mr-10 mt-4">
-                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                       <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
-                                          className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
-                                          placeholder={field.placeholder}></input>
-                                    </div>
-                                 )
-                              } else if (field.input_type === 'textarea') {
-                                 return (
-                                    <div className="flex flex-col w-full mt-4">
-                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                       <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
-                                          className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
-                                    </div>
-                                 )
-                              }
-                              return null;
-                              })
+                                 this.state.selectedDataSource.configFields.map((field, index) => {
+                                    if (field.input_type === 'text' || field.input_type === 'password') {
+                                       return (
+                                          <div className="flex flex-col mr-10 mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
+                                                className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                                placeholder={field.placeholder}></input>
+                                          </div>
+                                       )
+                                    } else if (field.input_type === 'textarea') {
+                                       return (
+                                          <div className="flex flex-col w-full mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
+                                                className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                          </div>
+                                       )
+                                    }
+                                    return null;
+                                 })
                               }
                               {/* Selecting locations */}
                               {
@@ -610,6 +619,26 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    onSourceSelectChange = (event) => {
       this.setState({ selectedDataSource: event, isSelectingLocations: false, selectedLocations: [] });
+   }
+
+
+   markdown = (url:string, baseUrl:string) => {
+
+      api.get(url).then((Response) => {
+         this.setState({readMe: Response.data.replaceAll("(./", "("+baseUrl+"/")})
+      })
+
+
+      return (
+         <div className="markdown">
+            <ReactMarkdown
+            rehypePlugins={[rehypeRaw, rehypeSanitize]}
+            remarkPlugins={[remarkGfm]}
+            >
+               {this.state.readMe}
+            </ReactMarkdown>
+         </div>
+      );
    }
 
    removeDataSource = (index: number) => {
