@@ -1,6 +1,6 @@
 [⚡🔎 Live online demo!](https://demo.gerev.ai)  
 ## Join Discord for early access code!
-![Discord Shield](https://discordapp.com/api/guilds/1060085859497549844/widget.png?style=shield)
+[![Discord Follow](https://dcbadge.vercel.app/api/server/autogpt?style=flat)](https://discord.gg/autogpt)
 [![DockerHub Pulls][docker-pull-img]][docker-pull]
 
 
