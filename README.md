@@ -1,7 +1,7 @@
 [⚡🔎 Live online demo!](https://demo.gerev.ai)  
-# Workplace search 🔎
+# open-source workplace search 🔎
 
-## Join Discord for early access code!
+### Join Discord for early access code!
 [![Discord Follow](https://dcbadge.vercel.app/api/server/7hNdF7yu8r?style=flat)](https://discord.gg/7hNdF7yu8r)
 [![DockerHub Pulls][docker-pull-img]][docker-pull]
 
