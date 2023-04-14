@@ -4,7 +4,7 @@
 [![DockerHub Pulls][docker-pull-img]][docker-pull]
 
 
-[docker-pull]: https://cloud.docker.com/repository/docker/gerev/gerev
+[docker-pull]: https://hub.docker.com/r/gerev/gerev
 [docker-pull-img]: https://img.shields.io/docker/pulls/gerev/gerev.svg
 
 [Join here!](https://discord.gg/NKhTX7JZAF)
