@@ -360,7 +360,6 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
                                     {this.markdown('https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive/google-drive.md', 'https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive')}
-                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
                                  </span>
                               )}
                               {
@@ -626,6 +625,8 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
       api.get(url).then((Response) => {
          this.setState({readMe: Response.data.replaceAll("(./", "("+baseUrl+"/")})
+      }).catch((error) => {
+         console.warn(`${url} did not load\n ${error}`)
       })
 
 
