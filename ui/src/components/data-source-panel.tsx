@@ -183,7 +183,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((dataSource, index) => {
                            return (
                               // connected data source
-                              <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
+                              <div key={index} className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[dataSource.name].image_base64}></img>
                                  <h1 className="text-white width-full">{this.props.dataSourceTypesDict[dataSource.name].display_name}</h1>
 
@@ -213,7 +213,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               if (!this.state.editMode && !this.props.connectedDataSources.find((connectedDataSource) => connectedDataSource.name === dataSource.name)) {
                                  return (
                                     // unconnected data source
-                                    <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                    <div key={key} onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
                                        <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
                                        {/* <h1 className="text-white">Add</h1> */}
                                        <h1 className="text-gray-500">{dataSource.display_name}</h1>
@@ -369,7 +369,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
-                                    {this.markdown('https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive/google-drive.md', 'https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive')}
+                                    {this.markdown('https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive/google-drive.md/')}
                                  </span>
                               )}
                               {
@@ -409,7 +409,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  this.state.selectedDataSource.configFields.map((field, index) => {
                                     if (field.input_type === 'text' || field.input_type === 'password') {
                                        return (
-                                          <div className="flex flex-col mr-10 mt-4">
+                                          <div key={index} className="flex flex-col mr-10 mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                              <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
                                                 className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
@@ -418,7 +418,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                        )
                                     } else if (field.input_type === 'textarea') {
                                        return (
-                                          <div className="flex flex-col w-full mt-4">
+                                          <div key={index} className="flex flex-col w-full mt-4">
                                              <h1 className="text-lg block text-white mb-4">{field.label}</h1>
                                              <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
                                                 className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
@@ -631,10 +631,16 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
 
-   markdown = (url:string, baseUrl:string) => {
+   markdown = (url:string) => {
+
+      if (url[url.length-1] === '/') {
+         url = url.slice(0, url.length-1)
+      }
+
+      const baseUrl = url.slice(0, url.lastIndexOf('/'));
 
       api.get(url).then((Response) => {
-         this.setState({readMe: Response.data.replaceAll("(./", "("+baseUrl+"/")})
+         this.setState({readMe: Response.data.replaceAll("(./", `(${baseUrl}/`)})
       }).catch((error) => {
          console.warn(`${url} did not load\n ${error}`)
       })
