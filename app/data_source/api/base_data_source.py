@@ -65,7 +65,7 @@ class BaseDataSource(ABC):
 
     @staticmethod
     @abstractmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         """
         Validates the config and raises an exception if it's invalid.
         """

@@ -28,7 +28,7 @@ class ConfluenceCloudDataSource(ConfluenceDataSource):
         return "Confluence Cloud"
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             client = ConfluenceCloudDataSource.confluence_client_from_config(config)
             ConfluenceCloudDataSource.list_spaces(confluence=client)

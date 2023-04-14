@@ -142,7 +142,7 @@ class MagicDataSource(BaseDataSource):
         pass
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         """
         Validate the configuration and raise an exception if it's invalid,
         You should try to actually connect to the data source and verify that it's working
@@ -188,7 +188,7 @@ Otherwise you can try to list something from the data source.
 
 ```python
 @staticmethod
-def validate_config(config: Dict) -> None:
+async def validate_config(config: Dict) -> None:
         """
         Validate the configuration and raise an exception if it's invalid,
         You should try to actually connect to the data source and verify that it's working

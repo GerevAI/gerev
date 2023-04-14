@@ -39,7 +39,7 @@ class GitlabDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             parsed_config = GitlabConfig(**config)
             session = requests.Session()

@@ -132,7 +132,7 @@ class BookstackDataSource(BaseDataSource):
                     raise e
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             parsed_config = BookStackConfig(**config)
             book_stack = BookStack(url=parsed_config.url, token_id=parsed_config.token_id,

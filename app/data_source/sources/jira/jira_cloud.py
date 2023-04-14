@@ -24,7 +24,7 @@ class JiraCloudDataSource(JiraDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             client = JiraCloudDataSource.client_from_config(config)
             JiraCloudDataSource.list_projects(jira=client)

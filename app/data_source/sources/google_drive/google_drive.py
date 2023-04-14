@@ -42,7 +42,7 @@ class GoogleDriveDataSource(BaseDataSource):
         ]
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             scopes = ['https://www.googleapis.com/auth/drive.readonly']
             parsed_config = GoogleDriveConfig(**config)

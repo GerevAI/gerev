@@ -57,7 +57,7 @@ class JiraDataSource(BaseDataSource):
         return True
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         try:
             jira = JiraDataSource.client_from_config(config)
             jira.get_all_priorities()

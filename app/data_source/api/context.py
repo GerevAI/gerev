@@ -1,14 +1,16 @@
 import json
 import logging
-from datetime import datetime
 from typing import Dict, List
+
+from pydantic import ValidationError
 
 from data_source.api.base_data_source import BaseDataSource
 from data_source.api.dynamic_loader import DynamicLoader, ClassInfo
 from data_source.api.exception import KnownException
 from data_source.api.utils import get_utc_time_now
-from db_engine import Session
+from db_engine import Session, async_session
 from schemas import DataSourceType, DataSource
+from sqlalchemy import select
 
 
 logger = logging.getLogger(__name__)
@@ -49,20 +51,23 @@ class DataSourceContext:
         return cls._data_source_classes
 
     @classmethod
-    def create_data_source(cls, name: str, config: dict) -> BaseDataSource:
-        with Session() as session:
-            data_source_type = session.query(DataSourceType).filter_by(name=name).first()
+    async def create_data_source(cls, name: str, config: dict) -> BaseDataSource:
+        async with async_session() as session:
+            data_source_type = await session.execute(
+                select(DataSourceType).filter_by(name=name)
+            )
+            data_source_type = data_source_type.scalar_one_or_none()
             if data_source_type is None:
                 raise KnownException(message=f"Data source type {name} does not exist")
 
             data_source_class = DynamicLoader.get_data_source_class(name)
             logger.info(f"validating config for data source {name}")
-            data_source_class.validate_config(config)
+            await data_source_class.validate_config(config)
             config_str = json.dumps(config)
 
             data_source_row = DataSource(type_id=data_source_type.id, config=config_str, created_at=get_utc_time_now())
             session.add(data_source_row)
-            session.commit()
+            await session.commit()
 
             data_source = data_source_class(config=config, data_source_id=data_source_row.id)
             cls._data_source_instances[data_source_row.id] = data_source
@@ -96,8 +101,12 @@ class DataSourceContext:
             for data_source in data_sources:
                 data_source_cls = DynamicLoader.get_data_source_class(data_source.type.name)
                 config = json.loads(data_source.config)
-                data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
-                                                       last_index_time=data_source.last_indexed_at)
+                try:
+                    data_source_instance = data_source_cls(config=config, data_source_id=data_source.id,
+                                                           last_index_time=data_source.last_indexed_at)
+                except ValidationError as e:
+                    logger.error(f"Error loading data source {data_source.id}: {e}")
+                    return
                 cls._data_source_instances[data_source.id] = data_source_instance
 
         cls._initialized = True

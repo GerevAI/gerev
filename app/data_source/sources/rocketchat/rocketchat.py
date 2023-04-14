@@ -54,7 +54,7 @@ class RocketchatDataSource(BaseDataSource):
         return "Rocket.Chat"
 
     @staticmethod
-    def validate_config(config: Dict) -> None:
+    async def validate_config(config: Dict) -> None:
         rocket_chat_config = RocketchatConfig(**config)
         should_verify_ssl = os.environ.get('ROCKETCHAT_VERIFY_SSL') is not None
         rocket_chat = RocketChat(user_id=rocket_chat_config.token_id, auth_token=rocket_chat_config.token_secret,
