@@ -312,7 +312,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  (this.state.selectedDataSource.value === 'jira_cloud' || this.state.selectedDataSource.value === 'confluence_cloud') && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. Go here: <a className="text-[#d6acff] hover:underline" rel="noreferrer" href={'https://id.atlassian.com/manage-profile/security/api-tokens'}
-                                                target='_blank'>Atlassian Account</a></span>
+                                          target='_blank'>Atlassian Account</a></span>
                                        <span>2. {'Create API token -> Name it -> Create'}</span>
                                        <span>3. {"Copy the token"}</span>
                                     </span>
@@ -631,26 +631,34 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
    }
 
 
-   markdown = (url:string) => {
+   markdown = (url: string) => {
+      /* 
+      This function takes a URL or path which contains markdown and returns JSX
+      elements.
+      */
 
-      if (url[url.length-1] === '/') {
-         url = url.slice(0, url.length-1)
+
+      if (url[url.length - 1] === '/') {
+         // trimming final "/"
+         url = url.slice(0, url.length - 1)
       }
 
+      // The markdown might use some relative paths. In that case, we need to 
+      // convert those to start with our base URL.
       const baseUrl = url.slice(0, url.lastIndexOf('/'));
 
       api.get(url).then((Response) => {
-         this.setState({readMe: Response.data.replaceAll("(./", `(${baseUrl}/`)})
+         this.setState({ readMe: Response.data.replaceAll("(./", `(${baseUrl}/`) })
       }).catch((error) => {
          console.warn(`${url} did not load\n ${error}`)
       })
 
 
       return (
-         <div className="markdown">
+         <div className="markdown">{/*The markdown class can be found in index.css*/}
             <ReactMarkdown
-            rehypePlugins={[rehypeRaw, rehypeSanitize]}
-            remarkPlugins={[remarkGfm]}
+               rehypePlugins={[rehypeRaw, rehypeSanitize]}
+               remarkPlugins={[remarkGfm]}
             >
                {this.state.readMe}
             </ReactMarkdown>
