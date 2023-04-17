@@ -24,6 +24,10 @@ class BackgroundIndexer:
         return cls._total_indexed_count
 
     @classmethod
+    def reset_indexed_count(cls):
+        cls._total_indexed_count = 0
+
+    @classmethod
     def start(cls):
         cls._thread = threading.Thread(target=cls.run)
         cls._thread.start()

@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from schemas.base import Base
@@ -5,6 +6,9 @@ from sqlalchemy import ForeignKey, Column, Integer, Connection
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime
 from sqlalchemy import event
+
+
+logger = logging.getLogger(__name__)
 
 
 class DataSource(Base):
@@ -26,4 +30,5 @@ def receive_before_delete(mapper, connection: Connection, target):
     from db_engine import Session
 
     with Session(bind=connection) as session:
+        logger.info(f"Deleting documents for data source {target.id}...")
         Indexer.remove_documents(target.documents, session=session)

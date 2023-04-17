@@ -90,6 +90,7 @@ class DataSourceContext:
                 raise KnownException(message=f"Data source {data_source_id} does not exist")
 
             data_source_name = data_source.type.name
+            logger.info(f"Deleting data source {data_source_id} ({data_source_name})...")
             session.delete(data_source)
             session.commit()
 
