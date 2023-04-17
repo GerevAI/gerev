@@ -12,6 +12,7 @@ from starlette.requests import Request
 from data_source.api.base_data_source import ConfigField, BaseDataSource, Location
 from data_source.api.context import DataSourceContext
 from db_engine import Session
+from indexing.background_indexer import BackgroundIndexer
 from schemas import DataSource
 from telemetry import Posthog
 
@@ -77,6 +78,7 @@ async def list_connected_data_sources() -> List[ConnectedDataSourceDto]:
 @router.delete("/{data_source_id}")
 async def delete_data_source(request: Request, data_source_id: int):
     deleted_name = DataSourceContext.delete_data_source(data_source_id=data_source_id)
+    BackgroundIndexer.reset_indexed_count()
     Posthog.removed_data_source(uuid=request.headers.get('uuid'), name=deleted_name)
     return {"success": "Data source deleted successfully"}
 

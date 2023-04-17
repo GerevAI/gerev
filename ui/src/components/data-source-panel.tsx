@@ -679,15 +679,19 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
       let connectedDataSource = this.props.connectedDataSources[index];
       this.setState({ removeInProgressIndex: index });
-
+      toast.success(`Removing ${this.capitilize(connectedDataSource.name)}... (it may take some time)`, { autoClose: 6000 });
       api.delete(`/data-sources/${connectedDataSource.id}`, {
          headers: {
             uuid: localStorage.getItem('uuid')
          }
       }).then(response => {
+         toast.dismiss();
          toast.success(`${this.capitilize(connectedDataSource.name)} removed.`);
          this.setState({ removeInProgressIndex: -1 });
          this.props.onRemoved(connectedDataSource);
+         if(this.props.connectedDataSources.length === 0) {
+            this.setState({ editMode: false });
+         }
       }).catch(error => {
          toast.error("Error removing data source: " + error.response.data, { autoClose: 10000 });
       });
