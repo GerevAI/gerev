@@ -563,6 +563,7 @@ export default class App extends React.Component<{}, AppState>{
   goSearchPage = () => {
     if (this.state.isFirstTimeIndexing) {
       this.showNotReady();
+      posthog.capture('blocked_premature_search');
       return;
     }
     window.location.replace(`/search?query=${this.state.query}`);
@@ -571,6 +572,7 @@ export default class App extends React.Component<{}, AppState>{
   search = (query?: string) => {
     if (this.state.isFirstTimeIndexing) {
       this.showNotReady();
+      posthog.capture('blocked_premature_search');
       return;
     }
 
