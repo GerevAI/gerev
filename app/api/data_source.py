@@ -74,11 +74,11 @@ async def list_connected_data_sources() -> List[ConnectedDataSourceDto]:
                 for data_source in data_sources]
 
 
-# @router.delete("/{data_source_id}")
-# async def delete_data_source(request: Request, data_source_id: int):
-#     deleted_name = DataSourceContext.delete_data_source(data_source_id=data_source_id)
-#     Posthog.removed_data_source(uuid=request.headers.get('uuid'), name=deleted_name)
-#     return {"success": "Data source deleted successfully"}
+@router.delete("/{data_source_id}")
+async def delete_data_source(request: Request, data_source_id: int):
+    deleted_name = DataSourceContext.delete_data_source(data_source_id=data_source_id)
+    Posthog.removed_data_source(uuid=request.headers.get('uuid'), name=deleted_name)
+    return {"success": "Data source deleted successfully"}
 
 
 @router.post("/{data_source_name}/list-locations")
@@ -89,13 +89,13 @@ async def list_locations(request: Request, data_source_name: str, config: dict) 
     return locations
 
 
-# @router.post("")
-# async def connect_data_source(request: Request, dto: AddDataSourceDto, background_tasks: BackgroundTasks) -> int:
-#     logger.info(f"Adding data source {dto.name} with config {json.dumps(dto.config)}")
-#     data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
-#     Posthog.added_data_source(uuid=request.headers.get('uuid'), name=dto.name)
-#     # in main.py we have a background task that runs every 5 minutes and indexes the data source
-#     # but here we want to index the data source immediately
-#     background_tasks.add_task(data_source.index)
-#
-#     return data_source.get_id()
+@router.post("")
+async def connect_data_source(request: Request, dto: AddDataSourceDto, background_tasks: BackgroundTasks) -> int:
+    logger.info(f"Adding data source {dto.name} with config {json.dumps(dto.config)}")
+    data_source = DataSourceContext.create_data_source(name=dto.name, config=dto.config)
+    Posthog.added_data_source(uuid=request.headers.get('uuid'), name=dto.name)
+    # in main.py we have a background task that runs every 5 minutes and indexes the data source
+    # but here we want to index the data source immediately
+    background_tasks.add_task(data_source.index)
+
+    return data_source.get_id()
