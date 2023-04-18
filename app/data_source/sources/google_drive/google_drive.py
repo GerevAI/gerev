@@ -18,6 +18,7 @@ from data_source.api.exception import KnownException
 from parsers.docx import docx_to_html
 from parsers.html import html_to_text
 from parsers.pptx import pptx_to_text
+from parsers.pdf import pdf_to_textV2
 from queues.index_queue import IndexQueue
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class GoogleDriveDataSource(BaseDataSource):
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': lambda content: html_to_text(
             docx_to_html(content)),
         'application/vnd.openxmlformats-officedocument.presentationml.presentation': pptx_to_text,
+        'application/pdf': pdf_to_textV2
     }
 
     @staticmethod
@@ -68,7 +70,8 @@ class GoogleDriveDataSource(BaseDataSource):
         self._supported_mime_types = [
             'application/vnd.google-apps.document',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/pdf'
         ]
 
     def _should_index_file(self, file):
@@ -159,6 +162,8 @@ class GoogleDriveDataSource(BaseDataSource):
                 elif file['mimeType'] == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
                     content = docx_to_html(file_to_download)
                     content = html_to_text(content)
+                elif file['mimeType'] == 'application/pdf':
+                    content = pdf_to_textV2(file_to_download)
                 else:
                     logger.error(f'Unsupported mime type {file["mimeType"]}')
                     return
@@ -181,7 +186,6 @@ class GoogleDriveDataSource(BaseDataSource):
 
         # title is file name without extension
         title = file['name'].split('.')[0]
-
         doc = BasicDocument(
             id=file_id,
             data_source_id=self._data_source_id,

@@ -2,6 +2,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 from typing import Union, List
+from langchain.schema import Document as PDFDocument
 
 
 class DocumentType(Enum):
@@ -24,6 +25,7 @@ class FileType(Enum):
     DOCX = "docx"
     PPTX = "pptx"
     TXT = "txt"
+    PDF = "pdf"
 
     @classmethod
     def from_mime_type(cls, mime_type: str):
@@ -35,6 +37,8 @@ class FileType(Enum):
             return cls.PPTX
         elif mime_type == 'text/plain':
             return cls.TXT
+        elif mime_type == 'application/pdf':
+            return cls.PDF
         else:
             return None
 
@@ -45,7 +49,7 @@ class BasicDocument:
     data_source_id: int  # data source id in database
     type: DocumentType
     title: str
-    content: str
+    content: Union[str, List[PDFDocument]]
     timestamp: datetime
     author: str
     author_image_url: str

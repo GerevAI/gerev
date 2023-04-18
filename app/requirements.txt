@@ -27,3 +27,13 @@ retry
 PyPDF2
 pytz
 aiosqlite
+starlette
+torch
+langchain~=0.0.141
+nltk
+numpy
+requests
+python-dateutil
+httplib2
+pypdf
+pycryptodome

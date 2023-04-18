@@ -5,6 +5,7 @@ import { Img } from 'react-image'
 import PurpleFolder from '../assets/images/pur-dir.svg';
 import GoogleDoc from '../assets/images/google-doc.svg';
 import Docx from '../assets/images/docx.svg';
+import Pdf from '../assets/images/pdf.svg';
 import Pptx from '../assets/images/pptx.svg';
 import DefaultUserImage from '../assets/images/user.webp';
 import Calendar from '../assets/images/calendar.svg';
@@ -32,6 +33,7 @@ export enum FileType {
     Docx = "docx",
     Pptx = "pptx",
     GoogleDoc = "doc",
+    Pdf = "pdf",
 }
 
 export interface SearchResultDetails {
@@ -241,6 +243,9 @@ function getBigIcon(props: SearchResultProps) {
                         break;
                     case FileType.GoogleDoc:
                         containingImage = GoogleDoc;
+                        break;
+                    case FileType.Pdf:
+                        containingImage = Pdf;
                         break;
                 }
             }

@@ -3,13 +3,15 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from data_source.api.basic_document import BasicDocument
+from data_source.api.basic_document import BasicDocument, FileType
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from models import bi_encoder
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
+from langchain.schema import Document as PDFDocument
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +27,10 @@ class Indexer:
 
     @staticmethod
     def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
-        paragraphs = Indexer._split_into_paragraphs(document.content)
+        if document.file_type != FileType.PDF:
+            paragraphs = Indexer._split_into_paragraphs(document.content)
+        else:
+            paragraphs = Indexer._split_PDF_into_paragraphs(document.content)
         return Document(
             data_source_id=document.data_source_id,
             id_in_data_source=document.id_in_data_source,
@@ -68,7 +73,10 @@ class Indexer:
             db_documents = []
             for document in documents:
                 # Split the content into paragraphs that fit inside the database
-                paragraphs = Indexer._split_into_paragraphs(document.content)
+                if document.file_type != FileType.PDF:
+                    paragraphs = Indexer._split_into_paragraphs(document.content)
+                else:
+                    paragraphs = Indexer._split_PDF_into_paragraphs(document.content)
                 # Create a new document in the database
                 db_document = Indexer.basic_to_document(document)
                 children = []
@@ -128,7 +136,6 @@ class Indexer:
 
         if len(current_paragraph) > 0:
             paragraphs.append(current_paragraph)
-
         return paragraphs
 
     @staticmethod
@@ -155,3 +162,26 @@ class Indexer:
         Bm25Index.get().update(session=session)
 
         logger.info(f"Finished removing {len(documents)} documents => {len(db_paragraphs)} paragraphs")
+
+
+    @staticmethod
+    def _split_PDF_into_paragraphs(texts:List[PDFDocument],minimum_length=256):
+        if texts is None:
+            return []
+        paragraphs= []
+        current_paragraph = ''
+        for text in texts:
+            paragraph = text.page_content
+            if len(current_paragraph) > 0:
+                current_paragraph += ' '
+            current_paragraph += paragraph.strip()
+            if len(current_paragraph) > minimum_length:
+                paragraphs.append(current_paragraph)
+                current_paragraph = ''
+
+        if len(current_paragraph) > 0:
+            paragraphs.append(current_paragraph)
+        return paragraphs
+
+
+
