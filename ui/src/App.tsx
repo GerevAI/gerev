@@ -117,7 +117,7 @@ export default class App extends React.Component <{}, AppState>{
       suggestions: [
         "whats special about trigger.dev?",
         "W23 email companies",
-        "who are the founders of resend w23?"
+        "what are the names of the founders of resend?"
       ]
     }
 
