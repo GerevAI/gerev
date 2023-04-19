@@ -2,8 +2,6 @@ from datetime import datetime
 from dataclasses import dataclass
 from enum import Enum
 from typing import Union, List
-from langchain.schema import Document as PDFDocument
-
 
 class DocumentType(Enum):
     DOCUMENT = "document"
@@ -49,7 +47,7 @@ class BasicDocument:
     data_source_id: int  # data source id in database
     type: DocumentType
     title: str
-    content: Union[str, List[PDFDocument]]
+    content: str
     timestamp: datetime
     author: str
     author_image_url: str
