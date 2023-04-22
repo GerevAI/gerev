@@ -16,15 +16,12 @@
 **Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
-## Made for devs 👨‍💻
+## Made for help desk techies 👨‍💻
 -  **For finding internal pages _fast_ ⚡️**
 ![second image](./images/product-example.png)
 
 - **Troubleshoot Issues 🐛**
 ![fourth image](./images/sql-card.png)
-- **For finding code snippets and code examples 🧑‍💻**  
-Coming Soon...
-![third image](./images/CodeCard.png)
 
 ## Integrations
  - [x] Slack
