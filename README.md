@@ -20,7 +20,7 @@
 -  **For finding internal issues _fast_ ⚡️**
 ![second image](./images/product-example.png)
 
-## Troubleshoot Issues 🐛
+- **Troubleshoot Issues 🐛**
 ![fourth image](./images/sql-card.png)
 
 ## Integrations
