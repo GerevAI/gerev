@@ -17,7 +17,7 @@
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
 ## Made for help desk techies 👨‍💻
--  **For finding internal pages _fast_ ⚡️**
+-  **For finding internal issues _fast_ ⚡️**
 ![second image](./images/product-example.png)
 
 ## Troubleshoot Issues 🐛
