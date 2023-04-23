@@ -158,10 +158,3 @@ class Indexer:
         Bm25Index.get().update(session=session)
 
         logger.info(f"Finished removing {len(documents)} documents => {len(db_paragraphs)} paragraphs")
-
-
-
-
-
-
-
