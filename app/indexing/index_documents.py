@@ -28,10 +28,8 @@ class Indexer:
 
     @staticmethod
     def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
-        if document.file_type != FileType.PDF:
-            paragraphs = Indexer._split_into_paragraphs(document.content)
-        else:
-            paragraphs = split_PDF_into_paragraphs(document.content)
+        paragraphs = Indexer._split_into_paragraphs(document.content)
+
         return Document(
             data_source_id=document.data_source_id,
             id_in_data_source=document.id_in_data_source,
@@ -74,10 +72,7 @@ class Indexer:
             db_documents = []
             for document in documents:
                 # Split the content into paragraphs that fit inside the database
-                if document.file_type != FileType.PDF:
-                    paragraphs = Indexer._split_into_paragraphs(document.content)
-                else:
-                    paragraphs = split_PDF_into_paragraphs(document.content)
+                paragraphs = Indexer._split_into_paragraphs(document.content)
                 # Create a new document in the database
                 db_document = Indexer.basic_to_document(document)
                 children = []
