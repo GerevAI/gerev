@@ -72,7 +72,7 @@ class RocketchatDataSource(BaseDataSource):
         self._authors_cache: Dict[str, RocketchatAuthor] = {}
 
     def _list_rooms(self) -> List[RocketchatRoom]:
-        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
         r = self._rocket_chat.call_api_get("rooms.get", updatedSince=oldest)
         json = r.json()
         data = json.get("update")
@@ -112,7 +112,7 @@ class RocketchatDataSource(BaseDataSource):
         return [RocketchatThread(id=trds["_id"], name=trds["msg"], channel_id=trds["rid"]) for trds in data]
 
     def _list_messages(self, channel: RocketchatRoom):
-        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
         data = []
         while oldest:
             r = self._rocket_chat.call_api_get("chat.syncMessages", roomId=channel.id, lastUpdate=oldest)
@@ -126,7 +126,7 @@ class RocketchatDataSource(BaseDataSource):
         return data
 
     def _list_thread_messages(self, thread: RocketchatThread):
-        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        oldest = self._last_index_time.strftime("%Y-%m-%dT%H:%M:%S.%f%z")
         data = []
         records = 0
         total = 1  # Set 1 to enter the loop
@@ -186,7 +186,7 @@ class RocketchatDataSource(BaseDataSource):
 
             timestamp = message["ts"]
             message_id = message["_id"]
-            readable_timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+            readable_timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S.%f%z")
             message_url = f"{self._raw_config.get('url')}/{channel.id}?msg={message_id}"
             last_msg = BasicDocument(title=channel.name, content=text, author=author.name,
                                      timestamp=readable_timestamp, id=message_id,

@@ -77,7 +77,7 @@ class GoogleDriveDataSource(BaseDataSource):
                 f"Skipping file {file['name']} because it's mime type is {file['mimeType']} which is not supported.")
             return False
 
-        last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%f%z")
         if last_modified < self._last_index_time:
             return False
 
@@ -170,7 +170,7 @@ class GoogleDriveDataSource(BaseDataSource):
 
         parent_name = self._get_parents_string(file)
 
-        last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%fZ")
+        last_modified = datetime.strptime(file['modifiedTime'], "%Y-%m-%dT%H:%M:%S.%f%z")
 
         author = file['lastModifyingUser'].get('displayName')
         author_image_url = file['lastModifyingUser'].get('photoLink')
