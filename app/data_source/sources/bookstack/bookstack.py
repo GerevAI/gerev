@@ -165,7 +165,7 @@ class BookstackDataSource(BaseDataSource):
             self.add_task_to_queue(self._feed_page, raw_page=page)
 
     def _feed_page(self, raw_page: Dict):
-        last_modified = datetime.strptime(raw_page["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+        last_modified = datetime.strptime(raw_page["updated_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
         if last_modified < self._last_index_time:
             return
 

@@ -238,7 +238,7 @@ def _fetch_channel(self, channel: Channel) -> None:
 ```
 5. Before adding to queue, check whether document is newer than self._last_indexed_at, if not, skip it.
 ```python
-last_modified = datetime.strptime(message["updated_at"], "%Y-%m-%dT%H:%M:%S.%fZ")
+last_modified = datetime.strptime(message["updated_at"], "%Y-%m-%dT%H:%M:%S.%f%z")
 if last_modified < self._last_index_time:
     logger.info(f"Message {message['id']} is too old, skipping")
     continue
