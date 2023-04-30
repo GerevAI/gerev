@@ -3,13 +3,16 @@ import re
 from enum import Enum
 from typing import List, Optional
 
-from data_source.api.basic_document import BasicDocument
+from data_source.api.basic_document import BasicDocument, FileType
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
 from models import bi_encoder
+from parsers.pdf import split_PDF_into_paragraphs
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
+from langchain.schema import Document as PDFDocument
+
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +29,7 @@ class Indexer:
     @staticmethod
     def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
         paragraphs = Indexer._split_into_paragraphs(document.content)
+
         return Document(
             data_source_id=document.data_source_id,
             id_in_data_source=document.id_in_data_source,
@@ -128,7 +132,6 @@ class Indexer:
 
         if len(current_paragraph) > 0:
             paragraphs.append(current_paragraph)
-
         return paragraphs
 
     @staticmethod

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Union, List
 
-
 class DocumentType(Enum):
     DOCUMENT = "document"
     MESSAGE = "message"
@@ -24,6 +23,7 @@ class FileType(Enum):
     DOCX = "docx"
     PPTX = "pptx"
     TXT = "txt"
+    PDF = "pdf"
 
     @classmethod
     def from_mime_type(cls, mime_type: str):
@@ -35,6 +35,8 @@ class FileType(Enum):
             return cls.PPTX
         elif mime_type == 'text/plain':
             return cls.TXT
+        elif mime_type == 'application/pdf':
+            return cls.PDF
         else:
             return None
 
