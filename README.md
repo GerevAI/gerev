@@ -69,7 +69,7 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 
 Getting Started
 ============
-## Managed Cloud (Pro)
+## Managed Cloud (Pro)  
 [Let's talk](https://calendly.com/mrdotcom/demo)  
 - [X] Authentication
 - [X] Multiple Users
