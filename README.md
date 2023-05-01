@@ -59,8 +59,16 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 
 ---  
 
-# Getting Started
-1. Install *Nvidia for docker* 
+# Getting Started (Cloud Managed version)
+- Authentication
+- Multiple Users
+- GPU machine
+- 24/7 Support
+- Self hosted version (with multi-user also supported)
+- [Let's talk](https://calendly.com/mrdotcom/demo)
+  
+# Getting Started (Self-hosted)
+1. Install *Nvidia for docker* (on host that runs the docker runtime)
 2. Run docker
  
 ## Nvidia for docker
