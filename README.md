@@ -70,12 +70,12 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 Getting Started
 ============
 ## Managed Cloud (Pro)
+[Let's talk](https://calendly.com/mrdotcom/demo)  
 - [X] Authentication
 - [X] Multiple Users
 - [X] GPU machine
 - [X] 24/7 Support
 - Self hosted version (with multi-user also supported)
-[Let's talk](https://calendly.com/mrdotcom/demo)
   
 ## Self-hosted (Community)
 1. Install *Nvidia for docker* (on host that runs the docker runtime)
