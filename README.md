@@ -16,6 +16,13 @@
 **Find any conversation, doc, or internal page in seconds**  ⏲️⚡️  
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
+<!--ts-->
+   * [Integrations](#integrations)
+   * [Getting Started](#getting-started)
+      * [Cloud](#managed-cloud-pro)
+      * [Self-Hosted](#self-hosted-community)
+<!--te-->
+
 ## Made for help desk techies 👨‍💻
 ### Troubleshoot Issues 🐛
 ![fourth image](./images/sql-card.png)
@@ -24,7 +31,8 @@
 ![second image](./images/product-example.png)
 
 
-## Integrations
+Integrations
+============
  - [x] Slack
  - [x] Confluence
  - [X] Jira
@@ -59,19 +67,21 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 
 ---  
 
-# Getting Started (Cloud Managed version)
-- Authentication
-- Multiple Users
-- GPU machine
-- 24/7 Support
+Getting Started
+============
+## Managed Cloud (Pro)
+- [X] Authentication
+- [X] Multiple Users
+- [X] GPU machine
+- [X] 24/7 Support
 - Self hosted version (with multi-user also supported)
-- [Let's talk](https://calendly.com/mrdotcom/demo)
+[Let's talk](https://calendly.com/mrdotcom/demo)
   
-# Getting Started (Self-hosted)
+## Self-hosted (Community)
 1. Install *Nvidia for docker* (on host that runs the docker runtime)
 2. Run docker
  
-## Nvidia for docker
+### Nvidia for docker
 Install nvidia container toolkit on the host machine.
 
 ```
@@ -87,7 +97,7 @@ sudo systemctl restart docker
 ```
 
 
-## Run docker
+### Run docker
 Then run the docker container like so:
 
 ### Nvidia hardware
