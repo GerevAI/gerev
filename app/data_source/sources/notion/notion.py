@@ -149,11 +149,9 @@ class NotionDataSource(BaseDataSource):
         )
         self.data_source_id = "DUMMY_SOURCE_ID"
 
-    @staticmethod
     def _parse_rich_text(self, rich_text: list):
         return "\n".join([text["plain_text"] for text in rich_text])
 
-    @staticmethod
     def _parse_content_from_blocks(self, notion_blocks):
         return "\n".join(
             [
@@ -163,13 +161,17 @@ class NotionDataSource(BaseDataSource):
             ]
         )
 
+    def _parse_title(self, page):
+        title_prop = next(prop for prop in page["properties"] if page["properties"][prop]["type"] == "title")
+        return self._parse_rich_text(page["properties"][title_prop]["title"])
+
     def _parse_content_from_page(self, page):
         metadata_list = [
             f"{prop}: {self._parse_rich_text(page['properties'][prop].get('rich_text',''))}"
             for prop in page["properties"]
             if prop != "Name"
         ]
-        title = f"Title: {self._parse_rich_text(page['properties']['Name']['title'])}"
+        title = f"Title: {self._parse_title(page)}"
         metadata = "\n".join([title] + metadata_list)
         page_blocks = self._notion_client.list_blocks(page["id"])
         blocks_content = self._parse_content_from_blocks(page_blocks)
@@ -182,18 +184,8 @@ class NotionDataSource(BaseDataSource):
             "title": title,
             "location": title,
             "content": metadata + blocks_content,
-            "timestamp": page["created_time"],
+            "timestamp": datetime.strptime(page["last_edited_time"], "%Y-%m-%dT%H:%M:%S.%fZ"),
         }
-
-    def _fetch_page(self, page):
-        page_data = self._parse_content_from_page(page)
-        logger.info(f"Indexing page {page_data['id']}")
-        document = BasicDocument(
-            data_source_id=self._data_source_id,
-            document_type=DocumentType.DOCUMENT,
-            **page_data,
-        )
-        IndexQueue.get_instance().put_single(document)
 
     def _feed_new_documents(self) -> None:
         pages = self._notion_client.list_pages()
@@ -203,4 +195,11 @@ class NotionDataSource(BaseDataSource):
                 # skipping already indexed pages
                 continue
 
-            self._add_task(self.fetch_page, page)
+            page_data = self._parse_content_from_page(page)
+            logger.info(f"Indexing page {page_data['id']}")
+            document = BasicDocument(
+                data_source_id=self._data_source_id,
+                type=DocumentType.DOCUMENT,
+                **page_data,
+            )
+            IndexQueue.get_instance().put_single(document)
