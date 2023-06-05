@@ -89,7 +89,7 @@ class NotionClient:
         response = self.session.post(url, json=filter_data)
         results = response.json()["results"]
         while response.json()["has_more"] is True:
-            response = self.session.post(url, json=filter_data, params={"start_cursor": response.json()["next_cursor"]})
+            response = self.session.post(url, json={"start_cursor": response.json()["next_cursor"], **filter_data})
             results.extend(response.json()["results"])
         return results
 
@@ -178,8 +178,8 @@ class NotionDataSource(BaseDataSource):
         author = self._notion_client.get_user(page["created_by"]["id"])
         return {
             "id": page["id"],
-            "author": author["name"],
-            "author_image_url": author["avatar_url"],
+            "author": author.get("name", ""),
+            "author_image_url": author.get("avatar_url", ""),
             "url": page["url"],
             "title": title,
             "location": title,
