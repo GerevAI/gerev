@@ -1,6 +1,6 @@
 services:
   gerev:
-    image: us-central1-docker.pkg.dev/gorgias-growth-production/growth-ops:latest
+    image: us-central1-docker.pkg.dev/gorgias-growth-production/growth-ops/gerev:latest
     ports:
       - 80:80
     volumes:
