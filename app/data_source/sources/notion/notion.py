@@ -38,7 +38,7 @@ RETRY_AFTER_STATUS_CODES = frozenset(
 )
 
 
-def _notion_retry_session(token, retries=5, backoff_factor=2.0, status_forcelist=RETRY_AFTER_STATUS_CODES):
+def _notion_retry_session(token, retries=10, backoff_factor=2.0, status_forcelist=RETRY_AFTER_STATUS_CODES):
     """Creates a retry session"""
     session = requests.Session()
     retry = Retry(
@@ -78,7 +78,10 @@ class NotionClient:
     def get_user(self, user_id):
         url = f"{self.api_url}/users/{user_id}"
         response = self.session.get(url)
-        return response.json()
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError:
+            return {}
 
     def list_objects(self, notion_object: NotionObject):
         url = f"{self.api_url}/search"
@@ -101,10 +104,26 @@ class NotionClient:
 
     def list_blocks(self, block_id: str):
         url = f"{self.api_url}/blocks/{block_id}/children"
-        response = self.session.get(url)
+        params = {"page_size": 100}
+        response = self.session.get(url, params=params)
+        if not response.json()["results"]:
+            return []
         results = response.json()["results"]
         while response.json()["has_more"] is True:
-            response = self.session.get(url, params={"start_cursor": response.json()["next_cursor"]})
+            response = self.session.get(url, params={"start_cursor": response.json()["next_cursor"], **params})
+            results.extend(response.json()["results"])
+        return results
+
+    def list_database_pages(self, database_id: str):
+        url = f"{self.api_url}/databases/{database_id}/query"
+        filter_data = {"page_size": 100}
+        response = self.session.post(url, json=filter_data)
+        results = response.json()["results"]
+        while response.json()["has_more"] is True:
+            response = self.session.post(
+                url,
+                json={"start_cursor": response.json()["next_cursor"], **filter_data},
+            )
             results.extend(response.json()["results"])
         return results
 
@@ -155,9 +174,9 @@ class NotionDataSource(BaseDataSource):
     def _parse_content_from_blocks(self, notion_blocks):
         return "\n".join(
             [
-                self._parse_rich_text(block["paragraph"]["rich_text"])
+                self._parse_rich_text(block[block["type"]]["rich_text"])
                 for block in notion_blocks
-                if block["type"] == "paragraph"
+                if block[block["type"]].get("rich_text")
             ]
         )
 
@@ -171,8 +190,8 @@ class NotionDataSource(BaseDataSource):
             for prop in page["properties"]
             if prop != "Name"
         ]
-        title = f"Title: {self._parse_title(page)}"
-        metadata = "\n".join([title] + metadata_list)
+        title = f"{self._parse_title(page)}"
+        metadata = "\n".join([f"Title: {title}"] + metadata_list)
         page_blocks = self._notion_client.list_blocks(page["id"])
         blocks_content = self._parse_content_from_blocks(page_blocks)
         author = self._notion_client.get_user(page["created_by"]["id"])
@@ -188,18 +207,36 @@ class NotionDataSource(BaseDataSource):
         }
 
     def _feed_new_documents(self) -> None:
-        pages = self._notion_client.list_pages()
+        logger.info("Fetching non database pages ...")
+        single_pages = self._notion_client.list_pages()
+        logger.info(f"Found {len(single_pages)} non database pages ...")
+
+        logger.info("Fetching databases ...")
+        databases = self._notion_client.list_databases()
+        logger.info(f"Found {len(databases)} databases ...")
+
+        all_database_pages = []
+        for database in databases:
+            database_pages = self._notion_client.list_database_pages(database["id"])
+            logger.info(f"Found {len(database_pages)} pages to index in database {database['id']} ...")
+            all_database_pages.extend(database_pages)
+
+        pages = single_pages + all_database_pages
+        logger.info(f"Found {len(pages)} pages in total ...")
+
         for page in pages:
             last_updated_at = datetime.strptime(page["last_edited_time"], "%Y-%m-%dT%H:%M:%S.%fZ")
             if last_updated_at < self._last_index_time:
                 # skipping already indexed pages
                 continue
-
-            page_data = self._parse_content_from_page(page)
-            logger.info(f"Indexing page {page_data['id']}")
-            document = BasicDocument(
-                data_source_id=self._data_source_id,
-                type=DocumentType.DOCUMENT,
-                **page_data,
-            )
-            IndexQueue.get_instance().put_single(document)
+            try:
+                page_data = self._parse_content_from_page(page)
+                logger.info(f"Indexing page {page_data['id']}")
+                document = BasicDocument(
+                    data_source_id=self._data_source_id,
+                    type=DocumentType.DOCUMENT,
+                    **page_data,
+                )
+                IndexQueue.get_instance().put_single(document)
+            except Exception as e:
+                logger.error(f"Failed to index page {page['id']}", exc_info=e)
