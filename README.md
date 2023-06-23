@@ -1,4 +1,4 @@
-[⚡🔎 Live online demo!](https://demo.gerev.ai)  
+[⚡🔎 Live online demo!](https://app.klu.so/signup?utm_source=github_gerevai)  
 # AI-powered enterprise search engine 🔎
 
 ### Join Discord for early access code!
@@ -9,7 +9,7 @@
 [docker-pull]: https://hub.docker.com/r/gerev/gerev
 [docker-pull-img]: https://img.shields.io/docker/pulls/gerev/gerev.svg
 
-[Join here!](https://discord.gg/NKhTX7JZAF)
+[Join here!](https://app.klu.so/signup?utm_source=github_gerevai)
 
 # Search engine for your organization!
 ![first image](./images/api.gif)
@@ -70,7 +70,7 @@ Enables searching using natural language. such as `"How to do X"`, `"how to conn
 Getting Started
 ============
 ## Managed Cloud (Pro)  
-[Let's talk](https://calendly.com/mrdotcom/demo)  
+[Sign up Free](https://app.klu.so/signup?utm_source=github_gerevai)  
 - [X] Authentication
 - [X] Multiple Users
 - [X] GPU machine
