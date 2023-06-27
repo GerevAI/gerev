@@ -393,6 +393,15 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                     </span>
                                  )
                               }
+                              {
+                                 this.state.selectedDataSource.value === 'notion' && (
+                                    <span className="flex flex-col leading-9  text-xl text-white">
+                                       <span>1. {'Go to notion.so/my-integrations -> Create an integration and copy its token -> Give it read access capabilities (users included)'}</span>
+                                       <span>2. {'Add your integration to high authority page so that it has access to all of its children.'}</span>
+                                       <span>3. {'Paste the token'}</span>
+                                    </span>
+                                 )
+                              }
                            </div>
 
                            <div className="flex flex-row flex-wrap items-end mt-4">

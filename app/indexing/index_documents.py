@@ -7,12 +7,10 @@ from data_source.api.basic_document import BasicDocument, FileType
 from db_engine import Session
 from indexing.bm25_index import Bm25Index
 from indexing.faiss_index import FaissIndex
+from langchain.schema import Document as PDFDocument
 from models import bi_encoder
-from parsers.pdf import split_PDF_into_paragraphs
 from paths import IS_IN_DOCKER
 from schemas import Document, Paragraph
-from langchain.schema import Document as PDFDocument
-
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +23,6 @@ def get_enum_value_or_none(enum: Optional[Enum]) -> Optional[str]:
 
 
 class Indexer:
-
     @staticmethod
     def basic_to_document(document: BasicDocument, parent: Document = None) -> Document:
         paragraphs = Indexer._split_into_paragraphs(document.content)
@@ -43,11 +40,8 @@ class Indexer:
             location=document.location,
             url=document.url,
             timestamp=document.timestamp,
-            paragraphs=[
-                Paragraph(content=content)
-                for content in paragraphs
-            ],
-            parent=parent
+            paragraphs=[Paragraph(content=content) for content in paragraphs],
+            parent=parent,
         )
 
     @staticmethod
@@ -57,10 +51,11 @@ class Indexer:
         ids_in_data_source = [document.id_in_data_source for document in documents]
 
         with Session() as session:
-            documents_to_delete = session.query(Document).filter(
-                Document.id_in_data_source.in_(ids_in_data_source)).all()
+            documents_to_delete = (
+                session.query(Document).filter(Document.id_in_data_source.in_(ids_in_data_source)).all()
+            )
             if documents_to_delete:
-                logging.info(f'removing documents that were updated and need to be re-indexed.')
+                logging.info(f"removing documents that were updated and need to be re-indexed.")
                 Indexer.remove_documents(documents_to_delete, session)
                 for document in documents_to_delete:
                     # Currently bulk deleting doesn't cascade. So we need to delete them one by one.
@@ -120,15 +115,15 @@ class Indexer:
         if text is None:
             return []
         paragraphs = []
-        current_paragraph = ''
-        for paragraph in re.split(r'\n\s*\n', text):
+        current_paragraph = ""
+        for paragraph in re.split(r"\n\s*\n", text):
             if len(current_paragraph) > 0:
-                current_paragraph += ' '
+                current_paragraph += " "
             current_paragraph += paragraph.strip()
 
             if len(current_paragraph) > minimum_length:
                 paragraphs.append(current_paragraph)
-                current_paragraph = ''
+                current_paragraph = ""
 
         if len(current_paragraph) > 0:
             paragraphs.append(current_paragraph)
@@ -138,7 +133,7 @@ class Indexer:
     def _add_metadata_for_indexing(paragraph: Paragraph) -> str:
         result = paragraph.content
         if paragraph.document.title is not None:
-            result += '; ' + paragraph.document.title
+            result += "; " + paragraph.document.title
         return result
 
     @staticmethod
