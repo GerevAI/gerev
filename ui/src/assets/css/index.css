@@ -15,3 +15,50 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #ffffff48;
+  width: 80%;
+  border-radius: 10px;
+  position: absolute;
+}
+::-webkit-scrollbar-thumb:active {
+  background: white;
+  width: 80%;
+  border-radius: 10px;
+  position: absolute;
+}
+
+
+
+.markdown {
+  max-width: 100%;
+  word-break: break-word;
+  color: rgb(200,200,200)
+}
+.markdown h1, h2, h3, h4, h5 {
+  margin-block: 1em 1em;
+}
+.markdown h1 {
+  text-transform: capitalize;
+  text-align: center;
+  color: white;
+  font-size: 3rem;
+  font-weight: bold;
+}
+.markdown h2 {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.markdown h3 {
+  color: white;
+}
+.markdown img {
+  border-radius: 0.5rem;
+  margin: 3rem auto;
+}

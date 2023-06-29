@@ -18,6 +18,12 @@ import { toast } from 'react-toastify';
 import { api } from "../api";
 import { ConfigField, ConnectedDataSource, DataSourceType, IndexLocation } from "../data-source";
 
+import ReactMarkdown from 'react-markdown'
+import '../assets/css/index.css'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
+import rehypeSanitize from 'rehype-sanitize'
+
 
 export interface SelectOption {
    value: string;
@@ -37,6 +43,7 @@ export interface DataSourcePanelState {
    isSelectingLocations: boolean
    removeInProgressIndex: number
    editMode: boolean
+   readMe: string
 }
 
 export interface DataSourcePanelProps {
@@ -94,6 +101,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
          selectedLocations: [],
          selectedDataSource: { value: 'unknown', label: 'unknown', imageBase64: '', configFields: [], hasAdditionalSteps: false },
          removeInProgressIndex: -1,
+         readMe: "",
          editMode: false
       }
    }
@@ -175,7 +183,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                         {this.props.connectedDataSources.map((dataSource, index) => {
                            return (
                               // connected data source
-                              <div className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
+                              <div key={index} className="flex py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#352C45] hover:shadow-inner shadow-blue-500/50 rounded-lg font-poppins leading-[28px] border-b-[#916CCD] border-b-2">
                                  <img alt="data-source" className={"mr-2 h-[20px]"} src={this.props.dataSourceTypesDict[dataSource.name].image_base64}></img>
                                  <h1 className="text-white width-full">{this.props.dataSourceTypesDict[dataSource.name].display_name}</h1>
 
@@ -205,7 +213,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               if (!this.state.editMode && !this.props.connectedDataSources.find((connectedDataSource) => connectedDataSource.name === dataSource.name)) {
                                  return (
                                     // unconnected data source
-                                    <div onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
+                                    <div key={key} onClick={() => this.dataSourceToAddSelected(dataSource)} className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
                                        <img alt="" className={"mr-2 h-[20px]"} src={dataSource.image_base64}></img>
                                        {/* <h1 className="text-white">Add</h1> */}
                                        <h1 className="text-gray-500">{dataSource.display_name}</h1>
@@ -222,7 +230,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                         </div>
                         <div className="flex hover:text-[#9875d4] py-2 pl-5 pr-3 m-2 flex-row items-center justify-center bg-[#36323b] hover:border-[#9875d4] rounded-lg font-poppins leading-[28px] border-[#777777] border-b-[.5px] transition duration-300 ease-in-out">
-                           <a className="flex flex-row justify-center items-center text-gray-500" href="https://form.typeform.com/to/JwtKLrLz" target="_blank" 
+                           <a className="flex flex-row justify-center items-center text-gray-500" href="https://form.typeform.com/to/JwtKLrLz" target="_blank"
                               rel="noreferrer">Beta Data Sources
                               <IoAddCircleOutline className="ml-4 text-white text-2xl hover:text-[#9875d4] hover:cursor-pointer transition duration-200 ease-in-out"></IoAddCircleOutline>
                            </a>
@@ -304,7 +312,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                                  (this.state.selectedDataSource.value === 'jira_cloud' || this.state.selectedDataSource.value === 'confluence_cloud') && (
                                     <span className="flex flex-col leading-9  text-xl text-white">
                                        <span>1. Go here: <a className="text-[#d6acff] hover:underline" rel="noreferrer" href={'https://id.atlassian.com/manage-profile/security/api-tokens'}
-                                                target='_blank'>Atlassian Account</a></span>
+                                          target='_blank'>Atlassian Account</a></span>
                                        <span>2. {'Create API token -> Name it -> Create'}</span>
                                        <span>3. {"Copy the token"}</span>
                                     </span>
@@ -361,7 +369,7 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                               {this.state.selectedDataSource.value === 'google_drive' && (
                                  // Google Drive instructions
                                  <span className="leading-9 text-lg text-white">
-                                    Follow <a href='https://github.com/GerevAI/gerev/blob/main/docs/data-sources/google-drive/google-drive.md' rel="noreferrer" className="inline underline" target="_blank">these instructions</a>
+                                    {this.markdown('https://raw.githubusercontent.com/GerevAI/gerev/main/docs/data-sources/google-drive/google-drive.md/')}
                                  </span>
                               )}
                               {
@@ -398,27 +406,27 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
                            <div className="flex flex-row flex-wrap items-end mt-4">
                               {/* for each field */}
                               {
-                              this.state.selectedDataSource.configFields.map((field, index) => {
-                              if (field.input_type === 'text' || field.input_type === 'password') {
-                                 return (
-                                    <div className="flex flex-col mr-10 mt-4">
-                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                       <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
-                                          className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
-                                          placeholder={field.placeholder}></input>
-                                    </div>
-                                 )
-                              } else if (field.input_type === 'textarea') {
-                                 return (
-                                    <div className="flex flex-col w-full mt-4">
-                                       <h1 className="text-lg block text-white mb-4">{field.label}</h1>
-                                       <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value)}}
-                                          className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
-                                    </div>
-                                 )
-                              }
-                              return null;
-                              })
+                                 this.state.selectedDataSource.configFields.map((field, index) => {
+                                    if (field.input_type === 'text' || field.input_type === 'password') {
+                                       return (
+                                          <div key={index} className="flex flex-col mr-10 mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <input value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
+                                                className="w-96 h-10 rounded-lg bg-[#352C45] text-white p-2"
+                                                placeholder={field.placeholder}></input>
+                                          </div>
+                                       )
+                                    } else if (field.input_type === 'textarea') {
+                                       return (
+                                          <div key={index} className="flex flex-col w-full mt-4">
+                                             <h1 className="text-lg block text-white mb-4">{field.label}</h1>
+                                             <textarea value={field.value} onChange={(event) => { this.updateInput(index, event.target.value) }}
+                                                className="w-full h-80 rounded-lg bg-[#352C45] text-white p-2 mb-5" placeholder={field.placeholder}></textarea>
+                                          </div>
+                                       )
+                                    }
+                                    return null;
+                                 })
                               }
                               {/* Selecting locations */}
                               {
@@ -620,6 +628,42 @@ export default class DataSourcePanel extends React.Component<DataSourcePanelProp
 
    onSourceSelectChange = (event) => {
       this.setState({ selectedDataSource: event, isSelectingLocations: false, selectedLocations: [] });
+   }
+
+
+   markdown = (url: string) => {
+      /* 
+      This function takes a URL or path which contains markdown and returns JSX
+      elements.
+      */
+
+
+      if (url[url.length - 1] === '/') {
+         // trimming final "/"
+         url = url.slice(0, url.length - 1)
+      }
+
+      // The markdown might use some relative paths. In that case, we need to 
+      // convert those to start with our base URL.
+      const baseUrl = url.slice(0, url.lastIndexOf('/'));
+
+      api.get(url).then((Response) => {
+         this.setState({ readMe: Response.data.replaceAll("(./", `(${baseUrl}/`) })
+      }).catch((error) => {
+         console.warn(`${url} did not load\n ${error}`)
+      })
+
+
+      return (
+         <div className="markdown">{/*The markdown class can be found in index.css*/}
+            <ReactMarkdown
+               rehypePlugins={[rehypeRaw, rehypeSanitize]}
+               remarkPlugins={[remarkGfm]}
+            >
+               {this.state.readMe}
+            </ReactMarkdown>
+         </div>
+      );
    }
 
    removeDataSource = (index: number) => {
