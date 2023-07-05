@@ -25,7 +25,6 @@ BM_25_CANDIDATES = 100 if torch.cuda.is_available() else 20
 BI_ENCODER_CANDIDATES = 60 if torch.cuda.is_available() else 20
 SMALL_CROSS_ENCODER_CANDIDATES = 30 if torch.cuda.is_available() else 10
 
-nltk.download('punkt')
 logger = logging.getLogger(__name__)
 
 
