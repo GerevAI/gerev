@@ -45,13 +45,14 @@
 
 :pray: - by the community
 
+## Getting Started
+
+See the full guide at [SETUP.md](./SETUP.md).
+
 ## Natural Language
 
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
-## Getting Started
-
-See the full guide on [SETUP.md](./SETUP.md).
 
 ---
 
