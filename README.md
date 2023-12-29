@@ -48,9 +48,9 @@ _ [Self-Hosted](#self-hosted-community)
 
 :pray: - by the community
 
-## Add your own data source NOW 🚀
+## HOW TO GET STARTED
 
-See the full guide at [ADDING-A-DATA-SOURCE.md](./ADDING-A-DATA-SOURCE.md).
+See the full guide on SETUP [SETUP.md](./SETUP.md).
 
 ## Natural Language
 
