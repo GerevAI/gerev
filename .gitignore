@@ -13,6 +13,8 @@ Pipfile.lock
 env3.*
 env
 venv
+.DS_Store
+
 
 # vim temporary files
 *~
