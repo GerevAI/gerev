@@ -7,8 +7,6 @@
 <!--ts-->
    * [Integrations](#integrations)
    * [Getting Started](#getting-started)
-      * [Cloud](#managed-cloud-pro)
-      * [Self-Hosted](#self-hosted-community)
 <!--te-->
 
 ## Made for help desk techies 👨‍💻
@@ -51,7 +49,7 @@
 
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
 
-## HOW TO GET STARTED
+## Getting Started
 
 See the full guide on [SETUP.md](./SETUP.md).
 
