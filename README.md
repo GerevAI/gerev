@@ -5,11 +5,10 @@
 **Join 100+** devs by hosting your own gerev instance, become a **hero** within your org! 💪
 
 <!--ts-->
-
-- [Integrations](#integrations)
-- [Getting Started](#getting-started)
-_ [Cloud](#managed-cloud-pro)
-_ [Self-Hosted](#self-hosted-community)
+   * [Integrations](#integrations)
+   * [Getting Started](#getting-started)
+      * [Cloud](#managed-cloud-pro)
+      * [Self-Hosted](#self-hosted-community)
 <!--te-->
 
 ## Made for help desk techies 👨‍💻
