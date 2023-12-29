@@ -48,13 +48,13 @@ _ [Self-Hosted](#self-hosted-community)
 
 :pray: - by the community
 
-## HOW TO GET STARTED
-
-See the full guide on SETUP [SETUP.md](./SETUP.md).
-
 ## Natural Language
 
 Enables searching using natural language. such as `"How to do X"`, `"how to connect to Y"`, `"Do we support Z"`
+
+## HOW TO GET STARTED
+
+See the full guide on [SETUP.md](./SETUP.md).
 
 ---
 
