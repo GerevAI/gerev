@@ -148,7 +148,14 @@ async def serve_ui(request: Request, path: str):
         else:
             file_path = os.path.join(UI_PATH, path)
 
-        return FileResponse(file_path, status_code=200)
+        ui_root = os.path.realpath(UI_PATH)
+        resolved_path = os.path.realpath(file_path)
+        if resolved_path != ui_root and not resolved_path.startswith(ui_root + os.sep):
+            raise HTTPException(status_code=404, detail="File not found")
+
+        return FileResponse(resolved_path, status_code=200)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.warning(f"Failed to serve UI (you probably need to build it): {e}")
         raise HTTPException(status_code=404, detail="File not found")
